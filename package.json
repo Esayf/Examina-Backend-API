@@ -11,6 +11,7 @@
 	"author": "Lruquaf",
 	"license": "MIT",
 	"dependencies": {
+		"axios": "^1.7.5",
 		"compression": "^1.7.4",
 		"connect-mongodb-session": "^2.2.0",
 		"cors": "^2.8.5",

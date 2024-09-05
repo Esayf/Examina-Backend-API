@@ -17,17 +17,52 @@ const {
 } = require("../middleware/protokit");
 const isTestEnv = require("../middleware/isTestEnv");
 const { setTimeout } = require("timers");
+const axios = require("axios");
 router.use((req, res, next) => {
 	isAuthenticated(req, res, next);
 });
 
+// Pinata'ya dosya pinlemek için fonksiyon
+// Regex to extract markdown links
+const markdownLinkRegex = /\[(.*?)\]\((https?:\/\/\S+)\)/g;
+
+// Regex to extract CID from the URL
+const cidRegex = /\/ipfs\/(Qm[a-zA-Z0-9]{44}|baf[a-zA-Z0-9]{56})/;
+
+// Pin to IPFS function
+async function pinToIPFS(hash) {
+	try {
+		const response = await axios.post(
+			"https://api.pinata.cloud/pinning/pinByHash",
+			{
+				hashToPin: hash,
+				pinataMetadata: {
+					name: "Pinned_Link",
+				},
+			},
+			{
+				headers: {
+					pinata_api_key: process.env.PINATA_API_KEY,
+					pinata_secret_api_key: process.env.PINATA_SECRET_KEY,
+				},
+			}
+		);
+		console.log("SUCCESS: Pinned CID:", hash);
+		return response.data.IpfsHash;
+	} catch (error) {
+		console.error("Error pinning to IPFS:", error);
+		throw error;
+	}
+}
+
+// Example usage in a router
 router.post("/create", async (req, res) => {
 	try {
-		const user = await User.findById(req.session.user.userId);
-		// console.log("User: ", user._id);
+		const user = await User.findById(req.session.user);
 		if (!user) {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
+
 		const newExam = new Exam({
 			creator: user._id,
 			title: req.body.title,
@@ -40,42 +75,102 @@ router.post("/create", async (req, res) => {
 
 		console.log("Questions: ", req.body.questions);
 
+		const questionsWithPinnedLinks = await Promise.all(
+			req.body.questions.map(async (question) => {
+				console.log("Processing Question: ", question.text);
+
+				// Extract markdown links from question text
+				const matches = [...question.text.matchAll(markdownLinkRegex)];
+				for (const match of matches) {
+					console.log("Found Markdown Link: ", match[2]);
+					const url = match[2]; // Extracted URL from markdown link
+					const cidMatch = url.match(cidRegex);
+
+					if (cidMatch && cidMatch[1]) {
+						const cid = cidMatch[1]; // Extracted CID from the URL
+						try {
+							await pinToIPFS(cid); // Pin CID to IPFS
+						} catch (error) {
+							console.error(`Failed to pin CID: ${cid}`);
+						}
+					} else {
+						console.log("No valid CID found in the URL:", url);
+					}
+				}
+
+				// Process question options similarly if they exist
+				if (question.options && Array.isArray(question.options)) {
+					console.log("Processing Options for Question.");
+					question.options = await Promise.all(
+						question.options.map(async (option) => {
+							console.log("Processing Option: ", option.text);
+							const optionMatches = [
+								...option.text.matchAll(markdownLinkRegex),
+							];
+							for (const match of optionMatches) {
+								console.log("Option Text Match: ", match[2]);
+								const url = match[2];
+								const cidMatch = url.match(cidRegex);
+
+								if (cidMatch && cidMatch[1]) {
+									const cid = cidMatch[1];
+									try {
+										await pinToIPFS(cid);
+									} catch (error) {
+										console.error(
+											`Failed to pin CID: ${cid}`
+										);
+									}
+								} else {
+									console.log(
+										"No valid CID found in the URL:",
+										url
+									);
+								}
+							}
+							return option;
+						})
+					);
+				}
+
+				question.exam = newExam._id;
+				return question;
+			})
+		);
+
 		newExam
 			.save()
 			.then((result) => {
 				console.log(result);
-				// Add newExam._id to each question in req.body.questions
-				let questions = req.body.questions.map((question) => {
-					question.exam = newExam._id;
-					return question;
-				});
-				Question.insertMany(questions)
+				Question.insertMany(questionsWithPinnedLinks)
 					.then((resultQs) => {
-						console.log("Insterted many questions", result);
+						console.log("Inserted many questions", resultQs);
 						createExam(
 							newExam._id,
-							resultQs.map((q) => {
-								return {
-									questionID: q._id.toString("hex"),
-									question: q.text,
-									correct_answer: q.correctAnswer,
-								};
-							})
+							resultQs.map((q) => ({
+								questionID: q._id.toString("hex"),
+								question: q.text,
+								correct_answer: q.correctAnswer,
+							}))
 						);
+						res.status(200).json({
+							message: "Exam created successfully",
+							newExam: result,
+						});
 					})
 					.catch((err) => {
 						console.log(err);
+						res.status(500).json({
+							message: "Error when saving questions",
+						});
 					});
-				res.status(200).json({
-					message: "Exam created successfully",
-					newExam: result,
-				});
 			})
 			.catch((err) => {
 				console.log(err);
-				res.status(500).json({ message: "Error when saving" });
+				res.status(500).json({ message: "Error when saving exam" });
 			});
 	} catch (err) {
+		console.error(err);
 		res.status(500).json({ message: "Internal server error" });
 	}
 });

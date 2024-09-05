@@ -14,8 +14,6 @@ const isTestEnv = require("./middleware/isTestEnv");
 const app = express();
 setTimeout(() => {
 try {
-	
-		console.log("MongoDB connection timeout.");
 	connectDB();
 	app.use(compression());
 
