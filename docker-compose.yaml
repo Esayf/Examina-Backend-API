@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
     app:
         build:
@@ -12,12 +12,12 @@ services:
         depends_on:
             - db
         environment:
-            MONGO_URI: mongodb://db:27017
-            PORT: 3005
-            PROTOKIT_URL: http://examina-protokit-api_server-1:5005
-            PINATA_API_KEY: 60948db248dafa1ff68f
-            PINATA_SECRET_KEY: 0f377f52c24b6c35b40a7dcb70a6c3fc66d06d2310bf7f8e3f67e8766014d2b2
-            MAIL_PASSWORD: "G?fpCM-Sq7/f@kK"
+            MONGO_URI: ${MONGO_URI}
+            PORT: ${PORT}
+            PROTOKIT_URL: ${PROTOKIT_URL}
+            PINATA_API_KEY: ${PINATA_API_KEY}
+            PINATA_SECRET_KEY: ${PINATA_SECRET_KEY}
+            MAIL_PASSWORD: ${MAIL_PASSWORD}
         command: npm run dev
     db:
         container_name: db
@@ -30,9 +30,9 @@ services:
             - examina_network
 
 volumes:
-  mongodb_data: 
+    mongodb_data:
 
 networks:
-  examina_network:
-    driver: bridge
-    external: true
+    examina_network:
+        driver: bridge
+        external: true
