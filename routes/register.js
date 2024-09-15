@@ -70,73 +70,35 @@ router.post("/", async (req, res) => {
 });
 
 if (process.env.NODE_ENV === "development") {
-  router.post("/dev", async (req, res) => {
-    const { walletAddress } = req.body;
-    // Create user if not exists
-    try {
-      const user = await User.find({ walletAddress: walletAddress });
-      if (user.length == 0) {
-        const newUser = new User({
-          username: walletAddress,
-          walletAddress,
-        });
-        const saved_user = await newUser.save();
-        console.log("Saved user: ", saved_user);
-        req.session.user = saved_user._id;
-        return res.json({ success: true, user: req.session.user });
-      } else {
-        req.session.user = user[0]._id;
-        console.log("User already exists: ", user[0]);
-        return res.json({ success: true, user: req.session.user });
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  });
-}
-
-if (process.env.NODE_ENV === "development") {
-  router.post("/dev/register_with_email_and_wallet", async (req, res) => {
-    const { walletAddress, mailAddress } = req.body;
-    // Create user if not exists
-    try {
-      const user = await User.find({ walletAddress: walletAddress });
-      if (user.length == 0) {
-        const newUser = new User({
-          username: walletAddress,
-          email: mailAddress,
-          walletAddress,
-        });
-
-        var mailOptions = {
-          from: 'Choz <info@choz.io>',
-          to: mailAddress,
-          subject: 'Registered Successfully',
-          text: '2 gun icinde bana 1 btc atmazsan butun sitenizi hacklerim :D',
-        };
-        
-        transporter.sendMail(mailOptions, async function(error, info){
-          if (error) {
-            console.log(error);
-            return res.status(500).json({ error: "Failed to send email!" });
-          } else {
-            console.log('Email sent: ' + info.response);
-            const saved_user = await newUser.save();
-            console.log("Saved user: ", saved_user);
-            req.session.user = saved_user._id;
-            return res.status(200).json({ success: true, user: req.session.user });
-          }
-        });
-        
-      } else {
-        req.session.user = user[0]._id;
-        console.log("User already exists: ", user[0]);
-        return res.json({ success: true, user: req.session.user });
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  });
+	router.post("/dev", async (req, res) => {
+		const { walletAddress, email } = req.body;
+		// Create user if not exists
+		try {
+			const user = await User.find({ walletAddress: walletAddress });
+			if (user.length == 0) {
+				const newUser = new User({
+					username: walletAddress,
+					walletAddress,
+					email: email,
+				});
+				const saved_user = await newUser.save();
+				console.log("Saved user: ", saved_user);
+				req.session.user = saved_user._id;
+				return res
+					.status(200)
+					.json({ success: true, user: req.session.user });
+			} else {
+				req.session.user = user[0]._id;
+				console.log("User already exists: ", user[0]);
+				return res
+					.status(200)
+					.json({ success: true, user: req.session.user });
+			}
+		} catch (err) {
+			console.log(err);
+			res.status(500).json({ message: "Internal server error" });
+		}
+	});
 }
 
 router.get("/session", (req, res) => {

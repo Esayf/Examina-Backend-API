@@ -1,29 +1,34 @@
 version: '3'
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - 3000:3000
-    networks:
-      - examina_network
-    depends_on:
-      - db
-    environment:
-      MONGO_URI: mongodb://db:27017
-      PORT: 3000
-      PROTOKIT_URL: http://examina-protokit-api_server-1:5005
-    command: npm run dev
-  db:
-    container_name: db
-    image: mongo:latest
-    ports:
-      - 27017:27017
-    volumes:
-      - mongodb_data:/data/db
-    networks: 
-      - examina_network
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - 3001:3005
+        restart: always
+        networks:
+            - examina_network
+        depends_on:
+            - db
+        environment:
+            MONGO_URI: mongodb://db:27017
+            PORT: 3005
+            PROTOKIT_URL: http://examina-protokit-api_server-1:5005
+            PINATA_API_KEY: 60948db248dafa1ff68f
+            PINATA_SECRET_KEY: 0f377f52c24b6c35b40a7dcb70a6c3fc66d06d2310bf7f8e3f67e8766014d2b2
+            MAIL_PASSWORD: "G?fpCM-Sq7/f@kK"
+        command: npm run dev
+    db:
+        container_name: db
+        image: mongo:latest
+        ports:
+            - 27017:27017
+        volumes:
+            - mongodb_data:/data/db
+        networks:
+            - examina_network
+
 volumes:
   mongodb_data: 
 

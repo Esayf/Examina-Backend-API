@@ -15,12 +15,44 @@ const { publishCorrectAnswers } = require("../middleware/protokit");
 const { checkScore } = require("../middleware/protokit");
 const isMochaRunning = require("../middleware/isMochaRunning");
 const { setTimeout } = require("timers");
+const axios = require("axios");
+const { sendExamResultEmail } = require("../mailer");
 router.use((req, res, next) => {
   isAuthenticated(req, res, next);
 });
-router.get("/create", (req, res) => {
-  res.render("exams/create");
-});
+
+// Pinata'ya dosya pinlemek için fonksiyon
+// Regex to extract markdown links
+const markdownLinkRegex = /\[(.*?)\]\((https?:\/\/\S+)\)/g;
+
+// Regex to extract CID from the URL
+const cidRegex = /\/ipfs\/(Qm[a-zA-Z0-9]{44}|baf[a-zA-Z0-9]{56})/;
+
+// Pin to IPFS function
+async function pinToIPFS(hash) {
+	try {
+		const response = await axios.post(
+			"https://api.pinata.cloud/pinning/pinByHash",
+			{
+				hashToPin: hash,
+				pinataMetadata: {
+					name: "Pinned_Link",
+				},
+			},
+			{
+				headers: {
+					pinata_api_key: process.env.PINATA_API_KEY,
+					pinata_secret_api_key: process.env.PINATA_SECRET_KEY,
+				},
+			}
+		);
+		console.log("SUCCESS: Pinned CID:", hash);
+		return response.data.IpfsHash;
+	} catch (error) {
+		console.error("Error pinning to IPFS:", error);
+		throw error;
+	}
+}
 
 router.post("/create", async (req, res) => {
   try {
@@ -117,22 +149,28 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/:id/answer/submit", async (req, res) => {
-  try {
-    const user = await User.findById(req.session.user);
-    const hashInput =
-      user.walletAddress + JSON.stringify(req.body.answer.selectedOption);
-    const answerHash = crypto
-      .createHash("sha256")
-      .update(hashInput)
-      .digest("hex");
-    const question = await Question.findById(req.body.answer.questionId);
-    const answer = {
-      question: question._id,
-      selectedOption: req.body.answer.selectedOption,
-      answerHash: answerHash,
-    };
-    const examId = req.params.id;
-    const exam = await Exam.findById(examId);
+	try {
+		const user = await User.findById(req.session.user);
+		if (!user) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+		const hashInput =
+			user.walletAddress + JSON.stringify(req.body.answer.selectedOption);
+		const answerHash = crypto
+			.createHash("sha256")
+			.update(hashInput)
+			.digest("hex");
+		const question = await Question.findById(req.body.answer.questionId);
+		if (!question) {
+			return res.status(404).json({ message: "Question not found" });
+		}
+		const answer = {
+			question: question._id,
+			selectedOption: req.body.answer.selectedOption,
+			answerHash: answerHash,
+		};
+		const examId = req.params.id;
+		const exam = await Exam.findById(examId);
 
     if (!exam) {
       return res.status(500).json({ message: "Exam not found" });
@@ -156,122 +194,137 @@ router.post("/:id/answer/submit", async (req, res) => {
       });
     }
 
-    // Find answers by user inside Answer schema
-    let userAnswers = await Answer.findOne({
-      user: user._id,
-      exam: examId,
-    });
-    console.log("User answers: ", userAnswers);
-    if (!userAnswers) {
-      // If user has not answered before, create a new entry
-      userAnswers = new Answer({
-        user: req.session.user,
-        exam: examId,
-        answers: [answer],
-      });
-      await userAnswers.save();
-      await submitAnswer(examId, user._id, question._id, answer.selectedOption);
-    } else {
-      // If user has already answered, find the specific answer and update it
-      let existingAnswerIndex = 0;
-      userAnswers.answers.forEach((answer) => {
-        if (answer.question.toString("hex") == question._id.toString("hex")) {
-          existingAnswerIndex = 1;
-        }
-      });
-      console.log("Existing answer index: ", existingAnswerIndex);
-      if (existingAnswerIndex == 1) {
-        // Update existing answer
-        userAnswers.answers[existingAnswerIndex] = answer;
-        console.log("Gone into Existed answer");
-        await submitAnswer(
-          examId,
-          user._id,
-          question._id,
-          answer.selectedOption
-        );
-        const questions = await Question.find({ exam: exam._id });
-        const questionsWithCorrectAnswers = questions.map((q) => {
-          return {
-            questionID: q._id.toString("hex"),
-            question: q.text,
-            correct_answer: q.correctAnswer,
-          };
-        });
-        if (userAnswers.answers?.length == questions?.length) {
-          const result = await checkScore(
-            exam._id,
-            user._id,
-            questionsWithCorrectAnswers
-          );
-          //setTimeout for 1 second to wait for the answer to be submitted to the blockchain
-          setTimeout(() => {
-            console.log("Delayed for 1 second.");
-          }, "1000");
-          const score = await getUserScore(
-            exam._id.toString("hex"),
-            user._id.toString("hex")
-          );
-          const userScore = new Score({
-            user: user._id,
-            exam: exam._id,
-            score: score > 0 ? score : 0,
-          });
-          await userScore.save();
-        }
-      } else {
-        // Add new answer if not already exists
-        userAnswers.answers.push(answer);
-        await submitAnswer(
-          examId,
-          user._id,
-          question._id,
-          answer.selectedOption
-        );
-        console.log(
-          "User answers: ",
-          userAnswers.answers ? userAnswers.answers.length : "Undefined"
-        );
-        const questions = await Question.find({ exam: exam._id });
-        console.log(
-          "Questions: ",
-          questions.length ? questions.length : "Undefined"
-        );
-        if (userAnswers.answers?.length == questions?.length) {
-          const questionsWithCorrectAnswers = questions.map((q) => {
-            return {
-              questionID: q._id.toString("hex"),
-              question: q.text,
-              correct_answer: q.correctAnswer,
-            };
-          });
-          const result = await checkScore(
-            exam._id,
-            user._id,
-            questionsWithCorrectAnswers
-          );
-          setTimeout(() => {
-            console.log("Delayed for 1 second.");
-          }, "1000");
-          const score = await getUserScore(
-            exam._id.toString("hex"),
-            user._id.toString("hex")
-          );
-          const userScore = new Score({
-            user: user._id,
-            exam: exam._id,
-            score: score > 0 ? score : 0,
-          });
-          await userScore.save();
-        }
-      }
-      await userAnswers.save();
-    }
-    res.status(200).json({ message: "Answer submitted successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: error.message });
-  }
+		// Find answers by user inside Answer schema
+		let userAnswers = await Answer.findOne({
+			user: user._id,
+			exam: examId,
+		});
+		console.log("User answers: ", userAnswers);
+		if (!userAnswers) {
+			// If user has not answered before, create a new entry
+			userAnswers = new Answer({
+				user: req.session.user,
+				exam: examId,
+				answers: [answer],
+			});
+			await userAnswers.save();
+			await submitAnswer(
+				examId,
+				user._id,
+				question._id,
+				answer.selectedOption
+			);
+		} else {
+			// If user has already answered, find the specific answer and update it
+			let existingAnswerIndex = 0;
+			userAnswers.answers.forEach((answer) => {
+				if (
+					answer.question.toString("hex") ==
+					question._id.toString("hex")
+				) {
+					existingAnswerIndex = 1;
+				}
+			});
+			console.log("Existing answer index: ", existingAnswerIndex);
+			if (existingAnswerIndex == 1) {
+				// Update existing answer
+				userAnswers.answers[existingAnswerIndex] = answer;
+				console.log("Gone into Existed answer");
+				await submitAnswer(
+					examId,
+					user._id,
+					question._id,
+					answer.selectedOption
+				);
+				const questions = await Question.find({ exam: exam._id });
+				if (!questions) {
+					return res
+						.status(404)
+						.json({ message: "Questions not found" });
+				}
+				const questionsWithCorrectAnswers = questions.map((q) => {
+					return {
+						questionID: q._id.toString("hex"),
+						question: q.text,
+						correct_answer: q.correctAnswer,
+					};
+				});
+				if (userAnswers.answers?.length == questions?.length) {
+					const result = await checkScore(
+						exam._id,
+						user._id,
+						questionsWithCorrectAnswers
+					);
+					//setTimeout for 1 second to wait for the answer to be submitted to the blockchain
+					setTimeout(() => {
+						console.log("Delayed for 1 second.");
+					}, "1000");
+					const score = await getUserScore(
+						exam._id.toString("hex"),
+						user._id.toString("hex")
+					);
+					const userScore = new Score({
+						user: user._id,
+						exam: exam._id,
+						score: score > 0 ? score : 0,
+					});
+					await userScore.save();
+				}
+			} else {
+				// Add new answer if not already exists
+				userAnswers.answers.push(answer);
+				await submitAnswer(
+					examId,
+					user._id,
+					question._id,
+					answer.selectedOption
+				);
+				console.log(
+					"User answers: ",
+					userAnswers.answers
+						? userAnswers.answers.length
+						: "Undefined"
+				);
+				const questions = await Question.find({ exam: exam._id });
+				console.log(
+					"Questions: ",
+					questions.length ? questions.length : "Undefined"
+				);
+				if (userAnswers.answers?.length == questions?.length) {
+					const questionsWithCorrectAnswers = questions.map((q) => {
+						return {
+							questionID: q._id.toString("hex"),
+							question: q.text,
+							correct_answer: q.correctAnswer,
+						};
+					});
+					const result = await checkScore(
+						exam._id,
+						user._id,
+						questionsWithCorrectAnswers
+					);
+					setTimeout(() => {
+						console.log("Delayed for 1 second.");
+					}, "1000");
+					const score = await getUserScore(
+						exam._id.toString("hex"),
+						user._id.toString("hex")
+					);
+					const userScore = new Score({
+						user: user._id,
+						exam: exam._id,
+						score: score > 0 ? score : 0,
+					});
+					await userScore.save();
+				}
+			}
+			await userAnswers.save();
+		}
+		res.status(200).json({ message: "Answer submitted successfully" });
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({ message: "Internal server error" });
+	}
 });
 
 /* 
@@ -442,31 +495,75 @@ router.get("/scores/:examID", async (req, res) => {
   }
 });
 
-router.get("/scores/get_user_score/:examID", async (req, res) => {
-  try {
-    const user = await User.findById(req.session.user);
-    if (!user) {
-      return res.status(401).json("Unauthorized");
-    }
+router.get("/scores/get_user_score/:examId", async (req, res) => {
+	try {
+		const user = await User.findById(req.session.user.userId);
+		if (!user) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
 
-    const userId = user._id;
-    const examID = req.params.examID;
+		const userId = user._id;
+		const examId = req.params.examId;
 
-    const exam = await Exam.findById(examID);
-    if (!exam) {
-      return res.status(404).json("Exam not found");
-    }
+		const exam = await Exam.findById(examId);
+		if (!exam) {
+			return res.status(404).json({ message: "Exam not found" });
+		}
 
-    const score = await Score.findOne({ exam: examID, user: userId });
-    if (!score) {
-      return res.status(404).json("Score not found for this user");
-    }
+		const score = await Score.findOne({ exam: examId, user: userId });
+		if (!score) {
+			return res
+				.status(404)
+				.json({ message: "Score not found for this user" });
+		}
 
-    res.json(score);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json("Error finding user score");
-  }
+		res.status(200).json(score);
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: "Error finding user score" });
+	}
+});
+
+router.post("/scores/finishExam", async (req, res) => {
+	try {
+		const user = await User.findById(req.session.user);
+		if (!user) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		const userId = user._id;
+		const examId = req.body.examId;
+
+		const exam = await Exam.findById(examId);
+		if (!exam) {
+			return res.status(404).json({ message: "Exam not found" });
+		}
+
+		const score = await Score.findOne({ exam: examId, user: userId });
+		if (!score) {
+			return res
+				.status(404)
+				.json({ message: "Score not found for this user" });
+		}
+
+		// const score = { score: "99" };
+		// const fakeEmail = "swordlionthelionheart@gmail.com";
+
+		await sendExamResultEmail(
+			user.email,
+			// fakeEmail,
+			exam.title,
+			exam._id,
+			score.score
+		);
+
+		res.status(200).json({
+			message: "Sending exam result to email successful",
+		});
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: "Error sending email" });
+	}
 });
 
 module.exports = router;
