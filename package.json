@@ -11,6 +11,7 @@
 	"author": "Lruquaf",
 	"license": "MIT",
 	"dependencies": {
+		"axios": "^1.7.7",
 		"compression": "^1.7.4",
 		"connect-mongodb-session": "^2.2.0",
 		"cors": "^2.8.5",
@@ -23,7 +24,6 @@
 		"merkletreejs": "^0.3.11",
 		"method-override": "^3.0.0",
 		"mina-signer": "2.1.1",
-		"nodemailer": "^6.9.13",
 		"moment": "^2.29.4",
 		"mongodb-memory-server": "^9.1.7",
 		"mongoose": "^8.0.3",
