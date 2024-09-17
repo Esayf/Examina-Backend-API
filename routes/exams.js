@@ -8,7 +8,7 @@ const Score = require("../models/Score");
 const router = express.Router();
 const crypto = require("crypto");
 const Classroom = require("../models/Classroom");
-const { project_questions, map_questions, map_questions } = require("../models/projections");
+const { project_questions, map_questions } = require("../models/projections");
 const isAuthenticated = require("../middleware/auth");
 const { createExam, getUserScore } = require("../middleware/protokit");
 const { submitAnswer } = require("../middleware/protokit");
@@ -686,19 +686,19 @@ router.post("/finishExam", async (req, res) => {
 			return res.status(404).json({ message: "Exam not found" });
 		}
 
-		// const score = await Score.findOne({ exam: examId, user: userId });
-		// if (!score) {
-		// 	return res
-		// 		.status(404)
-		// 		.json({ message: "Score not found for this user" });
-		// }
+		const score = await Score.findOne({ exam: examId, user: userId });
+		if (!score) {
+			return res
+				.status(404)
+				.json({ message: "Score not found for this user" });
+		}
 
-		const score = { score: "99" };
-		const fakeEmail = "swordlionthelionheart@gmail.com";
+		// const score = { score: "99" };
+		// const fakeEmail = "swordlionthelionheart@gmail.com";
 
 		await sendExamResultEmail(
-			// user.email,
-			fakeEmail,
+			user.email,
+			// fakeEmail,
 			exam.title,
 			examId,
 			score.score
