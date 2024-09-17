@@ -1,7 +1,7 @@
 {
-	"name": "examina",
+	"name": "choz",
 	"version": "1.0.0",
-	"description": "examina backend api",
+	"description": "choz backend api",
 	"main": "server.js",
 	"scripts": {
 		"start": "cross-env NODE_ENV=production node server",
@@ -18,7 +18,6 @@
 		"crypto": "^1.0.1",
 		"dotenv": "^16.3.1",
 		"express": "^4.18.2",
-		"express-handlebars": "^7.1.2",
 		"express-session": "^1.18.0",
 		"memorystore": "^1.6.7",
 		"merkletreejs": "^0.3.11",
@@ -40,7 +39,7 @@
 		"chai": "^5.1.0",
 		"cross-env": "^7.0.3",
 		"jest": "^29.7.0",
-		"mocha": "^10.2.0",
+		"mocha": "^10.4.0",
 		"nodemon": "^3.0.2",
 		"supertest": "^6.3.3"
 	}
