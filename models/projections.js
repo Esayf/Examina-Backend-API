@@ -1,5 +1,5 @@
 const project_questions = {
-	// correctAnswer: 0,
+	correctAnswer: 0,
 	text: 1,
 	options: 1,
 	_id: 1,

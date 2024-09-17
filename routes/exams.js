@@ -259,193 +259,193 @@ router.post("/startExam", async (req, res) => {
 	}
 });
 
-router.post("/:id/answer/submit", async (req, res) => {
-	try {
-		const user = await User.findById(req.session.user);
-		if (!user) {
-			return res.status(401).json({ message: "Unauthorized" });
-		}
+// router.post("/:id/answer/submit", async (req, res) => {
+// 	try {
+// 		const user = await User.findById(req.session.user);
+// 		if (!user) {
+// 			return res.status(401).json({ message: "Unauthorized" });
+// 		}
 
-		let participatedUser = await ParticipatedUser.findOne({
-			user,
-			examId,
-		});
-		if (!participatedUser.participated) {
-			return res.status(400).json({ message: "Not participated user" });
-		}
+// 		let participatedUser = await ParticipatedUser.findOne({
+// 			user,
+// 			examId,
+// 		});
+// 		if (!participatedUser.participated) {
+// 			return res.status(400).json({ message: "Not participated user" });
+// 		}
 
-		const hashInput =
-			user.walletAddress + JSON.stringify(req.body.answer.selectedOption);
-		const answerHash = crypto
-			.createHash("sha256")
-			.update(hashInput)
-			.digest("hex");
-		const question = await Question.findById(req.body.answer.questionId);
-		if (!question) {
-			return res.status(404).json({ message: "Question not found" });
-		}
-		const answer = {
-			question: question._id,
-			selectedOption: req.body.answer.selectedOption,
-			answerHash: answerHash,
-		};
-		const examId = req.params.id;
-		const exam = await Exam.findById(examId);
+// 		const hashInput =
+// 			user.walletAddress + JSON.stringify(req.body.answer.selectedOption);
+// 		const answerHash = crypto
+// 			.createHash("sha256")
+// 			.update(hashInput)
+// 			.digest("hex");
+// 		const question = await Question.findById(req.body.answer.questionId);
+// 		if (!question) {
+// 			return res.status(404).json({ message: "Question not found" });
+// 		}
+// 		const answer = {
+// 			question: question._id,
+// 			selectedOption: req.body.answer.selectedOption,
+// 			answerHash: answerHash,
+// 		};
+// 		const examId = req.params.id;
+// 		const exam = await Exam.findById(examId);
 
-		if (!exam) {
-			return res.status(500).json({ message: "Exam not found" });
-		}
+// 		if (!exam) {
+// 			return res.status(500).json({ message: "Exam not found" });
+// 		}
 
-		// Calculate end time of the exam
-		const startTime = exam.startDate;
-		console.log("Start time: ", startTime);
-		const endTime = new Date(startTime.getTime() + exam.duration * 60000); // Convert duration from minutes to milliseconds
+// 		// Calculate end time of the exam
+// 		const startTime = exam.startDate;
+// 		console.log("Start time: ", startTime);
+// 		const endTime = new Date(startTime.getTime() + exam.duration * 60000); // Convert duration from minutes to milliseconds
 
-		// Check if the exam has already ended
-		const currentDateTime = new Date();
-		if (currentDateTime < startTime) {
-			return res.status(400).json({
-				message: "Exam has not started yet. You cannot submit answers.",
-			});
-		}
-		if (currentDateTime > endTime + 60000) {
-			return res.status(400).json({
-				message: "Exam has already ended. You cannot submit answers.",
-			});
-		}
+// 		// Check if the exam has already ended
+// 		const currentDateTime = new Date();
+// 		if (currentDateTime < startTime) {
+// 			return res.status(400).json({
+// 				message: "Exam has not started yet. You cannot submit answers.",
+// 			});
+// 		}
+// 		if (currentDateTime > endTime + 60000) {
+// 			return res.status(400).json({
+// 				message: "Exam has already ended. You cannot submit answers.",
+// 			});
+// 		}
 
-		// Find answers by user inside Answer schema
-		let userAnswers = await Answer.findOne({
-			user: user._id,
-			exam: examId,
-		});
-		console.log("User answers: ", userAnswers);
-		if (!userAnswers) {
-			// If user has not answered before, create a new entry
-			userAnswers = new Answer({
-				user: req.session.user,
-				exam: examId,
-				answers: [answer],
-			});
-			await userAnswers.save();
-			await submitAnswer(
-				examId,
-				user._id,
-				question._id,
-				answer.selectedOption
-			);
-		} else {
-			// If user has already answered, find the specific answer and update it
-			let existingAnswerIndex = 0;
-			userAnswers.answers.forEach((answer) => {
-				if (
-					answer.question.toString("hex") ==
-					question._id.toString("hex")
-				) {
-					existingAnswerIndex = 1;
-				}
-			});
-			console.log("Existing answer index: ", existingAnswerIndex);
-			if (existingAnswerIndex == 1) {
-				// Update existing answer
-				userAnswers.answers[existingAnswerIndex] = answer;
-				console.log("Gone into Existed answer");
-				await submitAnswer(
-					examId,
-					user._id,
-					question._id,
-					answer.selectedOption
-				);
-				const questions = await Question.find({ exam: exam._id });
-				if (!questions) {
-					return res
-						.status(404)
-						.json({ message: "Questions not found" });
-				}
-				const questionsWithCorrectAnswers = questions.map((q) => {
-					return {
-						questionID: q._id.toString("hex"),
-						question: q.text,
-						correct_answer: q.correctAnswer,
-					};
-				});
-				if (userAnswers.answers?.length == questions?.length) {
-					const result = await checkScore(
-						exam._id,
-						user._id,
-						questionsWithCorrectAnswers
-					);
-					//setTimeout for 1 second to wait for the answer to be submitted to the blockchain
-					setTimeout(() => {
-						console.log("Delayed for 1 second.");
-					}, "1000");
-					const score = await getUserScore(
-						exam._id.toString("hex"),
-						user._id.toString("hex")
-					);
-					const userScore = new Score({
-						user: user._id,
-						exam: exam._id,
-						score: score > 0 ? score : 0,
-					});
-					await userScore.save();
-				}
-			} else {
-				// Add new answer if not already exists
-				userAnswers.answers.push(answer);
-				await submitAnswer(
-					examId,
-					user._id,
-					question._id,
-					answer.selectedOption
-				);
-				console.log(
-					"User answers: ",
-					userAnswers.answers
-						? userAnswers.answers.length
-						: "Undefined"
-				);
-				const questions = await Question.find({ exam: exam._id });
-				console.log(
-					"Questions: ",
-					questions.length ? questions.length : "Undefined"
-				);
-				if (userAnswers.answers?.length == questions?.length) {
-					const questionsWithCorrectAnswers = questions.map((q) => {
-						return {
-							questionID: q._id.toString("hex"),
-							question: q.text,
-							correct_answer: q.correctAnswer,
-						};
-					});
-					const result = await checkScore(
-						exam._id,
-						user._id,
-						questionsWithCorrectAnswers
-					);
-					setTimeout(() => {
-						console.log("Delayed for 1 second.");
-					}, "1000");
-					const score = await getUserScore(
-						exam._id.toString("hex"),
-						user._id.toString("hex")
-					);
-					const userScore = new Score({
-						user: user._id,
-						exam: exam._id,
-						score: score > 0 ? score : 0,
-					});
-					await userScore.save();
-				}
-			}
-			await userAnswers.save();
-		}
-		res.status(200).json({ message: "Answer submitted successfully" });
-	} catch (error) {
-		console.log(error);
-		res.status(500).json({ message: "Internal server error" });
-	}
-});
+// 		// Find answers by user inside Answer schema
+// 		let userAnswers = await Answer.findOne({
+// 			user: user._id,
+// 			exam: examId,
+// 		});
+// 		console.log("User answers: ", userAnswers);
+// 		if (!userAnswers) {
+// 			// If user has not answered before, create a new entry
+// 			userAnswers = new Answer({
+// 				user: req.session.user,
+// 				exam: examId,
+// 				answers: [answer],
+// 			});
+// 			await userAnswers.save();
+// 			await submitAnswer(
+// 				examId,
+// 				user._id,
+// 				question._id,
+// 				answer.selectedOption
+// 			);
+// 		} else {
+// 			// If user has already answered, find the specific answer and update it
+// 			let existingAnswerIndex = 0;
+// 			userAnswers.answers.forEach((answer) => {
+// 				if (
+// 					answer.question.toString("hex") ==
+// 					question._id.toString("hex")
+// 				) {
+// 					existingAnswerIndex = 1;
+// 				}
+// 			});
+// 			console.log("Existing answer index: ", existingAnswerIndex);
+// 			if (existingAnswerIndex == 1) {
+// 				// Update existing answer
+// 				userAnswers.answers[existingAnswerIndex] = answer;
+// 				console.log("Gone into Existed answer");
+// 				await submitAnswer(
+// 					examId,
+// 					user._id,
+// 					question._id,
+// 					answer.selectedOption
+// 				);
+// 				const questions = await Question.find({ exam: exam._id });
+// 				if (!questions) {
+// 					return res
+// 						.status(404)
+// 						.json({ message: "Questions not found" });
+// 				}
+// 				const questionsWithCorrectAnswers = questions.map((q) => {
+// 					return {
+// 						questionID: q._id.toString("hex"),
+// 						question: q.text,
+// 						correct_answer: q.correctAnswer,
+// 					};
+// 				});
+// 				if (userAnswers.answers?.length == questions?.length) {
+// 					const result = await checkScore(
+// 						exam._id,
+// 						user._id,
+// 						questionsWithCorrectAnswers
+// 					);
+// 					//setTimeout for 1 second to wait for the answer to be submitted to the blockchain
+// 					setTimeout(() => {
+// 						console.log("Delayed for 1 second.");
+// 					}, "1000");
+// 					const score = await getUserScore(
+// 						exam._id.toString("hex"),
+// 						user._id.toString("hex")
+// 					);
+// 					const userScore = new Score({
+// 						user: user._id,
+// 						exam: exam._id,
+// 						score: score > 0 ? score : 0,
+// 					});
+// 					await userScore.save();
+// 				}
+// 			} else {
+// 				// Add new answer if not already exists
+// 				userAnswers.answers.push(answer);
+// 				await submitAnswer(
+// 					examId,
+// 					user._id,
+// 					question._id,
+// 					answer.selectedOption
+// 				);
+// 				console.log(
+// 					"User answers: ",
+// 					userAnswers.answers
+// 						? userAnswers.answers.length
+// 						: "Undefined"
+// 				);
+// 				const questions = await Question.find({ exam: exam._id });
+// 				console.log(
+// 					"Questions: ",
+// 					questions.length ? questions.length : "Undefined"
+// 				);
+// 				if (userAnswers.answers?.length == questions?.length) {
+// 					const questionsWithCorrectAnswers = questions.map((q) => {
+// 						return {
+// 							questionID: q._id.toString("hex"),
+// 							question: q.text,
+// 							correct_answer: q.correctAnswer,
+// 						};
+// 					});
+// 					const result = await checkScore(
+// 						exam._id,
+// 						user._id,
+// 						questionsWithCorrectAnswers
+// 					);
+// 					setTimeout(() => {
+// 						console.log("Delayed for 1 second.");
+// 					}, "1000");
+// 					const score = await getUserScore(
+// 						exam._id.toString("hex"),
+// 						user._id.toString("hex")
+// 					);
+// 					const userScore = new Score({
+// 						user: user._id,
+// 						exam: exam._id,
+// 						score: score > 0 ? score : 0,
+// 					});
+// 					await userScore.save();
+// 				}
+// 			}
+// 			await userAnswers.save();
+// 		}
+// 		res.status(200).json({ message: "Answer submitted successfully" });
+// 	} catch (error) {
+// 		console.log(error);
+// 		res.status(500).json({ message: "Internal server error" });
+// 	}
+// });
 
 /* 
 router.get("/tryEnd", async (req, res) => {
@@ -681,14 +681,64 @@ router.post("/finishExam", async (req, res) => {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
 
-		const userId = user;
-		const examId = req.body.examId;
+		const userId = req.body.userID;
+		const examId = req.body.examID;
 
 		const exam = await Exam.findById(examId);
 		if (!exam) {
 			return res.status(404).json({ message: "Exam not found" });
 		}
 
+		// Cevapları teslim etme işlemi
+		let userAnswers = await Answer.findOne({
+			user: userId,
+			exam: examId,
+		});
+
+		// Tüm cevapları array olarak işliyoruz
+		const answersArray = req.body.answers.map((answer) => {
+			const hashInput =
+				user.walletAddress + JSON.stringify(answer.answer);
+			const answerHash = crypto
+				.createHash("sha256")
+				.update(hashInput)
+				.digest("hex");
+			return {
+				question: answer.questionID,
+				selectedOption: answer.answer,
+				answerHash: answerHash,
+			};
+		});
+
+		// Kullanıcının cevapları daha önce yoksa yeni bir kayıt oluşturuluyor
+		if (!userAnswers) {
+			userAnswers = new Answer({
+				user: userId,
+				exam: examId,
+				answers: answersArray,
+			});
+		} else {
+			// Kullanıcı daha önce cevap verdiyse, mevcut cevapları güncelliyoruz
+			answersArray.forEach((newAnswer) => {
+				const existingAnswerIndex = userAnswers.answers.findIndex(
+					(a) =>
+						a.question.toString() === newAnswer.question.toString()
+				);
+				if (existingAnswerIndex !== -1) {
+					userAnswers.answers[existingAnswerIndex] = newAnswer;
+				} else {
+					userAnswers.answers.push(newAnswer);
+				}
+			});
+		}
+
+		// Cevapları kaydet
+		await userAnswers.save();
+
+		// Cevapları blockchain'e gönderme işlemi
+		await submitAnswers(examId, userId, answersArray);
+
+		// Sınav sonucunu alma ve e-posta gönderme
 		const score = await Score.findOne({ exam: examId, user: userId });
 		if (!score) {
 			return res
@@ -696,23 +746,16 @@ router.post("/finishExam", async (req, res) => {
 				.json({ message: "Score not found for this user" });
 		}
 
-		// const score = { score: "99" };
-		// const fakeEmail = "swordlionthelionheart@gmail.com";
-
-		await sendExamResultEmail(
-			user.email,
-			// fakeEmail,
-			exam.title,
-			examId,
-			score.score
-		);
+		await sendExamResultEmail(user.email, exam.title, examId, score.score);
 
 		res.status(200).json({
-			message: "Sending exam result to email successful",
+			message: "Exam finished and answers submitted successfully",
 		});
 	} catch (err) {
 		console.error(err);
-		res.status(500).json({ message: "Error sending email" });
+		res.status(500).json({
+			message: "Error finishing exam and submitting answers",
+		});
 	}
 });
 

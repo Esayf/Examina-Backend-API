@@ -60,6 +60,30 @@ const submitAnswer = async (examID, userID, questionID, userAnswer) => {
 	return await fetch(url, options);
 };
 
+const submitAnswers = async (examID, userID, answers) => {
+	if (isTestEnv) return;
+	const url = `${process.env.PROTOKIT_URL}/submit-user-answers`;
+
+	// Data to be sent in the POST request (can be JSON, FormData, etc.)
+	const postData = {
+		examID: examID.toString("hex"),
+		userID: userID.toString("hex"),
+		answers: answers,
+	};
+
+	// Options for the fetch request
+	const options = {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json", // Adjust content type as needed
+		},
+		body: JSON.stringify(postData), // Convert data to JSON string
+	};
+	console.log("Submitting answers to protokit", postData);
+	// Making the POST request using fetch
+	return await fetch(url, options);
+}
+
 const publishCorrectAnswers = (examID, questionsWithCorrectAnswers) => {
 	if (isTestEnv) return;
 	const url = `${process.env.PROTOKIT_URL}/publish-correct-answers`;
@@ -140,6 +164,7 @@ const getUserScore = async (examID, userID) => {
 module.exports = {
 	createExam,
 	submitAnswer,
+	submitAnswers,
 	publishCorrectAnswers,
 	checkScore,
 	getUserScore,
