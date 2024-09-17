@@ -3,6 +3,7 @@ const Exam = require("../models/Exam");
 const Answer = require("../models/Answer");
 const Question = require("../models/Question");
 const User = require("../models/User");
+const ParticipatedUser = require("../models/ParticipatedUser");
 const Score = require("../models/Score");
 const router = express.Router();
 const crypto = require("crypto");
@@ -18,6 +19,7 @@ const {
 const isTestEnv = require("../middleware/isTestEnv");
 const { setTimeout } = require("timers");
 const axios = require("axios");
+const { sendExamResultEmail } = require("../mailer");
 router.use((req, res, next) => {
 	isAuthenticated(req, res, next);
 });
@@ -55,7 +57,6 @@ async function pinToIPFS(hash) {
 	}
 }
 
-// Example usage in a router
 router.post("/create", async (req, res) => {
 	try {
 		const user = await User.findById(req.session.user);
@@ -178,7 +179,7 @@ router.post("/create", async (req, res) => {
 router.get("/", async (req, res) => {
 	try {
 		const exams = await Exam.find({ creator: req.session.user.userId });
-		res.status(200).json(exams);
+		res.json(exams);
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ message: "Internal Server Error" });
@@ -187,12 +188,12 @@ router.get("/", async (req, res) => {
 
 router.post("/create/mock_exam", async (req, res) => {
 	try {
-		if (!isTestEnv) {
+		if (!isMochaRunning) {
 			const result = await fetch(
-				`${process.env.PROTOKIT_URL}/create/mock_exam`
+				`${config.PROTOKIT_URL}/create/mock_exam`
 			);
 			console.log("Result: ", result);
-			res.status(200).json(result);
+			res.json(result);
 		}
 	} catch (error) {
 		console.error(error);
@@ -213,12 +214,66 @@ router.get("/:id", async (req, res) => {
 	}
 });
 
-router.post("/:id/answer/submit", async (req, res) => {
+router.post("/startExam", async (req, res) => {
+	const { examId } = req.body;
+
 	try {
-		const user = await User.findById(req.session.user.userId);
+		const user = await User.findById(req.session.user);
 		if (!user) {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
+
+		const userId = user;
+
+		let participatedUser = await ParticipatedUser.findOne({
+			userId,
+			examId,
+		});
+
+		if (participatedUser) {
+			return res
+				.status(404)
+				.json({ message: "User has already participated" });
+		}
+
+		// if (participatedUser.participated) {
+		// 	return res
+		// 		.status(400)
+		// 		.json({ message: "User has already participated in the exam" });
+		// }
+
+		const newParticipatedUser = new ParticipatedUser({
+			userId: userId,
+			examId: examId,
+			participated: true,
+		});
+
+		await newParticipatedUser.save();
+
+		res.status(200).json({
+			message: "Exam participation updated successfully",
+		});
+	} catch (error) {
+		console.log("ERROR: ", error);
+		res.status(500).json({ message: "Internal Server Error" });
+	}
+});
+
+router.post("/:id/answer/submit", async (req, res) => {
+	try {
+		const user = await User.findById(req.session.user);
+		if (!user) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		let participatedUser = await ParticipatedUser.findOne({
+			user,
+			examId,
+		});
+		if (!participatedUser.participated) {
+			return res.status(400).json({ message: "Not participated user" });
+		}
+
 		const hashInput =
 			user.walletAddress + JSON.stringify(req.body.answer.selectedOption);
 		const answerHash = crypto
@@ -238,7 +293,7 @@ router.post("/:id/answer/submit", async (req, res) => {
 		const exam = await Exam.findById(examId);
 
 		if (!exam) {
-			return res.status(404).json({ message: "Exam not found" });
+			return res.status(500).json({ message: "Exam not found" });
 		}
 
 		// Calculate end time of the exam
@@ -268,7 +323,7 @@ router.post("/:id/answer/submit", async (req, res) => {
 		if (!userAnswers) {
 			// If user has not answered before, create a new entry
 			userAnswers = new Answer({
-				user: req.session.user.userId,
+				user: req.session.user,
 				exam: examId,
 				answers: [answer],
 			});
@@ -457,7 +512,22 @@ router.get("/:id/question/:questionId", async (req, res) => {
 
 router.get("/:id/questions", async (req, res) => {
 	try {
+		const user = await User.findById(req.session.user);
+		if (!user) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+		const userId = user._id;
+		const examId = req.params.id;
 		const exam = await Exam.findById(req.params.id);
+
+		let participatedUser = await ParticipatedUser.findOne({
+			userId,
+			examId,
+		});
+		if (!participatedUser.participated) {
+			return res.status(400).json({ message: "Not participated user" });
+		}
+
 		if (!exam) {
 			return res.status(404).json({ message: "Exam not found" });
 		}
@@ -524,24 +594,18 @@ router.get("/:id/answers/:answerId", async (req, res) => {
 
 // router.get("/question/:id", async (req, res) => {
 // 	try {
-// 		const question = await Question.findById(req.params.id).select(
+// 		const question = await Question.findById(req.params.id).projection(
 // 			project_questions
 // 		);
-// 		console.log("Question: ", question);
-// 		if (!question) {
-// 			return res.status(404).json({ message: "question not found" });
-// 		}
 // 		const exam = await Exam.findById(question.exam);
-// 		console.log("Exam: ", exam);
-// 		if (!exam) {
-// 			return res.status(404).json({ message: "exam not found" });
-// 		}
 // 		if (exam.startDate > new Date()) {
 // 			return res
 // 				.status(400)
 // 				.json({ message: "Exam has not started yet" });
 // 		}
-
+// 		if (!question) {
+// 			return res.status(404).send("question not found");
+// 		}
 // 		res.json(question);
 // 	} catch (err) {
 // 		console.error(err);
@@ -607,6 +671,48 @@ router.get("/scores/get_user_score/:examId", async (req, res) => {
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ message: "Error finding user score" });
+	}
+});
+
+router.post("/finishExam", async (req, res) => {
+	try {
+		const user = await User.findById(req.session.user);
+		if (!user) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		const userId = user;
+		const examId = req.body.examId;
+
+		const exam = await Exam.findById(examId);
+		if (!exam) {
+			return res.status(404).json({ message: "Exam not found" });
+		}
+
+		const score = await Score.findOne({ exam: examId, user: userId });
+		if (!score) {
+			return res
+				.status(404)
+				.json({ message: "Score not found for this user" });
+		}
+
+		// const score = { score: "99" };
+		// const fakeEmail = "swordlionthelionheart@gmail.com";
+
+		await sendExamResultEmail(
+			user.email,
+			// fakeEmail,
+			exam.title,
+			examId,
+			score.score
+		);
+
+		res.status(200).json({
+			message: "Sending exam result to email successful",
+		});
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: "Error sending email" });
 	}
 });
 

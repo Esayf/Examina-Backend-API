@@ -1,9 +1,8 @@
 const mongoose = require("mongoose");
-
+const config = require("./config");
 const connectDB = async () => {
 	try {
-		setTimeout(() => {}, 3000);
-		await mongoose.connect(process.env.MONGO_URI, {});
+		await mongoose.connect(config.MONGO_URI, {});
 
 		const db = mongoose.connection.db;
 
@@ -13,7 +12,7 @@ const connectDB = async () => {
 		}
 
 		console.log(
-			`MongoDB connected to ${mongoose.connection.host} with url: ${process.env.MONGO_URI}`
+			`MongoDB connected to ${mongoose.connection.host} with url: ${config.MONGO_URI}`
 		);
 
 		// Koleksiyonları kontrol et ve gerekiyorsa oluştur
