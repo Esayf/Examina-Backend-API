@@ -190,7 +190,7 @@ router.post("/create/mock_exam", async (req, res) => {
 	try {
 		if (!isMochaRunning) {
 			const result = await fetch(
-				`${config.PROTOKIT_URL}/create/mock_exam`
+				`${process.env.PROTOKIT_URL}/create/mock_exam`
 			);
 			console.log("Result: ", result);
 			res.json(result);

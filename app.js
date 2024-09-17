@@ -8,7 +8,6 @@ const path = require("path");
 const session = require("express-session");
 var MongoDBStore = require("connect-mongodb-session")(session);
 const MemoryStore = require("memorystore")(session);
-dotenv.config({ path: "./config/config.env" });
 
 const isTestEnv = require("./middleware/isTestEnv");
 const app = express();
