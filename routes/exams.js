@@ -7,14 +7,16 @@ const ParticipatedUser = require("../models/ParticipatedUser");
 const Score = require("../models/Score");
 const router = express.Router();
 const crypto = require("crypto");
-const Classroom = require("../models/Classroom");
 const { project_questions, map_questions } = require("../models/projections");
 const isAuthenticated = require("../middleware/auth");
-const { createExam, getUserScore } = require("../middleware/protokit");
-const { submitAnswer } = require("../middleware/protokit");
-const { publishCorrectAnswers } = require("../middleware/protokit");
-const { checkScore } = require("../middleware/protokit");
-const isMochaRunning = require("../middleware/isMochaRunning");
+const {
+	createExam,
+	getUserScore,
+	publishCorrectAnswers,
+	submitAnswer,
+	checkScore,
+} = require("../middleware/protokit");
+const isTestEnv = require("../middleware/isTestEnv");
 const { setTimeout } = require("timers");
 const axios = require("axios");
 const { sendExamResultEmail } = require("../mailer");
@@ -173,6 +175,7 @@ router.post("/create", async (req, res) => {
 		res.status(500).json({ message: "Internal server error" });
 	}
 });
+
 router.get("/", async (req, res) => {
 	try {
 		const exams = await Exam.find({ creator: req.session.user.userId });

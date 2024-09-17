@@ -14,7 +14,8 @@ describe("Register Endpoint Tests", () => {
 	});
 	afterAll(async () => {
 		await User.deleteMany({});
-		await mongoose.disconnect();
+		// await mongoose.disconnect();
+		await mongoose.connection.close();
 		testSession = null;
 	});
 	test("GET /register/session/get-message-to-sign/:walletAddress should return a message to sign for a given wallet address", async () => {
@@ -179,7 +180,7 @@ describe("Register Endpoint Tests", () => {
 
 		console.log("Is equal: ", isEqual);
 
-		fakeOgluFakeSignature = {
+		fakeSignature = {
 			field: "20187308472959499197282132002348634947237350735045384676982170768323707710782",
 			scalar: "865103642786804350208844285909586573108974998309200978991283948435663799274",
 		};
@@ -187,7 +188,7 @@ describe("Register Endpoint Tests", () => {
 		const verifyBody = {
 			data: realSignParams,
 			publicKey: keys_demo.publicKey,
-			signature: fakeOgluFakeSignature,
+			signature: fakeSignature,
 		};
 		console.log("Verify Body: ", verifyBody);
 
@@ -197,7 +198,7 @@ describe("Register Endpoint Tests", () => {
 		// send the message to endpoint to verify
 		const res = await testSession.post("/register").send({
 			walletAddress: signResult.publicKey,
-			signature: JSON.parse(JSON.stringify(fakeOgluFakeSignature)),
+			signature: JSON.parse(JSON.stringify(fakeSignature)),
 		});
 
 		expect(res.status).toBe(401);
@@ -205,7 +206,6 @@ describe("Register Endpoint Tests", () => {
 			"error",
 			"Invalid signature or didn't have session token"
 		);
-		expect(res.body).toHaveProperty("token");
 	});
 
 	// test("GET /register/session should respond with 200 status code and the session token", async () => {
