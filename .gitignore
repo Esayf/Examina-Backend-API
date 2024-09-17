@@ -1,1 +1,9 @@
 node_modules/
+.env
+*.env
+.env.production
+.env.development
+config/config.env
+/config/config.env
+.env
+.gitignore
