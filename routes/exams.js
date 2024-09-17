@@ -10,7 +10,7 @@ const crypto = require("crypto");
 const Classroom = require("../models/Classroom");
 const { project_questions, map_questions } = require("../models/projections");
 const isAuthenticated = require("../middleware/auth");
-const { createExam, getUserScore } = require("../middleware/protokit");
+const { createExam, getUserScore, submitAnswers } = require("../middleware/protokit");
 const { submitAnswer } = require("../middleware/protokit");
 const { publishCorrectAnswers } = require("../middleware/protokit");
 const { checkScore } = require("../middleware/protokit");
@@ -733,16 +733,7 @@ router.post("/finishExam", async (req, res) => {
 		await userAnswers.save();
 
 		// Cevapları blockchain'e gönderme işlemi
-		await Promise.all(
-			answersArray.map((answer) =>
-				submitAnswer(
-					examId,
-					userId,
-					answer.question,
-					answer.selectedOption
-				)
-			)
-		);
+		await submitAnswers(examId, userId, answersArray);
 
 		// Sınav sonucunu alma ve e-posta gönderme
 		const score = await Score.findOne({ exam: examId, user: userId });
