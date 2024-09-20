@@ -11,7 +11,7 @@ const ParticipatedUserSchema = new mongoose.Schema({
 		ref: "Exam",
 		required: true,
 	},
-	participated: { type: Boolean, default: false },
+	isFinished: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model("ParticipatedUser", ParticipatedUserSchema);
