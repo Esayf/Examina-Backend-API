@@ -822,24 +822,22 @@ cron.schedule("*/1 * * * *", async () => {
 	try {
 		const now = new Date();
 
-		const exams = await Exam.find({
-			isCompleted: false, // Henüz bitirilmemiş sınavlar
-			$expr: {
-				$lt: [
-					{
-						$add: [
-							"$startDate",
-							{ $multiply: ["$duration", 60 * 60 * 1000] },
-						],
-					},
-					now, // Şu anki zaman
-				],
-			},
+		const exams = await Exam.find({ isCompleted: false });
+
+		const completedExams = exams.filter((exam) => {
+			const startDate = new Date(exam.startDate);
+			const endDate = new Date(
+				startDate.getTime() + exam.duration * 60 * 1000
+			);
+			console.log(
+				`Sınav: ${exam.title}, EndDate: ${endDate}, Now: ${now}`
+			);
+			return endDate < now;
 		});
 
-		console.log("Bitmiş sınavlar:", exams);
+		console.log("Completed Exams: ", completedExams);
 
-		for (const exam of exams) {
+		for (const exam of completedExams) {
 			const users = await Answer.find({ exam: exam._id }).populate(
 				"user"
 			);
