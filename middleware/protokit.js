@@ -35,31 +35,6 @@ const createExam = (examID, questions) => {
 		});
 };
 
-const submitAnswer = async (examID, userID, questionID, userAnswer) => {
-	if (isTestEnv) return;
-	const url = `${process.env.PROTOKIT_URL}/submit-user-answer`;
-
-	// Data to be sent in the POST request (can be JSON, FormData, etc.)
-	const postData = {
-		examID: examID.toString("hex"),
-		userID: userID.toString("hex"),
-		questionID: questionID.toString("hex"),
-		userAnswer: userAnswer,
-	};
-
-	// Options for the fetch request
-	const options = {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json", // Adjust content type as needed
-		},
-		body: JSON.stringify(postData), // Convert data to JSON string
-	};
-	console.log("Submitting answer to protokit", postData);
-	// Making the POST request using fetch
-	return await fetch(url, options);
-};
-
 const submitAnswers = async (examID, userID, answers) => {
 	if (isTestEnv) return;
 	const url = `${process.env.PROTOKIT_URL}/submit-user-answers`;
@@ -119,7 +94,7 @@ const publishCorrectAnswers = (examID, questionsWithCorrectAnswers) => {
 		});
 };
 
-const checkScore = async (examID, userID, questionsWithCorrectAnswers) => {
+const checkScore = async (examID, userID) => {
 	if (isTestEnv) return 0;
 	const url = `${process.env.PROTOKIT_URL}/check-score`;
 
@@ -127,7 +102,6 @@ const checkScore = async (examID, userID, questionsWithCorrectAnswers) => {
 	const postData = {
 		examID: examID.toString("hex"),
 		userID: userID.toString("hex"),
-		questions: questionsWithCorrectAnswers,
 	};
 
 	// Options for the fetch request
@@ -145,9 +119,9 @@ const checkScore = async (examID, userID, questionsWithCorrectAnswers) => {
 	const score = await response.json();
 	console.log("Check score result: ", score);
 	if (score.score == "User score not found") {
-		await checkScore(examID, userID, questionsWithCorrectAnswers);
+		await checkScore(examID, userID);
 	}
-	return score;
+	return score.score;
 };
 
 const getUserScore = async (examID, userID) => {

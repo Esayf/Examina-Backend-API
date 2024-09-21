@@ -11,4 +11,25 @@ router.get("/", async (req, res) => {
 	}
 });
 
+function validateEmail(email) {
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	return emailRegex.test(email);
+}
+
+router.post("/put/email", async (req, res) => {
+	const { email } = req.body;
+	if (!validateEmail(email)) {
+		return res.status(400).json({ message: "Invalid email" });
+	}
+	try {
+		const user = await User.findById(req.session.user.userId);
+		user.email = email;
+		await user.save();
+		res.status(200).json({ success: true, user });
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: "Internal Server Error" });
+	}
+});
+
 module.exports = router;
