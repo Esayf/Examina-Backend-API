@@ -46,10 +46,6 @@ setTimeout(() => {
 				origin: [
 					"http://localhost:3000",
 					"http://localhost:3001",
-					"http://159.146.105.62:3000",
-					"https://159.146.105.62:3000",
-					"https://159.146.105.62",
-					"http://159.146.105.62:3000",
 					"https://www.choz.io",
 					"https://choz.io",
 					"https://choz.io/",

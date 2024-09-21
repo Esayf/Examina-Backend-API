@@ -5,7 +5,7 @@ services:
             context: .
             dockerfile: Dockerfile
         ports:
-            - 3000:3005
+            - 3001:3005
         restart: always
         networks:
             - examina_network
