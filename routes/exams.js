@@ -204,7 +204,17 @@ router.get("/:id", async (req, res) => {
 		if (!exam) {
 			return res.status(404).json({ message: "Exam not found" });
 		}
-		res.status(200).json(exam);
+		if(req.session.user.userId) {
+		const user = await ParticipatedUser.find({ user: req.session.user.userId}).populate("user");
+		const result = {
+			exam: exam,
+			isFinished: user.isFinished,
+		}
+		res.status(200).json(result);
+		}
+		else {
+			res.status(200).json(exam);
+		}
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ message: "Internal Server Error" });
