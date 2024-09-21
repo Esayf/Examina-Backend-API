@@ -5,7 +5,7 @@ services:
             context: .
             dockerfile: Dockerfile
         ports:
-            - 3000:3000
+            - 3001:3005
         restart: always
         networks:
             - examina_network
@@ -18,7 +18,7 @@ services:
             PINATA_API_KEY: ${PINATA_API_KEY}
             PINATA_SECRET_KEY: ${PINATA_SECRET_KEY}
             MAIL_PASSWORD: ${MAIL_PASSWORD}
-        command: npm run start
+        command: npm run dev
     db:
         container_name: db
         image: mongo:latest
