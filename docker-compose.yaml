@@ -18,7 +18,7 @@ services:
             PINATA_API_KEY: ${PINATA_API_KEY}
             PINATA_SECRET_KEY: ${PINATA_SECRET_KEY}
             MAIL_PASSWORD: ${MAIL_PASSWORD}
-        command: npm run dev
+        command: npm run start
     db:
         container_name: db
         image: mongo:latest
