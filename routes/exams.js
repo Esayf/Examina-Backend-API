@@ -610,7 +610,10 @@ cron.schedule("*/2 * * * *", async () => {
 			return endDate < now;
 		});
 		console.log("Completed Exams: ", completedExams);
-
+		if(completedExams.length == 0) {
+			console.log("No completed exams found.");
+			return;
+		}
 		for (const exam of completedExams) {
 			setTimeout(async () => {
 				await publishExamAnswers(exam);
