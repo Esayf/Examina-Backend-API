@@ -50,6 +50,10 @@ setTimeout(() => {
 					"https://choz.io",
 					"https://choz.io/",
 					"https://www.choz.io/",
+					"http://159.146.105.62:3000",
+					"https://159.146.105.62:3000",
+					"https://159.146.105.62",
+					"http://159.146.105.62:3000"				
 				],
 				credentials: true,
 			})
