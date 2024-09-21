@@ -12,6 +12,7 @@ const ParticipatedUserSchema = new mongoose.Schema({
 		required: true,
 	},
 	isFinished: { type: Boolean, default: false },
+	isMailSent: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model("ParticipatedUser", ParticipatedUserSchema);
