@@ -599,7 +599,7 @@ cron.schedule("*/2 * * * *", async () => {
 		console.log("Running cron job");
 		const now = new Date();
 		const exams = await Exam.find({ isCompleted: false });
-		if (Array.isArray(exams) && exams.length === 0 ) {
+		if (!exams || exams.length === 0) {
 			console.log("No exams found in cron job.");
 			return;
 		}
