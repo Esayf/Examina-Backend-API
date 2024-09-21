@@ -70,6 +70,7 @@ setTimeout(() => {
 		app.use("/user", require("./routes/user"));
 		app.use("/questions", require("./routes/questions"));
 	} catch (error) {
+		console.log("Error from appjs: ", error);
 		throw new Error("Logged Error in app.js", error);
 	}
 }, 5000);

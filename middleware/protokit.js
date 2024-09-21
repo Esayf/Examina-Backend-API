@@ -137,7 +137,6 @@ const getUserScore = async (examID, userID) => {
 
 module.exports = {
 	createExam,
-	submitAnswer,
 	submitAnswers,
 	publishCorrectAnswers,
 	checkScore,
