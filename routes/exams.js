@@ -596,8 +596,13 @@ async function calculateScore(exam, user) {
 
 cron.schedule("*/2 * * * *", async () => {
 	try {
+		console.log("Running cron job");
 		const now = new Date();
 		const exams = await Exam.find({ isCompleted: false });
+		if (Array.isArray(exams) && exams.length === 0 ) {
+			console.log("No exams found in cron job.");
+			return;
+		}
 		const completedExams = exams.filter((exam) => {
 			const startDate = new Date(exam.startDate);
 			const endDate = new Date(startDate.getTime() + exam.duration * 60 * 1000);
@@ -616,10 +621,11 @@ cron.schedule("*/2 * * * *", async () => {
 		}
 		const participatedUsers = await ParticipatedUser.find({
 			user: { mail: { $ne: null } },
-			exam: { isCompleted: true },
+			exam: { $ne: null , isCompleted: true },
 			isMailSent: false,
 			isFinished: true,
 		}).populate(["user", "exam"]);
+		if(participatedUsers.length !== 0) {
 		for (const participated of participatedUsers) {
 			var score = await Score.find({
 				exam: participated.exam._id,
@@ -641,6 +647,7 @@ cron.schedule("*/2 * * * *", async () => {
 				participated.save();
 			}
 		}
+	}
 	} catch (error) {
 		console.error("Error sending exam results: ", error);
 	}
