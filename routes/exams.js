@@ -560,7 +560,7 @@ async function publishExamAnswers(exam) {
 	if (new Date() >= endTime) {
 		const questions = await Question.find({ exam: exam._id });
 		publishCorrectAnswers(
-			req.params.id,
+			exam._id,
 			questions.map((q) => {
 				return {
 					question_id: q._id,
