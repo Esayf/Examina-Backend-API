@@ -65,6 +65,9 @@ router.post("/create", async (req, res) => {
 		if (!user) {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
+		if(req.body.questions.length === 0) {
+			return res.status(400).json({ message: "Questions cannot be empty" });
+		}
 
 		const newExam = new Exam({
 			creator: user._id,
@@ -74,6 +77,7 @@ router.post("/create", async (req, res) => {
 			duration: req.body.duration,
 			rootHash: req.body.rootHash,
 			secretKey: req.body.secretKey,
+			questionCount: req.body.questions.length
 		});
 
 		console.log("Questions: ", req.body.questions);
@@ -203,7 +207,7 @@ router.get("/:id", async (req, res) => {
 		const exam = await Exam.findById(req.params.id);
 		if (!exam) {
 			return res.status(404).json({ message: "Exam not found" });
-		}
+		}		
 		if(req.session.user.userId) {
 		const user = await ParticipatedUser.find({ user: req.session.user.userId}).populate("user");
 		const result = {

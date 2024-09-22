@@ -39,6 +39,9 @@ const ExamSchema = new mongoose.Schema({
 		type: Boolean,
 		default: false,
 	},
+	questionCount: {
+		type: Number	
+	},
 }, autoCreate = true);
 
 module.exports = mongoose.model("Exam", ExamSchema);
