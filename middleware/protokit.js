@@ -38,12 +38,19 @@ const createExam = (examID, questions) => {
 const submitAnswers = async (examID, userID, answers) => {
 	if (isTestEnv) return;
 	const url = `${process.env.PROTOKIT_URL}/submit-user-answers`;
+	var protokitAnswers = [];
+	answers.map((answer) => {
+		protokitAnswers.push({
+			questionID: answer.questionID,
+			answer: answer.answer,
+		});
+	})
 
 	// Data to be sent in the POST request (can be JSON, FormData, etc.)
 	const postData = {
 		examID: examID.toString("hex"),
 		userID: userID.toString("hex"),
-		answers: answers,
+		answers: protokitAnswers,
 	};
 
 	// Options for the fetch request
