@@ -632,7 +632,7 @@ cron.schedule("*/2 * * * *", async () => {
 				await exam.save();
 			}
 		}
-		const participatedUsers = await ParticipatedUser.exists({
+		var participatedUsers = await ParticipatedUser.exists({
 			isMailSent: false,
 			isFinished: true,
 		}).populate(["user", "exam"]);
@@ -640,6 +640,10 @@ cron.schedule("*/2 * * * *", async () => {
 		if(participatedUsers == null || participatedUsers == undefined || participatedUsers.length == 0 || participatedUsers == undefined  || participatedUsers == [] || participatedUsers.user?.email == undefined || participatedUsers.user?.email == null) {
 			return;
 		}
+		participatedUsers = await ParticipatedUser.find({
+			isMailSent: false,
+			isFinished: true,
+		}).populate(["user", "exam"]);
 		if(participatedUsers.length !== 0) {
 		for (const participated of participatedUsers) {
 			if(participated.exam == undefined || participated.exam == null || participated.exam?.isCompleted == false) {
