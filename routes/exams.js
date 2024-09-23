@@ -180,7 +180,7 @@ router.post("/create", async (req, res) => {
 router.get("/", async (req, res) => {
 	try {
 		const exams = await Exam.find({ creator: req.session.user.userId }).sort({
-			createdAt: -1,
+			startDate: -1,
 		});
 		res.json(exams);
 	} catch (err) {
