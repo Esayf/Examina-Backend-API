@@ -537,8 +537,13 @@ router.post("/finishExam", async (req, res) => {
 		// Cevapları kaydet
 		await userAnswers.save();
 
+		const protokitSubmitAnswers = req.body.answers.map((answer) => {
+			return {
+				questionID: answer.questionID?._id ? answer.questionID._id : answer.questionID,
+				answer: answer.answer,
+			} });
 		// Cevapları blockchain'e gönder
-		await submitAnswers(examId, userId._id, req.body.answers);
+		await submitAnswers(examId, userId._id, protokitSubmitAnswers);
 
 		participatedUser.isFinished = true;
 		await participatedUser.save();
