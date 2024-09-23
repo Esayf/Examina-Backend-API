@@ -538,7 +538,7 @@ router.post("/finishExam", async (req, res) => {
 		await userAnswers.save();
 
 		// Cevapları blockchain'e gönder
-		await submitAnswers(examId, userId._id, userAnswers.answers);
+		await submitAnswers(examId, userId._id, req.body.answers);
 
 		participatedUser.isFinished = true;
 		await participatedUser.save();
