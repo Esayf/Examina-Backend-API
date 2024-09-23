@@ -631,13 +631,12 @@ cron.schedule("*/2 * * * *", async () => {
 			exam.isCompleted = true;
 			await exam.save();
 		}
-		const participatedUsers = await ParticipatedUser.find({
-			user: { email: { $ne: null } },
+		const participatedUsers = await ParticipatedUser.exists({
 			isMailSent: false,
 			isFinished: true,
 		}).populate(["user", "exam"]);
 		console.log("Participated Users: ", participatedUsers);
-		if(participatedUsers.length == 0 || participatedUsers == undefined || participatedUsers == null) {
+		if(participatedUsers.length == 0 || participatedUsers == undefined || participatedUsers == null || participatedUsers == [] || participatedUsers.user?.email == undefined || participatedUsers.user?.email == null) {
 			return;
 		}
 		if(participatedUsers.length !== 0) {
