@@ -600,6 +600,7 @@ async function calculateScore(exam, user) {
 		score: result > 0 ? result : 0,
 	});
 	await userScore.save();
+	console.log("User score saved: ", userScore);
 	return userScore;
 }
 
@@ -658,7 +659,7 @@ cron.schedule("*/2 * * * *", async () => {
 			// MOCKING EMAIL
 			// MOCK MAIL const userEmail = "swordlionthelionheart@gmail.com";
 			if (score) {
-				console.log(`Sending email to ${userEmail} for exam ${participated.exam.title}`);
+				console.log(`Sending email to ${participated.user.email} for exam ${participated.exam.title}`);
 				await sendExamResultEmail(
 					participated.user.email,
 					participated.exam.title,
