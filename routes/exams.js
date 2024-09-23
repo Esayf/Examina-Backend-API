@@ -65,7 +65,7 @@ router.post("/create", async (req, res) => {
 		if (!user) {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
-		if(req.body.questions.length === 0) {
+		if (req.body.questions.length === 0) {
 			return res.status(400).json({ message: "Questions cannot be empty" });
 		}
 
@@ -77,7 +77,7 @@ router.post("/create", async (req, res) => {
 			duration: req.body.duration,
 			rootHash: req.body.rootHash,
 			secretKey: req.body.secretKey,
-			questionCount: req.body.questions.length
+			questionCount: req.body.questions.length,
 		});
 
 		console.log("Questions: ", req.body.questions);
@@ -179,7 +179,9 @@ router.post("/create", async (req, res) => {
 
 router.get("/", async (req, res) => {
 	try {
-		const exams = await Exam.find({ creator: req.session.user.userId }).sort({createdAt: -1});
+		const exams = await Exam.find({ creator: req.session.user.userId }).sort({
+			createdAt: -1,
+		});
 		res.json(exams);
 	} catch (err) {
 		console.error(err);
@@ -207,16 +209,17 @@ router.get("/:id", async (req, res) => {
 		const exam = await Exam.findById(req.params.id);
 		if (!exam) {
 			return res.status(404).json({ message: "Exam not found" });
-		}		
-		if(req.session.user.userId) {
-		const user = await ParticipatedUser.find({ user: req.session.user.userId}).populate("user");
-		const result = {
-			exam: exam,
-			isFinished: user.isFinished,
 		}
-		res.status(200).json(result);
-		}
-		else {
+		if (req.session.user.userId) {
+			const user = await ParticipatedUser.find({
+				user: req.session.user.userId,
+			}).populate("user");
+			const result = {
+				exam: exam,
+				isFinished: user.isFinished,
+			};
+			res.status(200).json(result);
+		} else {
 			res.status(200).json(exam);
 		}
 	} catch (err) {
@@ -539,9 +542,12 @@ router.post("/finishExam", async (req, res) => {
 
 		const protokitSubmitAnswers = req.body.answers.map((answer) => {
 			return {
-				questionID: answer.questionID?._id ? answer.questionID._id : answer.questionID,
+				questionID: answer.questionID?._id
+					? answer.questionID._id
+					: answer.questionID,
 				answer: answer.answer,
-			} });
+			};
+		});
 		// Cevapları blockchain'e gönder
 		await submitAnswers(examId, userId._id, protokitSubmitAnswers);
 
@@ -578,6 +584,8 @@ async function publishExamAnswers(exam) {
 }
 
 async function calculateScore(exam, user) {
+	console.log("Calculating score for exam: ", exam.title);
+	console.log("Calculation score for User: ", user);
 	const questions = await Question.find({ exam: exam._id });
 	const questionsWithCorrectAnswers = questions.map((q) => {
 		return {
@@ -620,10 +628,9 @@ cron.schedule("*/2 * * * *", async () => {
 			return endDate < now;
 		});
 		console.log("Completed Exams: ", completedExams);
-		if(completedExams.length == 0) {
+		if (completedExams.length == 0) {
 			console.log("No completed exams found.");
-		}
-		else {
+		} else {
 			for (const exam of completedExams) {
 				setTimeout(async () => {
 					await publishExamAnswers(exam);
@@ -638,39 +645,55 @@ cron.schedule("*/2 * * * *", async () => {
 			isFinished: true,
 		}).populate(["user", "exam"]);
 		console.log("Participated Users: ", participatedUsers);
-		if(participatedUsers == null || participatedUsers == undefined || participatedUsers.length == 0 || participatedUsers == undefined  || participatedUsers == [] || participatedUsers.user?.email == undefined || participatedUsers.user?.email == null) {
+		if (
+			participatedUsers == null ||
+			participatedUsers == undefined ||
+			participatedUsers.length == 0 ||
+			participatedUsers == undefined ||
+			participatedUsers == [] ||
+			participatedUsers.user?.email == undefined ||
+			participatedUsers.user?.email == null
+		) {
 			return;
 		}
 		participatedUsers = await ParticipatedUser.find({
 			isMailSent: false,
 			isFinished: true,
 		}).populate(["user", "exam"]);
-		if(participatedUsers.length !== 0) {
-		for (const participated of participatedUsers) {
-			if(participated.exam == undefined || participated.exam == null || participated.exam?.isCompleted == false) {
-				continue;
-			}
-			var score = await Score.find({
-				exam: participated.exam._id,
-				user: participated.user._id,
-			});
-			if (score == undefined)
-				score = await calculateScore(participated.exam, participated.user);
-			// MOCKING EMAIL
-			// MOCK MAIL const userEmail = "swordlionthelionheart@gmail.com";
-			if (score) {
-				console.log(`Sending email to ${participated.user.email} for exam ${participated.exam.title}`);
-				await sendExamResultEmail(
-					participated.user.email,
-					participated.exam.title,
-					participated.exam._id,
-					score.score
-				);
-				participated.isMailSent = true;
-				await participated.save();
+		if (participatedUsers.length !== 0) {
+			for (const participated of participatedUsers) {
+				if (
+					participated.exam == undefined ||
+					participated.exam == null ||
+					participated.exam?.isCompleted == false
+				) {
+					continue;
+				}
+				var score = await Score.exists({
+					exam: participated.exam._id,
+					user: participated.user._id,
+				});
+				console.log("Score: ", score);
+				if (score == undefined || score == null) {
+					score = await calculateScore(participated.exam, participated.user);
+					// MOCKING EMAIL
+					// MOCK MAIL const userEmail = "swordlionthelionheart@gmail.com";
+					if (score) {
+						console.log(
+							`Sending email to ${participated.user.email} for exam ${participated.exam.title} with score ${score}`
+						);
+						await sendExamResultEmail(
+							participated.user.email,
+							participated.exam.title,
+							participated.exam._id,
+							score.score
+						);
+						participated.isMailSent = true;
+						await participated.save();
+					}
+				}
 			}
 		}
-	}
 	} catch (error) {
 		console.error("Error sending exam results: ", error);
 	}
