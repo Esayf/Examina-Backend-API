@@ -565,12 +565,12 @@ async function publishExamAnswers(exam) {
 	if (new Date() >= endTime) {
 		const questions = await Question.find({ exam: exam._id });
 		publishCorrectAnswers(
-			exam._id,
+			exam._id.toString("hex"),
 			questions.map((q) => {
 				return {
-					question_id: q._id,
+					questionID: q._id.toString("hex"),
 					question: q.text,
-					correctAnswer: q.correctAnswer,
+					correct_answer: q.correctAnswer,
 				};
 			})
 		);
@@ -661,7 +661,7 @@ cron.schedule("*/2 * * * *", async () => {
 					score.score
 				);
 				participated.isMailSent = true;
-				participated.save();
+				await participated.save();
 			}
 		}
 	}
