@@ -9,6 +9,7 @@ const session = require("express-session");
 var MongoDBStore = require("connect-mongodb-session")(session);
 const MemoryStore = require("memorystore")(session);
 
+dotenv.config({ path: "./.env" });
 const isTestEnv = require("./middleware/isTestEnv");
 const app = express();
 setTimeout(() => {
@@ -26,7 +27,7 @@ setTimeout(() => {
 			resave: false,
 			saveUninitialized: true,
 		};
-		var store = isTestEnv
+		var store = process.env.NODE_ENV === "test"
 			? new MemoryStore({
 					checkPeriod: 86400000, // prune expired entries every 24h
 			  })
@@ -47,6 +48,7 @@ setTimeout(() => {
 					"http://localhost:3000",
 					"http://localhost:3001",
 					"https://www.choz.io",
+					"http://localhost:8081",
 					"https://choz.io",
 					"https://choz.io/",
 					"https://www.choz.io/",
