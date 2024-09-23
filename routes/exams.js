@@ -621,15 +621,16 @@ cron.schedule("*/2 * * * *", async () => {
 		console.log("Completed Exams: ", completedExams);
 		if(completedExams.length == 0) {
 			console.log("No completed exams found.");
-			return;
 		}
-		for (const exam of completedExams) {
-			setTimeout(async () => {
-				await publishExamAnswers(exam);
-				console.log("Delayed for 1/2 second.");
-			}, "500");
-			exam.isCompleted = true;
-			await exam.save();
+		else {
+			for (const exam of completedExams) {
+				setTimeout(async () => {
+					await publishExamAnswers(exam);
+					console.log("Delayed for 1/2 second.");
+				}, "500");
+				exam.isCompleted = true;
+				await exam.save();
+			}
 		}
 		const participatedUsers = await ParticipatedUser.exists({
 			isMailSent: false,
