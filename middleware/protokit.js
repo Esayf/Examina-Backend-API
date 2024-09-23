@@ -32,6 +32,7 @@ const createExam = (examID, questions) => {
 		})
 		.catch((error) => {
 			console.error("Error:", error);
+			throw new Error("Error in protokit.js when creating Exam", error);
 		});
 };
 

@@ -14,6 +14,7 @@ const {
 	publishCorrectAnswers,
 	submitAnswers,
 	checkScore,
+	getUserScore,
 } = require("../middleware/protokit");
 const isTestEnv = require("../middleware/isTestEnv");
 const { setTimeout } = require("timers");
@@ -140,37 +141,35 @@ router.post("/create", async (req, res) => {
 			})
 		);
 
-		newExam
-			.save()
-			.then((result) => {
-				console.log(result);
-				Question.insertMany(questionsWithPinnedLinks)
-					.then((resultQs) => {
-						console.log("Inserted many questions", resultQs);
-						createExam(
-							newExam._id,
-							resultQs.map((q) => ({
-								questionID: q._id.toString("hex"),
-								question: q.text,
-								correct_answer: q.correctAnswer,
-							}))
-						);
-						res.status(200).json({
-							message: "Exam created successfully",
-							newExam: result,
-						});
-					})
-					.catch((err) => {
-						console.log(err);
-						res.status(500).json({
-							message: "Error when saving questions",
-						});
-					});
-			})
-			.catch((err) => {
-				console.log(err);
-				res.status(500).json({ message: "Error when saving exam" });
+		const session = await Exam.startSession();
+		session.startTransaction();
+		try {
+			const savedExam = await newExam.save({ session });
+			console.log(savedExam);
+			const insertedQuestions = await Question.insertMany(questionsWithPinnedLinks, { session });
+			console.log("Inserted many questions", insertedQuestions);
+			createExam(
+				savedExam._id,
+				insertedQuestions.map((q) => ({
+					questionID: q._id.toString("hex"),
+					question: q.text,
+					correct_answer: q.correctAnswer,
+				}))
+			);
+			await session.commitTransaction();
+			res.status(200).json({
+				message: "Exam created successfully",
+				newExam: savedExam,
 			});
+		} catch (err) {
+			console.log(err);
+			await session.abortTransaction();
+			res.status(500).json({
+				message: "Error when creating exam",
+			});
+		} finally {
+			session.endSession();
+		}
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ message: "Internal server error" });
@@ -398,6 +397,32 @@ router.get("/:id/answers/:answerId", async (req, res) => {
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ message: "Internal server error" });
+	}
+});
+
+router.get("/allscores", async (req, res) => {
+	try {
+		const scores = await Score.find();
+		res.status(200).json(scores);
+	}
+	catch (err) {
+		console.error(err);
+		res.status(500).json({ message: "Error finding scores" });
+	}
+});
+
+router.get("/allscores/protkit", async (req, res) => {
+	try {
+		const participatedUsers = await ParticipatedUser.find({
+			isFinished: true
+		}).populate(["user", "exam"]);
+		const scores = await Promise.all(participatedUsers.map(async (participated) => {
+			return await getUserScore(participated.exam._id, participated.user._id);
+		}));
+		res.status(200).json(scores.data);
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: "Error finding scores" });
 	}
 });
 
