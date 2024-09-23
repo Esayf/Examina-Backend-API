@@ -462,7 +462,7 @@ router.post("/finishExam", async (req, res) => {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
 
-		const userId = user;
+		const userId = user._id;
 		const examId = req.body.examID;
 
 		const exam = await Exam.findById(examId);
@@ -538,7 +538,7 @@ router.post("/finishExam", async (req, res) => {
 		await userAnswers.save();
 
 		// Cevapları blockchain'e gönder
-		await submitAnswers(examId, userId, answersArray);
+		await submitAnswers(examId, userId._id, userAnswers.answers);
 
 		participatedUser.isFinished = true;
 		await participatedUser.save();
