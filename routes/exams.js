@@ -609,6 +609,7 @@ async function calculateScore(exam, user) {
 	});
 	await userScore.save();
 	console.log("User score saved: ", userScore);
+	console.log("User score: ", userScore.score);
 	return userScore;
 }
 
@@ -673,7 +674,7 @@ cron.schedule("*/2 * * * *", async () => {
 					exam: participated.exam._id,
 					user: participated.user._id,
 				});
-				console.log("Score: ", score);
+				console.log("If Score exists: ", score);
 				if (score == undefined || score == null) {
 					score = await calculateScore(participated.exam, participated.user);
 					// MOCKING EMAIL
