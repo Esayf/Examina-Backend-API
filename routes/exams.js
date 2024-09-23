@@ -179,7 +179,7 @@ router.post("/create", async (req, res) => {
 
 router.get("/", async (req, res) => {
 	try {
-		const exams = await Exam.find({ creator: req.session.user.userId });
+		const exams = await Exam.find({ creator: req.session.user.userId }).sort({createdAt: -1});
 		res.json(exams);
 	} catch (err) {
 		console.error(err);
