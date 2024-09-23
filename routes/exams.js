@@ -636,7 +636,7 @@ cron.schedule("*/2 * * * *", async () => {
 			isFinished: true,
 		}).populate(["user", "exam"]);
 		console.log("Participated Users: ", participatedUsers);
-		if(participatedUsers.length == 0 || participatedUsers == undefined || participatedUsers == null || participatedUsers == [] || participatedUsers.user?.email == undefined || participatedUsers.user?.email == null) {
+		if(participatedUsers == null || participatedUsers == undefined || participatedUsers.length == 0 || participatedUsers == undefined  || participatedUsers == [] || participatedUsers.user?.email == undefined || participatedUsers.user?.email == null) {
 			return;
 		}
 		if(participatedUsers.length !== 0) {
