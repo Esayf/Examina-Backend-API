@@ -40,8 +40,8 @@ const submitAnswers = async (examID, userID, answers) => {
 	const url = `${process.env.PROTOKIT_URL}/submit-user-answers`;
 	const protokitAnswers = answers.map((answer) => {
 		return {
-			question: answer.questionID.toString("hex"),
-			selectedOption: answer.answer,
+			questionID: answer.questionID.toString("hex"),
+			answer: answer.answer,
 		};
 	});
 	// Data to be sent in the POST request (can be JSON, FormData, etc.)
