@@ -711,16 +711,16 @@ cron.schedule("*/9 * * * * *", async () => {
 						console.log(
 							`Sending email to ${participated.user.email} for exam ${participated.exam.title} with score ${score}`
 						);
-						await sendExamResultEmail(
-							participated.user.email,
-							participated.exam.title,
-							participated.exam.uniqueId,
-							score.score
-						);
-						participated.isMailSent = true;
-						await participated.save();
 					}
 				}
+				await sendExamResultEmail(
+					participated.user.email,
+					participated.exam.title,
+					participated.exam.uniqueId,
+					score.score
+				);
+				participated.isMailSent = true;
+				await participated.save();
 		}
 	} catch (error) {
 		console.error("Error sending exam results: ", error);
