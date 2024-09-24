@@ -603,6 +603,7 @@ async function publishExamAnswers(exam) {
 }
 
 async function calculateScore(exam, user) {
+	setTimeout(async () => {
 	console.log("Calculating score for exam: ", exam.title);
 	console.log("Calculation score for User: ", user);
 	const questions = await Question.find({ exam: exam._id });
@@ -613,14 +614,14 @@ async function calculateScore(exam, user) {
 			correct_answer: q.correctAnswer,
 		};
 	});
-	setTimeout(() => {
+	
 		console.log("Delayed for 1 second.");
-	}, "1000");
 	const result = await checkScore(
 		exam.uniqueId,
 		user.uniqueId,
 		questionsWithCorrectAnswers
 	);
+	setTimeout(async () => {
 	const userScore = new Score({
 		user: user._id,
 		exam: exam._id,
@@ -630,6 +631,8 @@ async function calculateScore(exam, user) {
 	console.log("User score saved: ", userScore);
 	console.log("User score: ", userScore.score);
 	return userScore;
+	}, "1000");
+	}, "2000");
 }
 
 cron.schedule("*/2 * * * *", async () => {
