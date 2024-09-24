@@ -688,13 +688,13 @@ cron.schedule("*/9 * * * * *", async () => {
 					console.log("Exam is not completed yet.");
 					return;
 				}
-				var score = await Score.exists({
+				var score = await Score.findOne({
 					exam: participated.exam._id,
 					user: participated.user._id,
 				});
 				console.log("If Score exists: ", score);
 				if (score == undefined || score == null) {
-					score = await calculateScore(participated.exam, participated.user);
+					await calculateScore(participated.exam, participated.user);
 					// MOCKING EMAIL
 					// MOCK MAIL const userEmail = "swordlionthelionheart@gmail.com";
 	
