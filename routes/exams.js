@@ -672,7 +672,7 @@ cron.schedule("*/2 * * * *", async () => {
 
 cron.schedule("*/9 * * * * *", async () => {
 	try {
-		let participated = await ParticipatedUser.exists({
+		let participated = await ParticipatedUser.findOne({
 			isMailSent: false,
 			isFinished: true,
 		}).populate(["user", "exam"]);
@@ -689,8 +689,7 @@ cron.schedule("*/9 * * * * *", async () => {
 			console.log("User does not have email.");
 			return;
 		}
-		if (participated) {
-			participated = await ParticipatedUser.findById(participated._iq).populate(["user", "exam"]);
+		if (participated && participated != null && participated != undefined) {
 				if (
 					participated.exam == undefined ||
 					participated.exam == null ||
