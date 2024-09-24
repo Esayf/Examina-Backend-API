@@ -1,5 +1,7 @@
 const isTestEnv = require("./isTestEnv");
 const Score = require("../models/Score");
+const User = require("../models/User");
+const Exam = require("../models/Exam");
 const createExam = (examID, questions) => {
 	if (isTestEnv) return;
 	const url = `${process.env.PROTOKIT_URL}/create/exam`;
@@ -128,7 +130,8 @@ const checkScore = async (examID, userID) => {
 	if (score.score == "User score not found") {
 		setTimeout(async () => {
 			console.log("Waiting to get score");
-			
+			const user = await User.findOne({ uniqueId: userID });
+			const exam = await Exam.findOne({ uniqueId: examID });
 			const userScore = new Score({
 				user: user._id,
 				exam: exam._id,

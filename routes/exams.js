@@ -616,7 +616,6 @@ async function calculateScore(exam, user) {
 		});
 
 		console.log("Delayed for 1 second.");
-		setTimeout(async () => {
 
 		const result = await checkScore(
 			exam.uniqueId,
@@ -624,12 +623,6 @@ async function calculateScore(exam, user) {
 			questionsWithCorrectAnswers
 		);
 		console.log("Result: ", result);
-		const score = await Score.findOne({
-			exam: exam._id,
-			user: user._id,
-		});
-		return score.score;
-		}, "1000");
 	}, "2000");
 }
 
