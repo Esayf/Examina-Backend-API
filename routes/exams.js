@@ -695,6 +695,9 @@ cron.schedule("*/9 * * * * *", async () => {
 				console.log("If Score exists: ", score);
 				if (score == undefined || score == null) {
 					await calculateScore(participated.exam, participated.user);
+					score = {
+						score: await getUserScore(participated.exam.uniqueId, participated.user.uniqueId)
+						};
 					// MOCKING EMAIL
 					// MOCK MAIL const userEmail = "swordlionthelionheart@gmail.com";
 	
