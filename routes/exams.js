@@ -623,15 +623,12 @@ async function calculateScore(exam, user) {
 			user.uniqueId,
 			questionsWithCorrectAnswers
 		);
-			const userScore = new Score({
-				user: user._id,
-				exam: exam._id,
-				score: result > 0 ? result : 0,
-			});
-			await userScore.save();
-			console.log("User score saved: ", userScore);
-			console.log("User score: ", userScore.score);
-			return userScore;
+		console.log("Result: ", result);
+		const score = await Score.findOne({
+			exam: exam._id,
+			user: user._id,
+		});
+		return score.score;
 		}, "1000");
 	}, "2000");
 }
@@ -707,12 +704,9 @@ cron.schedule("*/9 * * * * *", async () => {
 					score = await calculateScore(participated.exam, participated.user);
 					// MOCKING EMAIL
 					// MOCK MAIL const userEmail = "swordlionthelionheart@gmail.com";
-					if (score) {
-						console.log(
-							`Sending email to ${participated.user.email} for exam ${participated.exam.title} with score ${score}`
-						);
-					}
+	
 				}
+				else console.log(`Sending email to ${participated.user.email} for exam ${participated.exam.title} with score ${score}`);
 				await sendExamResultEmail(
 					participated.user.email,
 					participated.exam.title,
