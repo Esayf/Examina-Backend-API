@@ -690,6 +690,7 @@ cron.schedule("*/9 * * * * *", async () => {
 			return;
 		}
 		if (participated) {
+			participated = await ParticipatedUser.findById(participated._iq).populate(["user", "exam"]);
 				if (
 					participated.exam == undefined ||
 					participated.exam == null ||
