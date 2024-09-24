@@ -89,14 +89,14 @@ router.post("/create", async (req, res) => {
 				const questionsWithPinnedLinksInserted = await Promise.all(
 					req.body.questions.map(async (question) => {
 						console.log("Processing Question: ", question.text);
-		
+
 						// Extract markdown links from question text
 						const matches = [...question.text.matchAll(markdownLinkRegex)];
 						for (const match of matches) {
 							console.log("Found Markdown Link: ", match[1]);
 							const url = match[1]; // Extracted URL from markdown link
 							const cidMatch = url.match(cidRegex);
-		
+
 							if (cidMatch && cidMatch[1]) {
 								const cid = cidMatch[1]; // Extracted CID from the URL
 								try {
@@ -108,7 +108,7 @@ router.post("/create", async (req, res) => {
 								console.log("No valid CID found in the URL:", url);
 							}
 						}
-		
+
 						// Process question options similarly if they exist
 						if (question.options && Array.isArray(question.options)) {
 							console.log("Processing Options for Question.");
@@ -122,7 +122,7 @@ router.post("/create", async (req, res) => {
 										console.log("Option Text Match: ", match[1]);
 										const url = match[1];
 										const cidMatch = url.match(cidRegex);
-		
+
 										if (cidMatch && cidMatch[1]) {
 											const cid = cidMatch[1];
 											try {
@@ -138,10 +138,10 @@ router.post("/create", async (req, res) => {
 								})
 							);
 						}
-		
+
 						question.exam = newExam._id;
 						return await new Question(question).save();
-						
+
 					})
 				);
 				console.log(result);
@@ -604,34 +604,35 @@ async function publishExamAnswers(exam) {
 
 async function calculateScore(exam, user) {
 	setTimeout(async () => {
-	console.log("Calculating score for exam: ", exam.title);
-	console.log("Calculation score for User: ", user);
-	const questions = await Question.find({ exam: exam._id });
-	const questionsWithCorrectAnswers = questions.map((q) => {
-		return {
-			questionID: q.uniqueId,
-			question: q.text,
-			correct_answer: q.correctAnswer,
-		};
-	});
-	
+		console.log("Calculating score for exam: ", exam.title);
+		console.log("Calculation score for User: ", user);
+		const questions = await Question.find({ exam: exam._id });
+		const questionsWithCorrectAnswers = questions.map((q) => {
+			return {
+				questionID: q.uniqueId,
+				question: q.text,
+				correct_answer: q.correctAnswer,
+			};
+		});
+
 		console.log("Delayed for 1 second.");
-	const result = await checkScore(
-		exam.uniqueId,
-		user.uniqueId,
-		questionsWithCorrectAnswers
-	);
-	setTimeout(async () => {
-	const userScore = new Score({
-		user: user._id,
-		exam: exam._id,
-		score: result > 0 ? result : 0,
-	});
-	await userScore.save();
-	console.log("User score saved: ", userScore);
-	console.log("User score: ", userScore.score);
-	return userScore;
-	}, "1000");
+		setTimeout(async () => {
+
+		const result = await checkScore(
+			exam.uniqueId,
+			user.uniqueId,
+			questionsWithCorrectAnswers
+		);
+			const userScore = new Score({
+				user: user._id,
+				exam: exam._id,
+				score: result > 0 ? result : 0,
+			});
+			await userScore.save();
+			console.log("User score saved: ", userScore);
+			console.log("User score: ", userScore.score);
+			return userScore;
+		}, "1000");
 	}, "2000");
 }
 
@@ -648,7 +649,7 @@ cron.schedule("*/2 * * * *", async () => {
 			const startDate = new Date(exam.startDate);
 			const endDate = new Date(startDate.getTime() + exam.duration * 60 * 1000);
 			console.log(`Sinav: ${exam.title}, EndDate: ${endDate}, Now: ${now}`);
-			return endDate < now;
+			return endDate <= now;
 		});
 		console.log("Completed Exams: ", completedExams);
 		if (completedExams.length == 0) {
@@ -663,34 +664,39 @@ cron.schedule("*/2 * * * *", async () => {
 				await exam.save();
 			}
 		}
-		var participatedUsers = await ParticipatedUser.exists({
+
+	} catch (error) {
+		console.error("Error publishing exam answers: ", error);
+	}
+});
+
+cron.schedule("*/9 * * * * *", async () => {
+	try {
+		let participated = await ParticipatedUser.exists({
 			isMailSent: false,
 			isFinished: true,
 		}).populate(["user", "exam"]);
-		console.log("Participated Users: ", participatedUsers);
+		console.log("Participated User: ", participated);
 		if (
-			participatedUsers == null ||
-			participatedUsers == undefined ||
-			participatedUsers.length == 0 ||
-			participatedUsers == undefined ||
-			participatedUsers == [] ||
-			participatedUsers.user?.email == undefined ||
-			participatedUsers.user?.email == null
+			participated == null ||
+			participated == undefined ||
+			participated.length == 0 ||
+			participated == undefined ||
+			participated == [] ||
+			participated.user?.email == undefined ||
+			participated.user?.email == null
 		) {
+			console.log("User does not have email.");
 			return;
 		}
-		participatedUsers = await ParticipatedUser.find({
-			isMailSent: false,
-			isFinished: true,
-		}).populate(["user", "exam"]);
-		if (participatedUsers.length !== 0) {
-			for (const participated of participatedUsers) {
+		if (participated) {
 				if (
 					participated.exam == undefined ||
 					participated.exam == null ||
 					participated.exam?.isCompleted == false
 				) {
-					continue;
+					console.log("Exam is not completed yet.");
+					return;
 				}
 				var score = await Score.exists({
 					exam: participated.exam._id,
@@ -715,7 +721,6 @@ cron.schedule("*/2 * * * *", async () => {
 						await participated.save();
 					}
 				}
-			}
 		}
 	} catch (error) {
 		console.error("Error sending exam results: ", error);

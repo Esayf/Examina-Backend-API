@@ -126,6 +126,7 @@ const checkScore = async (examID, userID) => {
 	console.log("Check score result: ", score);
 	if (score.score == "User score not found") {
 		setTimeout(async () => {
+			console.log("Waiting to get score");
 			return await getUserScore(examID, userID);
 		}, 2000);
 	}
