@@ -3,6 +3,7 @@ const project_questions = {
 	text: 1,
 	options: 1,
 	_id: 1,
+	uniqueId: 1,
 	number: 1,
 };
 

@@ -5,7 +5,7 @@ const createExam = (examID, questions) => {
 
 	// Data to be sent in the POST request (can be JSON, FormData, etc.)
 	const postData = {
-		examID: examID.toString("hex"),
+		examID: examID.toString(),
 		questions: questions,
 	};
 	console.log("postData: ", postData);
@@ -41,14 +41,14 @@ const submitAnswers = async (examID, userID, answers) => {
 	const url = `${process.env.PROTOKIT_URL}/submit-user-answers`;
 	const protokitAnswers = answers.map((answer) => {
 		return {
-			questionID: answer.questionID.toString("hex"),
+			questionID: answer.questionID.toString(),
 			answer: answer.answer,
 		};
 	});
 	// Data to be sent in the POST request (can be JSON, FormData, etc.)
 	const postData = {
-		examID: examID.toString("hex"),
-		userID: userID.toString("hex"),
+		examID: examID.toString(),
+		userID: userID.toString(),
 		answers: protokitAnswers,
 	};
 
@@ -71,7 +71,7 @@ const publishCorrectAnswers = (examID, questionsWithCorrectAnswers) => {
 
 	// Data to be sent in the POST request (can be JSON, FormData, etc.)
 	const postData = {
-		examID: examID.toString("hex"),
+		examID: examID.toString(),
 		questions: questionsWithCorrectAnswers,
 	};
 
@@ -106,8 +106,8 @@ const checkScore = async (examID, userID) => {
 
 	// Data to be sent in the POST request (can be JSON, FormData, etc.)
 	const postData = {
-		examID: examID.toString("hex"),
-		userID: userID.toString("hex"),
+		examID: examID.toString(),
+		userID: userID.toString(),
 	};
 
 	// Options for the fetch request
@@ -125,20 +125,24 @@ const checkScore = async (examID, userID) => {
 	const score = await response.json();
 	console.log("Check score result: ", score);
 	if (score.score == "User score not found") {
-		await checkScore(examID, userID);
+		setTimeout(async () => {
+			return await getUserScore(examID, userID);
+		}, 2000);
 	}
-	return score.score;
+	else {
+		return score.score;
+	}
 };
 
 const getUserScore = async (examID, userID) => {
 	if (isTestEnv) return 0;
-	const url = `${process.env.PROTOKIT_URL}/score/${examID}/${userID}`;
+	const url = `${process.env.PROTOKIT_URL}/score/${examID.toString()}/${userID.toString()}`;
 
 	// Making the POST request using fetch
 	const response = await fetch(url);
 	const score = await response.json();
 	console.log("Score: ", score);
-	return score;
+	return score.score;
 };
 
 module.exports = {

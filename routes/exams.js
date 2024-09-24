@@ -83,90 +83,81 @@ router.post("/create", async (req, res) => {
 
 		console.log("Questions: ", req.body.questions);
 
-		const questionsWithPinnedLinks = await Promise.all(
-			req.body.questions.map(async (question) => {
-				console.log("Processing Question: ", question.text);
-
-				// Extract markdown links from question text
-				const matches = [...question.text.matchAll(markdownLinkRegex)];
-				for (const match of matches) {
-					console.log("Found Markdown Link: ", match[2]);
-					const url = match[2]; // Extracted URL from markdown link
-					const cidMatch = url.match(cidRegex);
-
-					if (cidMatch && cidMatch[1]) {
-						const cid = cidMatch[1]; // Extracted CID from the URL
-						try {
-							await pinToIPFS(cid); // Pin CID to IPFS
-						} catch (error) {
-							console.error(`Failed to pin CID: ${cid}`);
-						}
-					} else {
-						console.log("No valid CID found in the URL:", url);
-					}
-				}
-
-				// Process question options similarly if they exist
-				if (question.options && Array.isArray(question.options)) {
-					console.log("Processing Options for Question.");
-					question.options = await Promise.all(
-						question.options.map(async (option) => {
-							console.log("Processing Option: ", option.text);
-							const optionMatches = [
-								...option.text.matchAll(markdownLinkRegex),
-							];
-							for (const match of optionMatches) {
-								console.log("Option Text Match: ", match[2]);
-								const url = match[2];
-								const cidMatch = url.match(cidRegex);
-
-								if (cidMatch && cidMatch[1]) {
-									const cid = cidMatch[1];
-									try {
-										await pinToIPFS(cid);
-									} catch (error) {
-										console.error(`Failed to pin CID: ${cid}`);
-									}
-								} else {
-									console.log("No valid CID found in the URL:", url);
-								}
-							}
-							return option;
-						})
-					);
-				}
-
-				question.exam = newExam._id;
-				return question;
-			})
-		);
-
 		newExam
 			.save()
-			.then((result) => {
-				console.log(result);
-				Question.insertMany(questionsWithPinnedLinks)
-					.then((resultQs) => {
-						console.log("Inserted many questions", resultQs);
-						createExam(
-							newExam._id,
-							resultQs.map((q) => ({
-								questionID: q._id.toString("hex"),
-								question: q.text,
-								correct_answer: q.correctAnswer,
-							}))
-						);
-						res.status(200).json({
-							message: "Exam created successfully",
-							newExam: result,
-						});
+			.then(async (result) => {
+				const questionsWithPinnedLinksInserted = await Promise.all(
+					req.body.questions.map(async (question) => {
+						console.log("Processing Question: ", question.text);
+		
+						// Extract markdown links from question text
+						const matches = [...question.text.matchAll(markdownLinkRegex)];
+						for (const match of matches) {
+							console.log("Found Markdown Link: ", match[1]);
+							const url = match[1]; // Extracted URL from markdown link
+							const cidMatch = url.match(cidRegex);
+		
+							if (cidMatch && cidMatch[1]) {
+								const cid = cidMatch[1]; // Extracted CID from the URL
+								try {
+									await pinToIPFS(cid); // Pin CID to IPFS
+								} catch (error) {
+									console.error(`Failed to pin CID: ${cid}`);
+								}
+							} else {
+								console.log("No valid CID found in the URL:", url);
+							}
+						}
+		
+						// Process question options similarly if they exist
+						if (question.options && Array.isArray(question.options)) {
+							console.log("Processing Options for Question.");
+							question.options = await Promise.all(
+								question.options.map(async (option) => {
+									console.log("Processing Option: ", option.text);
+									const optionMatches = [
+										...option.text.matchAll(markdownLinkRegex),
+									];
+									for (const match of optionMatches) {
+										console.log("Option Text Match: ", match[1]);
+										const url = match[1];
+										const cidMatch = url.match(cidRegex);
+		
+										if (cidMatch && cidMatch[1]) {
+											const cid = cidMatch[1];
+											try {
+												await pinToIPFS(cid);
+											} catch (error) {
+												console.error(`Failed to pin CID: ${cid}`);
+											}
+										} else {
+											console.log("No valid CID found in the URL:", url);
+										}
+									}
+									return option;
+								})
+							);
+						}
+		
+						question.exam = newExam._id;
+						return await new Question(question).save();
+						
 					})
-					.catch((err) => {
-						console.log(err);
-						res.status(500).json({
-							message: "Error when saving questions",
-						});
-					});
+				);
+				console.log(result);
+				console.log("Inserted many questions", questionsWithPinnedLinksInserted);
+				createExam(
+					newExam.uniqueId,
+					questionsWithPinnedLinksInserted.map((q) => ({
+						questionID: q.uniqueId.toString(),
+						question: q.text,
+						correct_answer: q.correctAnswer,
+					}))
+				);
+				res.status(200).json({
+					message: "Exam created successfully",
+					newExam: newExam,
+				});
 			})
 			.catch((err) => {
 				console.log(err);
@@ -419,7 +410,7 @@ router.get("/allscores/protkit", async (req, res) => {
 			isFinished: true
 		}).populate(["user", "exam"]);
 		const scores = await Promise.all(participatedUsers.map(async (participated) => {
-			return await getUserScore(participated.exam._id, participated.user._id);
+			return await getUserScore(participated.exam.uniqueId, participated.user.uniqueId);
 		}));
 		res.status(200).json(scores.data);
 	} catch (err) {
@@ -530,7 +521,7 @@ router.post("/finishExam", async (req, res) => {
 			user: userId,
 			exam: examId,
 		});
-
+		console.log("User Answers: ", req.body.answers);
 		const answersArray = req.body.answers.map((answer) => {
 			const hashInput = user.walletAddress + JSON.stringify(answer.answer);
 			const answerHash = crypto
@@ -538,7 +529,7 @@ router.post("/finishExam", async (req, res) => {
 				.update(hashInput)
 				.digest("hex");
 			return {
-				question: answer.questionID,
+				question: answer.questionID._id,
 				selectedOption: answer.answer,
 				answerHash: answerHash,
 			};
@@ -566,17 +557,18 @@ router.post("/finishExam", async (req, res) => {
 
 		// Cevapları kaydet
 		await userAnswers.save();
-
+		console.log("User Answers saved: ", userAnswers);
 		const protokitSubmitAnswers = req.body.answers.map((answer) => {
+			console.log("Protokit submit answers ,Answer: ", answer);
 			return {
-				questionID: answer.questionID?._id
-					? answer.questionID._id
+				questionID: answer.questionID?.uniqueId
+					? answer.questionID.uniqueId
 					: answer.questionID,
 				answer: answer.answer,
 			};
 		});
 		// Cevapları blockchain'e gönder
-		await submitAnswers(examId, userId._id, protokitSubmitAnswers);
+		await submitAnswers(exam.uniqueId, user.uniqueId, protokitSubmitAnswers);
 
 		participatedUser.isFinished = true;
 		await participatedUser.save();
@@ -598,10 +590,10 @@ async function publishExamAnswers(exam) {
 	if (new Date() >= endTime) {
 		const questions = await Question.find({ exam: exam._id });
 		publishCorrectAnswers(
-			exam._id.toString("hex"),
+			exam.uniqueId,
 			questions.map((q) => {
 				return {
-					questionID: q._id.toString("hex"),
+					questionID: q.uniqueId,
 					question: q.text,
 					correct_answer: q.correctAnswer,
 				};
@@ -616,7 +608,7 @@ async function calculateScore(exam, user) {
 	const questions = await Question.find({ exam: exam._id });
 	const questionsWithCorrectAnswers = questions.map((q) => {
 		return {
-			questionID: q._id.toString("hex"),
+			questionID: q.uniqueId,
 			question: q.text,
 			correct_answer: q.correctAnswer,
 		};
@@ -625,8 +617,8 @@ async function calculateScore(exam, user) {
 		console.log("Delayed for 1 second.");
 	}, "1000");
 	const result = await checkScore(
-		exam._id,
-		user._id,
+		exam.uniqueId,
+		user.uniqueId,
 		questionsWithCorrectAnswers
 	);
 	const userScore = new Score({
@@ -713,7 +705,7 @@ cron.schedule("*/2 * * * *", async () => {
 						await sendExamResultEmail(
 							participated.user.email,
 							participated.exam.title,
-							participated.exam._id,
+							participated.exam.uniqueId,
 							score.score
 						);
 						participated.isMailSent = true;
