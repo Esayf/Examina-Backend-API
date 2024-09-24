@@ -150,7 +150,8 @@ router.post("/create", async (req, res) => {
 					newExam.uniqueId,
 					questionsWithPinnedLinksInserted.map((q) => ({
 						questionID: q.uniqueId.toString(),
-						question: q.text,
+						question: crypto.createHash('sha1')
+						.update(q.text).digest('hex'),
 						correct_answer: q.correctAnswer,
 					}))
 				);
@@ -594,7 +595,8 @@ async function publishExamAnswers(exam) {
 			questions.map((q) => {
 				return {
 					questionID: q.uniqueId,
-					question: q.text,
+					question: crypto.createHash('sha1')
+					.update(q.text).digest('hex'),
 					correct_answer: q.correctAnswer,
 				};
 			})
@@ -698,9 +700,6 @@ cron.schedule("*/9 * * * * *", async () => {
 					score = {
 						score: await getUserScore(participated.exam.uniqueId, participated.user.uniqueId)
 						};
-					// MOCKING EMAIL
-					// MOCK MAIL const userEmail = "swordlionthelionheart@gmail.com";
-	
 				}
 				else console.log(`Sending email to ${participated.user.email} for exam ${participated.exam.title} with score ${score}`);
 				await sendExamResultEmail(
