@@ -346,7 +346,7 @@ router.get("/:id/questions", async (req, res) => {
 				.json({ message: "User has already finished the exam" });
 		}
 
-		const questions = await Question.find({ exam: exam._id }, map_questions);
+		const questions = await Question.find({ exam: exam._id }, map_questions).sort({number: 1});
 
 		res.status(200).json(questions);
 	} catch (err) {
