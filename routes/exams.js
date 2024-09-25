@@ -624,7 +624,7 @@ async function calculateScore(exam, user) {
 			user.uniqueId,
 			questionsWithCorrectAnswers
 		);
-		console.log("Result: ", result);
+		console.log("Result does not matter though: ", result);
 	}, "2000");
 }
 

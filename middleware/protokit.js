@@ -2,6 +2,7 @@ const isTestEnv = require("./isTestEnv");
 const Score = require("../models/Score");
 const User = require("../models/User");
 const Exam = require("../models/Exam");
+const { set } = require("mongoose");
 const createExam = (examID, questions) => {
 	if (isTestEnv) return;
 	const url = `${process.env.PROTOKIT_URL}/create/exam`;
@@ -66,7 +67,7 @@ const submitAnswers = async (examID, userID, answers) => {
 	console.log("Submitting answers to protokit", postData);
 	// Making the POST request using fetch
 	return await fetch(url, options);
-}
+};
 
 const publishCorrectAnswers = (examID, questionsWithCorrectAnswers) => {
 	if (isTestEnv) return;
@@ -132,24 +133,42 @@ const checkScore = async (examID, userID) => {
 			console.log("Waiting to get score");
 			const user = await User.findOne({ uniqueId: userID });
 			const exam = await Exam.findOne({ uniqueId: examID });
+			let realScore = await getUserScore(examID, userID);
+			console.log("Real score first try: ", realScore);
+			if (realScore == 0 || realScore == "User score not found") {
+				setTimeout(async () => {
+					realScore = await getUserScore(examID, userID);
+					console.log("Real score second try: ", realScore);
+					const userScore = new Score({
+						user: user._id,
+						exam: exam._id,
+						score: realScore > 0 ? realScore : 0,
+					});
+					await userScore.save();
+					console.log("User score saved: ", userScore);
+					console.log("User score: ", userScore.score);
+				}, 2000);
+			}
+			else{
 			const userScore = new Score({
 				user: user._id,
 				exam: exam._id,
-				score: await getUserScore(examID, userID) > 0 ? result : 0,
+				score: realScore > 0 ? realScore : 0,
 			});
 			await userScore.save();
 			console.log("User score saved: ", userScore);
 			console.log("User score: ", userScore.score);
+		}
 		}, 2000);
-	}
-	else {
+	} else {
 		return score.score;
 	}
 };
 
 const getUserScore = async (examID, userID) => {
 	if (isTestEnv) return 0;
-	const url = `${process.env.PROTOKIT_URL}/score/${examID.toString()}/${userID.toString()}`;
+	const url = `${process.env.PROTOKIT_URL
+		}/score/${examID.toString()}/${userID.toString()}`;
 
 	// Making the POST request using fetch
 	const response = await fetch(url);
