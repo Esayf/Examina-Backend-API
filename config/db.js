@@ -31,6 +31,7 @@ const connectDB = async () => {
 				console.log(`Collection ${model} created.`);
 			}
 		}
+	return true;
 	} catch (error) {
 		console.error("Error happened in db.js", error);
 		process.exit(1);

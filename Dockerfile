@@ -1,12 +1,20 @@
-# Use the official Node.js 14 image as the base image
-FROM node:21
+# Use the official Node.js LTS image
+FROM node:18-alpine
 
-RUN mkdir -p /usr/src/app
-
+# Set the working directory
 WORKDIR /usr/src/app
 
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy the rest of the application code
 COPY . .
 
-RUN npm install
-
+# Expose the application port
 EXPOSE 3000
+
+# Start the application
+CMD ["npm", "start"]
