@@ -20,8 +20,8 @@ const isTestEnv = require("../middleware/isTestEnv");
 const { setTimeout } = require("timers");
 const axios = require("axios");
 const cron = require("node-cron");
-const { sendExamResultEmail } = require("../mailer");
-const { set } = require("mongoose");
+const Joi = require("joi");
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 router.use((req, res, next) => {
 	isAuthenticated(req, res, next);
 });
@@ -146,12 +146,12 @@ router.post("/create", async (req, res) => {
 				);
 				console.log(result);
 				console.log("Inserted many questions", questionsWithPinnedLinksInserted);
-				createExam(
+				await createExam(
 					newExam.uniqueId,
 					questionsWithPinnedLinksInserted.map((q) => ({
 						questionID: q.uniqueId.toString(),
 						question: crypto.createHash('sha1')
-						.update(q.text).digest('hex'),
+							.update(q.text).digest('hex'),
 						correct_answer: q.correctAnswer,
 					}))
 				);
@@ -240,8 +240,11 @@ router.post("/startExam", async (req, res) => {
 		console.log("Start time: ", startTime);
 		const endTime = new Date(startTime.getTime() + exam.duration * 60000); // Convert duration from minutes to milliseconds
 
-		const currentDateTime = new Date();
-		if (currentDateTime < startTime) {
+		const currentDateTime = new Date().getTime();
+		console.log("Current time: ", currentDateTime);
+		console.log("End time: ", endTime);
+		console.log("Start time: ", startTime);
+		if (currentDateTime < startTime.getTime()) {
 			return res.status(400).json({
 				message: "Exam has not started yet.",
 			});
@@ -346,7 +349,7 @@ router.get("/:id/questions", async (req, res) => {
 				.json({ message: "User has already finished the exam" });
 		}
 
-		const questions = await Question.find({ exam: exam._id }, map_questions).sort({number: 1});
+		const questions = await Question.find({ exam: exam._id }, map_questions).sort({ number: 1 });
 
 		res.status(200).json(questions);
 	} catch (err) {
@@ -477,40 +480,47 @@ router.get("/scores/get_user_score/:examId", async (req, res) => {
 	}
 });
 
+// Define the schema for request body validation
+const finishExamSchema = Joi.object({
+	examID: Joi.string().required(),
+	answers: Joi.array()
+		.items(
+			Joi.object({
+				questionID: Joi.string().required(),
+				answer: Joi.any().required(),
+			})
+		)
+		.required(),
+});
+
 router.post("/finishExam", async (req, res) => {
+	// Validate the request body
+	const { error } = finishExamSchema.validate(req.body);
+	if (error) {
+		return res.status(400).json({ message: error.details[0].message });
+	}
+
 	try {
 		const user = await User.findById(req.session.user.userId);
 		if (!user) {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
 
-		const userId = user._id;
-		const examId = req.body.examID;
-
-		const exam = await Exam.findById(examId);
+		const exam = await Exam.findById(req.body.examID);
 		if (!exam) {
 			return res.status(500).json({ message: "Exam not found" });
 		}
 
-		const startTime = exam.startDate;
-		console.log("Start time: ", startTime);
-		const endTime = new Date(startTime.getTime() + exam.duration * 60000); // Convert duration from minutes to milliseconds
-
 		const currentDateTime = new Date();
-		if (currentDateTime < startTime) {
+		if (!isExamActive(exam, currentDateTime)) {
 			return res.status(400).json({
-				message: "Exam has not started yet.",
-			});
-		}
-		if (currentDateTime > endTime) {
-			return res.status(400).json({
-				message: "Exam has already ended.",
+				message: "Exam is not active.",
 			});
 		}
 
 		let participatedUser = await ParticipatedUser.findOne({
-			user: userId,
-			exam: examId,
+			user: user._id,
+			exam: exam._id,
 		});
 		if (participatedUser.isFinished) {
 			return res
@@ -518,57 +528,15 @@ router.post("/finishExam", async (req, res) => {
 				.json({ message: "User has already finished the exam" });
 		}
 
-		let userAnswers = await Answer.findOne({
-			user: userId,
-			exam: examId,
-		});
-		console.log("User Answers: ", req.body.answers);
-		const answersArray = req.body.answers.map((answer) => {
-			const hashInput = user.walletAddress + JSON.stringify(answer.answer);
-			const answerHash = crypto
-				.createHash("sha256")
-				.update(hashInput)
-				.digest("hex");
-			return {
-				question: answer.questionID._id,
-				selectedOption: answer.answer,
-				answerHash: answerHash,
-			};
-		});
-
-		if (!userAnswers) {
-			userAnswers = new Answer({
-				user: userId,
-				exam: examId,
-				answers: answersArray,
+		if (!(await Answer.findOne({ user: user._id, exam: exam._id }))) {
+			let userAnswers = new Answer({
+				user: user._id,
+				exam: exam._id,
+				answers: generateAnswersArray(req.body.answers, user.walletAddress)
 			});
-		} else {
-			// Kullanıcı daha önce cevap verdiyse, mevcut cevapları güncelliyoruz
-			answersArray.forEach((newAnswer) => {
-				const existingAnswerIndex = userAnswers.answers.findIndex(
-					(a) => a.question.toString() === newAnswer.question.toString()
-				);
-				if (existingAnswerIndex !== -1) {
-					userAnswers.answers[existingAnswerIndex] = newAnswer;
-				} else {
-					userAnswers.answers.push(newAnswer);
-				}
-			});
+			await userAnswers.save();
 		}
-
-		// Cevapları kaydet
-		await userAnswers.save();
-		console.log("User Answers saved: ", userAnswers);
-		const protokitSubmitAnswers = req.body.answers.map((answer) => {
-			console.log("Protokit submit answers ,Answer: ", answer);
-			return {
-				questionID: answer.questionID?.uniqueId
-					? answer.questionID.uniqueId
-					: answer.questionID,
-				answer: answer.answer,
-			};
-		});
-		// Cevapları blockchain'e gönder
+		const protokitSubmitAnswers = await generateProtokitSubmitAnswers(req.body.answers);
 		await submitAnswers(exam.uniqueId, user.uniqueId, protokitSubmitAnswers);
 
 		participatedUser.isFinished = true;
@@ -585,6 +553,38 @@ router.post("/finishExam", async (req, res) => {
 	}
 });
 
+function isExamActive(exam, currentDateTime) {
+	const startTime = exam.startDate;
+	const endTime = new Date(startTime.getTime() + exam.duration * 60000);
+	return currentDateTime >= startTime && currentDateTime <= endTime;
+}
+
+function generateAnswersArray(answers, walletAddress) {
+	return answers.map((answer) => {
+		const hashInput = walletAddress + JSON.stringify(answer.answer);
+		const answerHash = crypto.createHash("sha256").update(hashInput).digest("hex");
+		return {
+			question: answer.questionID,
+			selectedOption: answer.answer,
+			answerHash: answerHash,
+		};
+	});
+}
+
+async function generateProtokitSubmitAnswers(answers) {
+	return Promise.all(
+		answers.map(async (answer) => {
+			const question = await Question.findById(answer.questionID);
+			return {
+				questionID: question.uniqueId,
+				answer: answer.answer,
+			};
+		})
+	);
+}
+
+module.exports = router;
+
 async function publishExamAnswers(exam) {
 	const startTime = exam.startDate;
 	const endTime = new Date(startTime.getTime() + exam.duration * 60000); // Convert duration from minutes to milliseconds
@@ -596,36 +596,12 @@ async function publishExamAnswers(exam) {
 				return {
 					questionID: q.uniqueId,
 					question: crypto.createHash('sha1')
-					.update(q.text).digest('hex'),
+						.update(q.text).digest('hex'),
 					correct_answer: q.correctAnswer,
 				};
 			})
 		);
 	}
-}
-
-async function calculateScore(exam, user) {
-	setTimeout(async () => {
-		console.log("Calculating score for exam: ", exam.title);
-		console.log("Calculation score for User: ", user);
-		const questions = await Question.find({ exam: exam._id });
-		const questionsWithCorrectAnswers = questions.map((q) => {
-			return {
-				questionID: q.uniqueId,
-				question: q.text,
-				correct_answer: q.correctAnswer,
-			};
-		});
-
-		console.log("Delayed for 1 second.");
-
-		const result = await checkScore(
-			exam.uniqueId,
-			user.uniqueId,
-			questionsWithCorrectAnswers
-		);
-		console.log("Result does not matter though: ", result);
-	}, "2000");
 }
 
 cron.schedule("*/2 * * * *", async () => {
@@ -648,10 +624,10 @@ cron.schedule("*/2 * * * *", async () => {
 			console.log("No completed exams found.");
 		} else {
 			for (const exam of completedExams) {
-				setTimeout(async () => {
+					await delay(500);
 					await publishExamAnswers(exam);
 					console.log("Delayed for 1/2 second.");
-				}, "500");
+
 				exam.isCompleted = true;
 				await exam.save();
 			}
@@ -659,60 +635,6 @@ cron.schedule("*/2 * * * *", async () => {
 
 	} catch (error) {
 		console.error("Error publishing exam answers: ", error);
-	}
-});
-
-cron.schedule("*/9 * * * * *", async () => {
-	try {
-		let participated = await ParticipatedUser.findOne({
-			isMailSent: false,
-			isFinished: true,
-		}).populate(["user", "exam"]);
-		console.log("Participated User: ", participated);
-		if (
-			participated == null ||
-			participated == undefined ||
-			participated.length == 0 ||
-			participated == undefined ||
-			participated == [] ||
-			participated.user?.email == undefined ||
-			participated.user?.email == null
-		) {
-			console.log("User does not have email.");
-			return;
-		}
-		if (participated && participated != null && participated != undefined) {
-				if (
-					participated.exam == undefined ||
-					participated.exam == null ||
-					participated.exam?.isCompleted == false
-				) {
-					console.log("Exam is not completed yet.");
-					return;
-				}
-				var score = await Score.findOne({
-					exam: participated.exam._id,
-					user: participated.user._id,
-				});
-				console.log("If Score exists: ", score);
-				if (score == undefined || score == null) {
-					await calculateScore(participated.exam, participated.user);
-					score = {
-						score: await getUserScore(participated.exam.uniqueId, participated.user.uniqueId)
-						};
-				}
-				else console.log(`Sending email to ${participated.user.email} for exam ${participated.exam.title} with score ${score}`);
-				await sendExamResultEmail(
-					participated.user.email,
-					participated.exam.title,
-					participated.exam.uniqueId,
-					score.score
-				);
-				participated.isMailSent = true;
-				await participated.save();
-		}
-	} catch (error) {
-		console.error("Error sending exam results: ", error);
 	}
 });
 

@@ -1,4 +1,5 @@
 var nodemailer = require("nodemailer");
+const User = require("./models/User");
 
 const transporter = nodemailer.createTransport({
 	host: "smtpout.secureserver.net",
@@ -18,6 +19,11 @@ const transporter = nodemailer.createTransport({
 
 async function sendExamResultEmail(userEmail, examName, examId, score) {
 	try {
+		let user = await User.findOne({ email: userEmail });
+		if(score == "User score not found") {
+			console.log("User score is undefined, not sending email.");
+			return;
+		}
 		let info = await transporter.sendMail({
 			from: '"Choz Support" <info@choz.io>', // Gönderen
 			to: userEmail, // Alıcı

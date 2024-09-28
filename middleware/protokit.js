@@ -2,8 +2,7 @@ const isTestEnv = require("./isTestEnv");
 const Score = require("../models/Score");
 const User = require("../models/User");
 const Exam = require("../models/Exam");
-const { set } = require("mongoose");
-const createExam = (examID, questions) => {
+const createExam = async (examID, questions) => {
 	if (isTestEnv) return;
 	const url = `${process.env.PROTOKIT_URL}/create/exam`;
 
@@ -24,20 +23,15 @@ const createExam = (examID, questions) => {
 	};
 
 	// Making the POST request using fetch
-	fetch(url, options)
-		.then((response) => {
-			if (!response.ok) {
-				throw new Error("Network response was not ok");
-			}
-			return response; // Parsing JSON response
-		})
-		.then((data) => {
-			console.log("Success:", data);
-		})
-		.catch((error) => {
-			console.error("Error:", error);
-			throw new Error("Error in protokit.js when creating Exam", error);
-		});
+	try {
+		const response = await fetch(url, options);
+		console.log("Create exam response: ", response);
+		return response;
+	}
+	catch (error) {
+		console.error("Error:", error);
+		throw error;
+	}
 };
 
 const submitAnswers = async (examID, userID, answers) => {
@@ -104,64 +98,77 @@ const publishCorrectAnswers = (examID, questionsWithCorrectAnswers) => {
 		});
 };
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+
 const checkScore = async (examID, userID) => {
-	if (isTestEnv) return 0;
-	const url = `${process.env.PROTOKIT_URL}/check-score`;
+	try {
+		if (isTestEnv) return 0;
+		const url = `${process.env.PROTOKIT_URL}/check-score`;
 
-	// Data to be sent in the POST request (can be JSON, FormData, etc.)
-	const postData = {
-		examID: examID.toString(),
-		userID: userID.toString(),
-	};
+		// Data to be sent in the POST request (can be JSON, FormData, etc.)
+		const postData = {
+			examID: examID.toString(),
+			userID: userID.toString(),
+		};
 
-	// Options for the fetch request
-	const options = {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json", // Adjust content type as needed
-		},
-		body: JSON.stringify(postData), // Convert data to JSON string
-	};
-	console.log("Fetching score", postData);
+		// Options for the fetch request
+		const options = {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json", // Adjust content type as needed
+			},
+			body: JSON.stringify(postData), // Convert data to JSON string
+		};
+		console.log("Fetching score", postData);
 
-	// Making the POST request using fetch
-	const response = await fetch(url, options);
-	const score = await response.json();
-	console.log("Check score result: ", score);
-	if (score.score == "User score not found") {
-		setTimeout(async () => {
-			console.log("Waiting to get score");
-			const user = await User.findOne({ uniqueId: userID });
-			const exam = await Exam.findOne({ uniqueId: examID });
-			let realScore = await getUserScore(examID, userID);
-			console.log("Real score first try: ", realScore);
-			if (realScore == 0 || realScore == "User score not found") {
-				setTimeout(async () => {
-					realScore = await getUserScore(examID, userID);
-					console.log("Real score second try: ", realScore);
-					const userScore = new Score({
-						user: user._id,
-						exam: exam._id,
-						score: realScore > 0 ? realScore : 0,
-					});
-					await userScore.save();
-					console.log("User score saved: ", userScore);
-					console.log("User score: ", userScore.score);
-				}, 2000);
-			}
-			else{
-			const userScore = new Score({
-				user: user._id,
-				exam: exam._id,
-				score: realScore > 0 ? realScore : 0,
-			});
-			await userScore.save();
-			console.log("User score saved: ", userScore);
-			console.log("User score: ", userScore.score);
+		// Making the POST request using fetch
+		const response = await fetch(url, options);
+		const score = await response.json();
+		console.log("Check score result: ", score);
+		if (!score || score.score == "User score not found") {
+				console.log("Waiting to get score");
+				const user = await User.findOne({ uniqueId: userID });
+				const exam = await Exam.findOne({ uniqueId: examID });
+				let realScore = await getUserScore(examID, userID);
+				console.log("Real score first try: ", realScore);
+				for (let i = 0; i < 10; i++) {
+					await delay(1000);
+					console.log("Waiting for score...");
+					if (realScore == "User score not found") {
+						realScore = await getUserScore(examID, userID);
+						console.log("Real score second try: ", realScore);
+						if (realScore != "User score not found" && realScore >= 0) {
+							const userScore = new Score({
+								user: user._id,
+								exam: exam._id,
+								score: realScore,
+							});
+							await userScore.save();
+							console.log("User score saved: ", userScore);
+							console.log("User score: ", userScore.score);
+							break;
+						}
+					}
+					else {
+						if (await Score.findOne({ user: user._id, exam: exam._id })) break;
+						const userScore = new Score({
+							user: user._id,
+							exam: exam._id,
+							score: realScore,
+						});
+						await userScore.save();
+						console.log("User score saved: ", userScore);
+						console.log("User score: ", userScore.score);
+						break;
+					}
+				}
 		}
-		}, 2000);
-	} else {
-		return score.score;
+		return "Score checked";
+	}
+	catch (error) {
+		console.error("Error:", error);
+		return "User score error";
 	}
 };
 
