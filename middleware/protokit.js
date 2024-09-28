@@ -4,6 +4,8 @@ const User = require("../models/User");
 const Exam = require("../models/Exam");
 const { set } = require("mongoose");
 const createExam = (examID, questions) => {
+	if (process.env.NODE_ENV === "development") return;
+
 	if (isTestEnv) return;
 	const url = `${process.env.PROTOKIT_URL}/create/exam`;
 
@@ -41,6 +43,8 @@ const createExam = (examID, questions) => {
 };
 
 const submitAnswers = async (examID, userID, answers) => {
+	if (process.env.NODE_ENV === "development") return;
+
 	if (isTestEnv) return;
 	const url = `${process.env.PROTOKIT_URL}/submit-user-answers`;
 	const protokitAnswers = answers.map((answer) => {
@@ -70,6 +74,8 @@ const submitAnswers = async (examID, userID, answers) => {
 };
 
 const publishCorrectAnswers = (examID, questionsWithCorrectAnswers) => {
+	if (process.env.NODE_ENV === "development") return;
+
 	if (isTestEnv) return;
 	const url = `${process.env.PROTOKIT_URL}/publish-correct-answers`;
 
@@ -105,6 +111,8 @@ const publishCorrectAnswers = (examID, questionsWithCorrectAnswers) => {
 };
 
 const checkScore = async (examID, userID) => {
+	if (process.env.NODE_ENV === "development") return 0;
+
 	if (isTestEnv) return 0;
 	const url = `${process.env.PROTOKIT_URL}/check-score`;
 
@@ -148,17 +156,16 @@ const checkScore = async (examID, userID) => {
 					console.log("User score saved: ", userScore);
 					console.log("User score: ", userScore.score);
 				}, 2000);
+			} else {
+				const userScore = new Score({
+					user: user._id,
+					exam: exam._id,
+					score: realScore > 0 ? realScore : 0,
+				});
+				await userScore.save();
+				console.log("User score saved: ", userScore);
+				console.log("User score: ", userScore.score);
 			}
-			else{
-			const userScore = new Score({
-				user: user._id,
-				exam: exam._id,
-				score: realScore > 0 ? realScore : 0,
-			});
-			await userScore.save();
-			console.log("User score saved: ", userScore);
-			console.log("User score: ", userScore.score);
-		}
 		}, 2000);
 	} else {
 		return score.score;
@@ -166,9 +173,12 @@ const checkScore = async (examID, userID) => {
 };
 
 const getUserScore = async (examID, userID) => {
+	if (process.env.NODE_ENV === "development") return 0;
+
 	if (isTestEnv) return 0;
-	const url = `${process.env.PROTOKIT_URL
-		}/score/${examID.toString()}/${userID.toString()}`;
+	const url = `${
+		process.env.PROTOKIT_URL
+	}/score/${examID.toString()}/${userID.toString()}`;
 
 	// Making the POST request using fetch
 	const response = await fetch(url);
