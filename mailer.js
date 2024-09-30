@@ -1,5 +1,9 @@
 var nodemailer = require("nodemailer");
-const User = require("./models/User");
+const fs = require("fs");
+const path = require("path");
+
+const htmlFilePath = path.join(__dirname, "quiz-results.html");
+let htmlContent = fs.readFileSync(htmlFilePath, "utf-8");
 
 const transporter = nodemailer.createTransport({
 	host: "smtpout.secureserver.net",
@@ -17,19 +21,29 @@ const transporter = nodemailer.createTransport({
 	secureConnection: false,
 });
 
-async function sendExamResultEmail(userEmail, examName, examId, score) {
+async function sendExamResultEmail(
+	userEmail,
+	examName,
+	totalQuestions,
+	correctAnswers
+) {
 	try {
-		let user = await User.findOne({ email: userEmail });
-		if(score == "User score not found") {
+		if (score == "User score not found") {
 			console.log("User score is undefined, not sending email.");
 			return;
 		}
+
+		htmlContent = htmlContent
+			.replace("{{examName}}", examName)
+			.replace("{{score}}", (correctAnswers / totalQuestions) * 100)
+			.replace("{{correctAnswers}}", correctAnswers) // Doğru cevap sayısını ekleyin
+			.replace("{{totalQuestions}}", totalQuestions); // Toplam soru sayısını ekleyin
+
 		let info = await transporter.sendMail({
 			from: '"Choz Support" <info@choz.io>', // Gönderen
 			to: userEmail, // Alıcı
-			subject: `Your Exam Results for ${examName} (Id: ${examId})`, // Konu
-			text: `Dear Student, your score for the exam "${examName}" (Id: ${examId}) is ${score}.`, // Düz metin içeriği
-			html: `<b>Dear Student,</b><br>Your score for the exam "<b>${examName}</b>" is <b>${score}</b>.`, // HTML içeriği
+			subject: "Your Quiz Results from Choz!", // Konu
+			html: htmlContent,
 		});
 
 		console.log("Message sent: %s", info.messageId);
@@ -38,5 +52,4 @@ async function sendExamResultEmail(userEmail, examName, examId, score) {
 	}
 }
 
-// transporter ve sendExamResultEmail fonksiyonunu dışa aktarma
 module.exports = { transporter, sendExamResultEmail };

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Your Choz Quiz Results</title>
+		<!--[if mso]>
+			<style type="text/css">
+				body,
+				table,
+				td {
+					font-family: Arial, Helvetica, sans-serif !important;
+				}
+			</style>
+		<![endif]-->
+	</head>
+	<body
+		style="
+			margin: 0;
+			padding: 0;
+			font-family: Arial, Helvetica, sans-serif;
+			background-color: #f4f4f4;
+		"
+	>
+		<table
+			role="presentation"
+			cellspacing="0"
+			cellpadding="0"
+			border="0"
+			width="100%"
+			style="background-color: #f4f4f4"
+		>
+			<tr>
+				<td style="padding: 20px 0">
+					<table
+						role="presentation"
+						cellspacing="0"
+						cellpadding="0"
+						border="0"
+						width="100%"
+						style="
+							max-width: 600px;
+							margin: 0 auto;
+							background-color: #ffffff;
+							border-radius: 8px;
+							overflow: hidden;
+							box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+						"
+					>
+						<!-- Header -->
+						<tr>
+							<td
+								style="
+									background-color: #7b60f1;
+									padding: 20px;
+									text-align: center;
+								"
+							>
+								<img
+									src="./beyaz choz logo.svg"
+									alt="Choz Logo"
+									style="max-width: 150px; height: auto"
+								/>
+								<h1
+									style="
+										color: #ffffff;
+										font-size: 24px;
+										margin-top: 20px;
+									"
+								>
+									Your Quiz Results Are In!
+								</h1>
+							</td>
+						</tr>
+
+						<!-- Quiz Result Section -->
+						<tr>
+							<td style="padding: 30px 20px">
+								<h2
+									style="
+										color: #333333;
+										font-size: 20px;
+										margin-bottom: 20px;
+									"
+								>
+									Quiz: {{examName}}
+								</h2>
+								<p
+									style="
+										color: #666666;
+										font-size: 16px;
+										line-height: 1.5;
+									"
+								>
+									Congratulations on completing the quiz!
+									Here's how you did:
+								</p>
+								<table
+									role="presentation"
+									cellspacing="0"
+									cellpadding="0"
+									border="0"
+									width="100%"
+									style="margin-top: 20px"
+								>
+									<tr>
+										<td
+											style="
+												text-align: center;
+												padding: 10px;
+												background-color: #f0f8ff;
+												border-radius: 8px;
+											"
+										>
+											<p
+												style="
+													font-size: 36px;
+													color: #1e90ff;
+													margin: 0;
+												"
+											>
+												{{score}}
+											</p>
+											<p
+												style="
+													font-size: 16px;
+													color: #666666;
+													margin: 5px 0 0;
+												"
+											>
+												Your Score
+											</p>
+										</td>
+										<td width="20"></td>
+										<td
+											style="
+												text-align: center;
+												padding: 10px;
+												background-color: #fff8dc;
+												border-radius: 8px;
+											"
+										>
+											<p
+												style="
+													font-size: 36px;
+													color: #ffd700;
+													margin: 0;
+												"
+											>
+												{{correctAnswers}} /
+												{{totalQuestions}}
+											</p>
+											<p
+												style="
+													font-size: 16px;
+													color: #666666;
+													margin: 5px 0 0;
+												"
+											>
+												Correct Answers
+											</p>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+
+						<!-- Footer Section: Additional Message -->
+						<tr>
+							<td style="padding: 0 20px 30px; text-align: left">
+								<p
+									style="
+										color: #666666;
+										font-size: 16px;
+										line-height: 1.5;
+									"
+								>
+									Feel free to take more quizzes or challenge
+									your friends!
+								</p>
+								<p
+									style="
+										color: #666666;
+										font-size: 16px;
+										line-height: 1.5;
+									"
+								>
+									For any questions or feedback, please
+									contact us.
+								</p>
+								<p
+									style="
+										color: #666666;
+										font-size: 16px;
+										line-height: 1.5;
+										margin-top: 20px;
+									"
+								>
+									Best regards,<br />
+									The Choz Team
+								</p>
+								<p
+									style="
+										color: #ff0000;
+										font-size: 14px;
+										line-height: 1.5;
+										margin-top: 20px;
+										font-weight: bold;
+									"
+								>
+									Note:<br />
+									If you didn’t take this quiz, please contact
+									us immediately.
+								</p>
+							</td>
+						</tr>
+
+						<!-- Footer -->
+						<tr>
+							<td
+								style="
+									background-color: #f8f8f8;
+									padding: 20px;
+									text-align: center;
+									border-top: 1px solid #eeeeee;
+								"
+							>
+								<p
+									style="
+										color: #666666;
+										font-size: 14px;
+										margin: 0;
+									"
+								>
+									© 2024 Choz Platform. All rights reserved.
+								</p>
+								<p
+									style="
+										color: #666666;
+										font-size: 14px;
+										margin: 10px 0 0;
+									"
+								>
+									<a
+										href="https://choz.io"
+										style="
+											color: #1e90ff;
+											text-decoration: none;
+										"
+										>Visit Choz</a
+									>
+									|
+									<a
+										href="mailto:info@choz.io"
+										style="
+											color: #1e90ff;
+											text-decoration: none;
+										"
+										>Contact Support</a
+									>
+								</p>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>
