@@ -14,7 +14,7 @@ const {
 	publishCorrectAnswers,
 	submitAnswers,
 	checkScore,
-	getUserScore
+	getUserScore,
 } = require("../middleware/protokit");
 const isTestEnv = require("../middleware/isTestEnv");
 const { setTimeout } = require("timers");
@@ -26,8 +26,6 @@ router.use((req, res, next) => {
 	isAuthenticated(req, res, next);
 });
 
-// Pinata'ya dosya pinlemek için fonksiyon
-// Regex to extract markdown links
 const markdownLinkRegex = /\[(.*?)\]\((https?:\/\/\S+)\)/g;
 
 // Regex to extract CID from the URL
@@ -67,7 +65,9 @@ router.post("/create", async (req, res) => {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
 		if (req.body.questions.length === 0) {
-			return res.status(400).json({ message: "Questions cannot be empty" });
+			return res
+				.status(400)
+				.json({ message: "Questions cannot be empty" });
 		}
 
 		const newExam = new Exam({
@@ -91,7 +91,9 @@ router.post("/create", async (req, res) => {
 						console.log("Processing Question: ", question.text);
 
 						// Extract markdown links from question text
-						const matches = [...question.text.matchAll(markdownLinkRegex)];
+						const matches = [
+							...question.text.matchAll(markdownLinkRegex),
+						];
 						for (const match of matches) {
 							console.log("Found Markdown Link: ", match[1]);
 							const url = match[1]; // Extracted URL from markdown link
@@ -105,21 +107,35 @@ router.post("/create", async (req, res) => {
 									console.error(`Failed to pin CID: ${cid}`);
 								}
 							} else {
-								console.log("No valid CID found in the URL:", url);
+								console.log(
+									"No valid CID found in the URL:",
+									url
+								);
 							}
 						}
 
 						// Process question options similarly if they exist
-						if (question.options && Array.isArray(question.options)) {
+						if (
+							question.options &&
+							Array.isArray(question.options)
+						) {
 							console.log("Processing Options for Question.");
 							question.options = await Promise.all(
 								question.options.map(async (option) => {
-									console.log("Processing Option: ", option.text);
+									console.log(
+										"Processing Option: ",
+										option.text
+									);
 									const optionMatches = [
-										...option.text.matchAll(markdownLinkRegex),
+										...option.text.matchAll(
+											markdownLinkRegex
+										),
 									];
 									for (const match of optionMatches) {
-										console.log("Option Text Match: ", match[1]);
+										console.log(
+											"Option Text Match: ",
+											match[1]
+										);
 										const url = match[1];
 										const cidMatch = url.match(cidRegex);
 
@@ -128,10 +144,15 @@ router.post("/create", async (req, res) => {
 											try {
 												await pinToIPFS(cid);
 											} catch (error) {
-												console.error(`Failed to pin CID: ${cid}`);
+												console.error(
+													`Failed to pin CID: ${cid}`
+												);
 											}
 										} else {
-											console.log("No valid CID found in the URL:", url);
+											console.log(
+												"No valid CID found in the URL:",
+												url
+											);
 										}
 									}
 									return option;
@@ -141,17 +162,21 @@ router.post("/create", async (req, res) => {
 
 						question.exam = newExam._id;
 						return await new Question(question).save();
-
 					})
 				);
 				console.log(result);
-				console.log("Inserted many questions", questionsWithPinnedLinksInserted);
+				console.log(
+					"Inserted many questions",
+					questionsWithPinnedLinksInserted
+				);
 				await createExam(
 					newExam.uniqueId,
 					questionsWithPinnedLinksInserted.map((q) => ({
 						questionID: q.uniqueId.toString(),
-						question: crypto.createHash('sha1')
-							.update(q.text).digest('hex'),
+						question: crypto
+							.createHash("sha1")
+							.update(q.text)
+							.digest("hex"),
 						correct_answer: q.correctAnswer,
 					}))
 				);
@@ -172,7 +197,9 @@ router.post("/create", async (req, res) => {
 
 router.get("/", async (req, res) => {
 	try {
-		const exams = await Exam.find({ creator: req.session.user.userId }).sort({
+		const exams = await Exam.find({
+			creator: req.session.user.userId,
+		}).sort({
 			startDate: -1,
 		});
 		res.json(exams);
@@ -263,7 +290,8 @@ router.post("/startExam", async (req, res) => {
 		if (participatedUser) {
 			if (participatedUser.isFinished) {
 				return res.status(400).json({
-					message: "User has already participated and finished the exam",
+					message:
+						"User has already participated and finished the exam",
 				});
 			} else {
 				return res.status(200).json({ message: "Continue the exam" });
@@ -341,7 +369,9 @@ router.get("/:id/questions", async (req, res) => {
 		});
 
 		if (!participatedUser) {
-			return res.status(404).json({ message: "User is not participated" });
+			return res
+				.status(404)
+				.json({ message: "User is not participated" });
 		}
 		if (participatedUser.isFinished) {
 			return res
@@ -349,7 +379,10 @@ router.get("/:id/questions", async (req, res) => {
 				.json({ message: "User has already finished the exam" });
 		}
 
-		const questions = await Question.find({ exam: exam._id }, map_questions).sort({ number: 1 });
+		const questions = await Question.find(
+			{ exam: exam._id },
+			map_questions
+		).sort({ number: 1 });
 
 		res.status(200).json(questions);
 	} catch (err) {
@@ -365,7 +398,9 @@ router.get("/:id/answers", async (req, res) => {
 			return res.status(404).json({ message: "Exam not found" });
 		}
 		if (exam.startDate > new Date()) {
-			return res.status(400).json({ message: "Exam has not started yet" });
+			return res
+				.status(400)
+				.json({ message: "Exam has not started yet" });
 		}
 
 		const answers = await Answer.find({
@@ -386,7 +421,9 @@ router.get("/:id/answers/:answerId", async (req, res) => {
 			return res.status(404).json({ message: "Exam not found" });
 		}
 		if (exam.startDate > new Date()) {
-			return res.status(400).json({ message: "Exam has not started yet" });
+			return res
+				.status(400)
+				.json({ message: "Exam has not started yet" });
 		}
 
 		const answer = await Answer.findById(req.params.answerId);
@@ -401,8 +438,7 @@ router.get("/allscores", async (req, res) => {
 	try {
 		const scores = await Score.find();
 		res.status(200).json(scores);
-	}
-	catch (err) {
+	} catch (err) {
 		console.error(err);
 		res.status(500).json({ message: "Error finding scores" });
 	}
@@ -411,11 +447,16 @@ router.get("/allscores", async (req, res) => {
 router.get("/allscores/protkit", async (req, res) => {
 	try {
 		const participatedUsers = await ParticipatedUser.find({
-			isFinished: true
+			isFinished: true,
 		}).populate(["user", "exam"]);
-		const scores = await Promise.all(participatedUsers.map(async (participated) => {
-			return await getUserScore(participated.exam.uniqueId, participated.user.uniqueId);
-		}));
+		const scores = await Promise.all(
+			participatedUsers.map(async (participated) => {
+				return await getUserScore(
+					participated.exam.uniqueId,
+					participated.user.uniqueId
+				);
+			})
+		);
 		res.status(200).json(scores.data);
 	} catch (err) {
 		console.error(err);
@@ -434,7 +475,9 @@ router.get("/scores/:examId", async (req, res) => {
 
 		const exam = await Exam.findById(examId);
 		if (exam.startDate > new Date()) {
-			return res.status(400).json({ message: "Exam has not started yet" });
+			return res
+				.status(400)
+				.json({ message: "Exam has not started yet" });
 		}
 		if (!exam) {
 			return res.status(404).json({ message: "Exam not found" });
@@ -470,7 +513,9 @@ router.get("/scores/get_user_score/:examId", async (req, res) => {
 
 		const score = await Score.findOne({ exam: examId, user: userId });
 		if (!score) {
-			return res.status(404).json({ message: "Score not found for this user" });
+			return res
+				.status(404)
+				.json({ message: "Score not found for this user" });
 		}
 
 		res.status(200).json(score);
@@ -532,12 +577,21 @@ router.post("/finishExam", async (req, res) => {
 			let userAnswers = new Answer({
 				user: user._id,
 				exam: exam._id,
-				answers: generateAnswersArray(req.body.answers, user.walletAddress)
+				answers: generateAnswersArray(
+					req.body.answers,
+					user.walletAddress
+				),
 			});
 			await userAnswers.save();
 		}
-		const protokitSubmitAnswers = await generateProtokitSubmitAnswers(req.body.answers);
-		await submitAnswers(exam.uniqueId, user.uniqueId, protokitSubmitAnswers);
+		const protokitSubmitAnswers = await generateProtokitSubmitAnswers(
+			req.body.answers
+		);
+		await submitAnswers(
+			exam.uniqueId,
+			user.uniqueId,
+			protokitSubmitAnswers
+		);
 
 		participatedUser.isFinished = true;
 		await participatedUser.save();
@@ -562,7 +616,10 @@ function isExamActive(exam, currentDateTime) {
 function generateAnswersArray(answers, walletAddress) {
 	return answers.map((answer) => {
 		const hashInput = walletAddress + JSON.stringify(answer.answer);
-		const answerHash = crypto.createHash("sha256").update(hashInput).digest("hex");
+		const answerHash = crypto
+			.createHash("sha256")
+			.update(hashInput)
+			.digest("hex");
 		return {
 			question: answer.questionID,
 			selectedOption: answer.answer,
@@ -595,8 +652,10 @@ async function publishExamAnswers(exam) {
 			questions.map((q) => {
 				return {
 					questionID: q.uniqueId,
-					question: crypto.createHash('sha1')
-						.update(q.text).digest('hex'),
+					question: crypto
+						.createHash("sha1")
+						.update(q.text)
+						.digest("hex"),
 					correct_answer: q.correctAnswer,
 				};
 			})
@@ -615,8 +674,12 @@ cron.schedule("*/2 * * * *", async () => {
 		}
 		const completedExams = exams.filter((exam) => {
 			const startDate = new Date(exam.startDate);
-			const endDate = new Date(startDate.getTime() + exam.duration * 60 * 1000);
-			console.log(`Sinav: ${exam.title}, EndDate: ${endDate}, Now: ${now}`);
+			const endDate = new Date(
+				startDate.getTime() + exam.duration * 60 * 1000
+			);
+			console.log(
+				`Sinav: ${exam.title}, EndDate: ${endDate}, Now: ${now}`
+			);
 			return endDate <= now;
 		});
 		console.log("Completed Exams: ", completedExams);
@@ -624,15 +687,14 @@ cron.schedule("*/2 * * * *", async () => {
 			console.log("No completed exams found.");
 		} else {
 			for (const exam of completedExams) {
-					await delay(500);
-					await publishExamAnswers(exam);
-					console.log("Delayed for 1/2 second.");
+				await delay(500);
+				await publishExamAnswers(exam);
+				console.log("Delayed for 1/2 second.");
 
 				exam.isCompleted = true;
 				await exam.save();
 			}
 		}
-
 	} catch (error) {
 		console.error("Error publishing exam answers: ", error);
 	}

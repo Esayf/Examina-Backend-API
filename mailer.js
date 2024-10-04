@@ -28,7 +28,7 @@ async function sendExamResultEmail(
 	correctAnswers
 ) {
 	try {
-		if (score == "User score not found") {
+		if (!correctAnswers) {
 			console.log("User score is undefined, not sending email.");
 			return;
 		}
@@ -36,13 +36,13 @@ async function sendExamResultEmail(
 		htmlContent = htmlContent
 			.replace("{{examName}}", examName)
 			.replace("{{score}}", (correctAnswers / totalQuestions) * 100)
-			.replace("{{correctAnswers}}", correctAnswers) // Doğru cevap sayısını ekleyin
-			.replace("{{totalQuestions}}", totalQuestions); // Toplam soru sayısını ekleyin
+			.replace("{{correctAnswers}}", correctAnswers)
+			.replace("{{totalQuestions}}", totalQuestions);
 
 		let info = await transporter.sendMail({
-			from: '"Choz Support" <info@choz.io>', // Gönderen
-			to: userEmail, // Alıcı
-			subject: "Your Quiz Results from Choz!", // Konu
+			from: '"Choz Support" <info@choz.io>',
+			to: userEmail,
+			subject: "Your Quiz Results from Choz!",
 			html: htmlContent,
 		});
 

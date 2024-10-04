@@ -77,6 +77,7 @@ examResultsQueue.process(1, async (job, done) => {
 			participated.exam.questionCount,
 			score.score
 		);
+
 		participatedUser.isMailSent = true;
 		await participatedUser.save();
 		done();
