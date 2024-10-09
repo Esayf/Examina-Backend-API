@@ -28,7 +28,7 @@ async function sendExamResultEmail(
 	correctAnswers
 ) {
 	try {
-		if (!correctAnswers) {
+		if (!correctAnswers || correctAnswers === "User score not found") {
 			console.log("User score is undefined, not sending email.");
 			return;
 		}
