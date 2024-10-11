@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User"); //Generate user route for get all users
+const User = require("../models/user.model"); //Generate user route for get all users
 router.get("/", async (req, res) => {
 	try {
 		const users = await User.find();

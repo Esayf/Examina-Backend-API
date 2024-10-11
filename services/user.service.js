@@ -1,4 +1,4 @@
-const User = require("../models/User");
+const User = require("../models/user.model");
 var Client = require("mina-signer");
 const signerClient = new Client({ network: "mainnet" });
 
@@ -20,11 +20,13 @@ async function verifySignature(message, walletAddress, signature) {
 	const parsedSignature =
 		typeof signature === "string" ? JSON.parse(signature) : signature;
 	const verifyBody = {
-		data: message,
+		data: { message: message },
 		publicKey: walletAddress,
 		signature: parsedSignature,
 	};
-	return signerClient.verifyMessage(verifyBody);
+	const verifyResult = await signerClient.verifyMessage(verifyBody);
+	console.log("Result: ", verifyResult);
+	return verifyResult;
 }
 
 module.exports = { findUserByWalletAddress, createUser, verifySignature };
