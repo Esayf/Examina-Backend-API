@@ -1,9 +1,9 @@
-const userService = require("../services/user.service");
-const verifySignature = async (req, res, next) => {
+const helperFunctions = require("../helpers/helperFunctions");
+const verifySignature = (req, res, next) => {
 	const { walletAddress, signature } = req.body;
 	const message = req.session.message;
 
-	const verifyResult = await userService.verifySignature(
+	const verifyResult = helperFunctions.verifySignature(
 		message,
 		walletAddress,
 		signature

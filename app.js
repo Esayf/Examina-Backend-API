@@ -69,8 +69,7 @@ setTimeout(() => {
 		}
 
 		app.use("/exams", require("./routes/exams"));
-		app.use("/register", require("./routes/register.route"));
-		app.use("/user", require("./routes/user"));
+		app.use("/users", require("./routes/user.route"));
 		app.use("/questions", require("./routes/questions"));
 		require("./cron/checkParticipantScoreAndMail");
 	} catch (error) {

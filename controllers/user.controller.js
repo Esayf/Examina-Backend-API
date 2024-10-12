@@ -3,30 +3,15 @@ const sessionHelper = require("../helpers/sessionHelper");
 
 async function getMessageToSign(req, res) {
 	const { walletAddress } = req.params;
-	const token = Math.random().toString(36).substring(7);
-	req.session.token = token;
-	const message = `${req.session.token}${walletAddress}`;
-	req.session.message =
-		process.env.NODE_ENV == "test" ? { message } : message;
+	const message = sessionHelper.createTokenAndMessage(req, walletAddress);
 	res.json({ message: message });
 }
 
 async function registerUser(req, res) {
 	const { walletAddress } = req.body;
 	try {
-		let user = await userService.findUserByWalletAddress(walletAddress);
-		if (user.length === 0) {
-			user = await userService.createUser(walletAddress);
-			sessionHelper.setSessionUser(req, user);
-			return res
-				.status(200)
-				.json({ success: true, session: req.session.user });
-		} else {
-			sessionHelper.setSessionUser(req, user[0]);
-			return res
-				.status(200)
-				.json({ success: true, session: req.session.user });
-		}
+		await userService.registerOrCreateUser(req, walletAddress);
+		res.status(200).json({ success: true, session: req.session.user });
 	} catch (error) {
 		console.log(error);
 		res.status(500).json({ message: "Internal server error" });
@@ -46,4 +31,35 @@ async function logout(req, res) {
 	});
 }
 
-module.exports = { getMessageToSign, registerUser, getSession, logout };
+async function getAllUsers(req, res) {
+	try {
+		const users = await userService.findAllUsers();
+		res.status(200).json(users);
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: "Internal server error" });
+	}
+}
+
+async function putEmail(req, res) {
+	const { email } = req.body;
+	try {
+		const user = await userService.updateUserEmail(
+			req.session.user.userId,
+			email
+		);
+		res.status(200).json({ success: true, user: user });
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: "Internal server error" });
+	}
+}
+
+module.exports = {
+	getMessageToSign,
+	registerUser,
+	getSession,
+	logout,
+	getAllUsers,
+	putEmail,
+};
