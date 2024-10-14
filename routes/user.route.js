@@ -1,9 +1,11 @@
 const express = require("express");
 const userController = require("../controllers/user.controller");
-const isAuthenticated = require("../middleware/auth");
-const checkSessionToken = require("../middleware/checkSessionToken");
-const verifySignature = require("../middleware/verifySignature");
-const isEmailValid = require("../middleware/isEmailValid");
+const {
+	ensureAuthenticated,
+	validateSessionToken,
+	validateRequestedEmail,
+	verifyUserSignature,
+} = require("../middleware/middleware");
 
 const router = express.Router();
 
@@ -13,24 +15,22 @@ router.get(
 );
 router.post(
 	"/register",
-	checkSessionToken,
-	verifySignature,
+	validateSessionToken,
+	verifyUserSignature,
 	userController.registerUser
 );
 if (process.env.NODE_ENV === "development") {
 	router.post("/register/dev", userController.registerUser);
 }
-router.get("/session", isAuthenticated, userController.getSession);
-router.post("/logout", isAuthenticated, userController.logout);
+router.get("/session", ensureAuthenticated, userController.getSession);
+router.post("/logout", ensureAuthenticated, userController.logout);
 
-// SHOULD THERE BE A CONTROL?
 router.get("/", userController.getAllUsers);
 
-// SHOULD IT BE "PUT" OR "POST" REQUEST?
 router.post(
 	"/put/email",
-	isAuthenticated,
-	isEmailValid,
+	ensureAuthenticated,
+	validateRequestedEmail,
 	userController.putEmail
 );
 

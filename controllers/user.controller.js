@@ -10,7 +10,7 @@ async function getMessageToSign(req, res) {
 async function registerUser(req, res) {
 	const { walletAddress } = req.body;
 	try {
-		await userService.registerOrCreateUser(req, walletAddress);
+		await userService.registerOrLogin(req, walletAddress);
 		res.status(200).json({ success: true, session: req.session.user });
 	} catch (error) {
 		console.log(error);

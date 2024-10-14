@@ -34,24 +34,24 @@ async function createUser(walletAddress) {
 	return savedUser;
 }
 
-async function findAndRegisterUser(req, walletAddress) {
+async function findAndLogin(req, walletAddress) {
 	let user = await findUserByWalletAddress(walletAddress);
 	sessionHelper.setSessionUser(req, user[0]);
 	return user[0];
 }
 
-async function createAndRegisterUser(req, walletAddress) {
+async function createAndRegister(req, walletAddress) {
 	let newUser = await createUser(walletAddress);
 	sessionHelper.setSessionUser(req, newUser);
 	return newUser;
 }
 
-async function registerOrCreateUser(req, walletAddress) {
+async function registerOrLogin(req, walletAddress) {
 	let user = await findUserByWalletAddress(walletAddress);
 	if (user.length === 0) {
-		return await createAndRegisterUser(req, walletAddress);
+		return await createAndRegister(req, walletAddress);
 	} else {
-		return await findAndRegisterUser(req, walletAddress);
+		return await findAndLogin(req, walletAddress);
 	}
 }
 
@@ -67,6 +67,6 @@ module.exports = {
 	findUserById,
 	findAllUsers,
 	createUser,
-	registerOrCreateUser,
+	registerOrLogin,
 	updateUserEmail,
 };

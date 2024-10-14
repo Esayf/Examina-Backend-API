@@ -4,8 +4,10 @@ const signerClient = new Client({ network: "mainnet" });
 function verifySignature(message, walletAddress, signature) {
 	const parsedSignature =
 		typeof signature === "string" ? JSON.parse(signature) : signature;
+	const parsedMessage =
+		typeof message === "string" ? message.toString() : message;
 	const verifyBody = {
-		data: { message: message },
+		data: parsedMessage,
 		publicKey: walletAddress,
 		signature: parsedSignature,
 	};

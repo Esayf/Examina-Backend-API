@@ -8,7 +8,7 @@ const Score = require("../models/Score");
 const router = express.Router();
 const crypto = require("crypto");
 const { project_questions, map_questions } = require("../models/projections");
-const isAuthenticated = require("../middleware/auth");
+const isAuthenticated = require("../middleware/middleware");
 const {
 	createExam,
 	publishCorrectAnswers,
