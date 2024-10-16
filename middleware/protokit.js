@@ -1,7 +1,7 @@
 const isTestEnv = require("./isTestEnv");
 const Score = require("../models/Score");
 const User = require("../models/user.model");
-const Exam = require("../models/Exam");
+const Exam = require("../models/exam.model");
 const createExam = async (examID, questions) => {
 	if (process.env.NODE_ENV === "development") return;
 	if (isTestEnv) return;

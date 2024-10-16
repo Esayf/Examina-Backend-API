@@ -68,7 +68,7 @@ setTimeout(() => {
 			app.use(morgan("dev"));
 		}
 
-		app.use("/exams", require("./routes/exams"));
+		app.use("/exams", require("./routes/exam.route"));
 		app.use("/users", require("./routes/user.route"));
 		app.use("/questions", require("./routes/questions"));
 		require("./cron/checkParticipantScoreAndMail");
