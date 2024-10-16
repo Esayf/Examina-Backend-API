@@ -1,14 +1,14 @@
 const express = require("express");
-const Exam = require("../models/Exam");
+const Exam = require("../models/exam.model");
 const Answer = require("../models/Answer");
 const Question = require("../models/Question");
-const User = require("../models/User");
+const User = require("../models/user.model");
 const ParticipatedUser = require("../models/ParticipatedUser");
 const Score = require("../models/Score");
 const router = express.Router();
 const crypto = require("crypto");
 const { project_questions, map_questions } = require("../models/projections");
-const isAuthenticated = require("../middleware/auth");
+const isAuthenticated = require("../middleware/middleware");
 const {
 	createExam,
 	publishCorrectAnswers,
@@ -169,17 +169,6 @@ router.post("/create", async (req, res) => {
 					"Inserted many questions",
 					questionsWithPinnedLinksInserted
 				);
-				await createExam(
-					newExam.uniqueId,
-					questionsWithPinnedLinksInserted.map((q) => ({
-						questionID: q.uniqueId.toString(),
-						question: crypto
-							.createHash("sha1")
-							.update(q.text)
-							.digest("hex"),
-						correct_answer: q.correctAnswer,
-					}))
-				);
 				res.status(200).json({
 					message: "Exam created successfully",
 					newExam: newExam,
@@ -205,21 +194,6 @@ router.get("/", async (req, res) => {
 		res.json(exams);
 	} catch (err) {
 		console.error(err);
-		res.status(500).json({ message: "Internal Server Error" });
-	}
-});
-
-router.post("/create/mock_exam", async (req, res) => {
-	try {
-		if (!isMochaRunning && process.env.NODE_ENV === "development") {
-			const result = await fetch(
-				`${process.env.PROTOKIT_URL}/create/mock_exam`
-			);
-			console.log("Result: ", result);
-			res.json(result);
-		}
-	} catch (error) {
-		console.error(error);
 		res.status(500).json({ message: "Internal Server Error" });
 	}
 });
