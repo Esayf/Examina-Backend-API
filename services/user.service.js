@@ -78,7 +78,7 @@ async function createAndRegister(req, walletAddress) {
 
 async function registerOrLogin(req, walletAddress) {
 	try {
-		let user = await findByWalletAddress(walletAddress);
+		let user = await getByWalletAddress(walletAddress);
 		if (user.length === 0) {
 			return await createAndRegister(req, walletAddress);
 		} else {

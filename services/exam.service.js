@@ -1,7 +1,12 @@
-const { processQuestion } = require("../helpers/helperFunctions");
+const {
+	processQuestion,
+	checkExamTimes,
+} = require("../helpers/helperFunctions");
 const Exam = require("../models/exam.model");
 const Question = require("../models/Question");
-const ParticipatedUser = require("../models/participatedUser.model");
+const participatedUserService = require("./participatedUser.service");
+const questionService = require("../services/question.service");
+const { map_questions } = require("../models/projections");
 
 async function create(examData, questions) {
 	const newExam = new Exam({
@@ -18,10 +23,7 @@ async function create(examData, questions) {
 	try {
 		const savedExam = await newExam.save(); // Save exam to database
 
-		const questionsWithPinnedLinks = await saveQuestions(
-			questions,
-			savedExam._id
-		);
+		await saveQuestions(questions, savedExam._id);
 
 		return {
 			message: "Exam created successfully",
@@ -68,42 +70,97 @@ async function getById(examId) {
 		return exam;
 	} catch (error) {
 		console.log(error);
-		throw new Error("Error finding the exam");
+		throw new Error("Exam not found");
 	}
 }
 
-async function getByIdWithParticipation(examId, userId) {
+async function getByIdWithOrWithoutParticipation(examId, userId) {
 	try {
 		const exam = await getById(examId);
 
-		const participation = await getParticipation(examId, userId);
+		if (userId) {
+			const participation = await participatedUserService.get(
+				examId,
+				userId
+			);
 
-		return {
-			exam,
-			isFinished: participation,
-		};
+			return {
+				exam,
+				isFinished: participation ? participation.isFinished : false,
+			};
+		} else {
+			return exam;
+		}
 	} catch (err) {
 		console.error("Error fetching exam:", err);
 		throw new Error("Error fetching exam");
 	}
 }
 
-async function getParticipation(examId, userId) {
-	// Unnecessary control. User id have to exist because it must pass authorization.
-	// if (userId) {
-	const userParticipation = await ParticipatedUser.findOne({
-		user: userId,
-		exam: examId,
-	}).populate("user");
+async function start(examId, userId) {
+	try {
+		const exam = await getById(examId);
 
-	if (!userParticipation) {
-		return false; // User has not participated
+		// Sınav zamanı kontrolü
+		const examTimeCheck = checkExamTimes(exam);
+		if (!examTimeCheck.valid) {
+			return { status: 400, message: examTimeCheck.message };
+		}
+
+		// Katılımcı kullanıcıyı kontrol et
+		return await participatedUserService.checkParticipation(
+			userId,
+			examId,
+			{
+				createIfNotExist: true,
+			}
+		);
+	} catch (error) {
+		console.log("Error starting exam: ", error);
+		return { status: 500, message: "Internal Server Error" };
 	}
-
-	return userParticipation.isFinished;
-	// } else {
-	// 	return { exam };
-	// }
 }
 
-module.exports = { create, getAllByUser, getById, getByIdWithParticipation };
+// This function should move to question.service. It would be better.
+// These controls should be inside service or controller? Which one is more proper?
+async function getQuestionsByExam(examId, userId) {
+	try {
+		const exam = await getById(examId);
+
+		// Check if the exam has started or ended
+		const examTimeCheck = checkExamTimes(exam);
+		if (!examTimeCheck.valid) {
+			return { status: 400, message: examTimeCheck.message };
+		}
+
+		// Check if the user has participated
+		const participationResult =
+			await participatedUserService.checkParticipation(userId, examId, {
+				createIfNotExist: false,
+			});
+
+		if (!participationResult.success) {
+			return {
+				status: participationResult.status,
+				message: participationResult.message,
+			};
+		}
+
+		// Retrieve the questions for the exam
+		const questions = await questionService.getAllByExam(examId);
+
+		return { status: 200, data: questions };
+	} catch (err) {
+		console.error("Error fetching exam questions:", err);
+		throw { status: 500, message: "Internal Server Error" };
+	}
+}
+
+module.exports = {
+	create,
+	getAllByUser,
+	getById,
+	getByIdWithOrWithoutParticipation,
+	start,
+	getQuestionsByExam,
+};

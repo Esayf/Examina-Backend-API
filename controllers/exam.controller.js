@@ -41,10 +41,9 @@ async function getAllExams(req, res) {
 
 async function getExamById(req, res) {
 	try {
-		const result = await examService.getByIdWithParticipation(
+		const result = await examService.getByIdWithOrWithoutParticipation(
 			req.params.id,
-			// Unnecessary Control?
-			req.session.user ? req.session.user.userId : null
+			req.session.user?.userId
 		);
 		res.status(200).json(result);
 	} catch (err) {
@@ -56,8 +55,41 @@ async function getExamById(req, res) {
 	}
 }
 
+async function startExam(req, res) {
+	const { examId } = req.body;
+
+	try {
+		const userId = req.session.user.userId;
+		const response = await examService.start(examId, userId);
+
+		res.status(response.status).json({ message: response.message });
+	} catch (error) {
+		console.error("Error starting exam: ", error);
+		res.status(500).json({ message: "Internal Server Error" });
+	}
+}
+
+async function getExamQuestions(req, res) {
+	const userId = req.session.user.userId;
+	const examId = req.params.id;
+
+	try {
+		const response = await examService.getQuestionsByExam(examId, userId);
+		return res
+			.status(response.status)
+			.json(response.data || { message: response.message });
+	} catch (err) {
+		console.error(err);
+		res.status(err.status || 500).json({
+			message: err.message || "Internal Server Error",
+		});
+	}
+}
+
 module.exports = {
 	createExam,
 	getAllExams,
 	getExamById,
+	startExam,
+	getExamQuestions,
 };

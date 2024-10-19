@@ -86,10 +86,26 @@ async function processQuestion(question) {
 	return question;
 }
 
+function checkExamTimes(exam) {
+	const startTime = exam.startDate;
+	const endTime = new Date(startTime.getTime() + exam.duration * 60000);
+	const currentDateTime = new Date().getTime();
+
+	if (currentDateTime < startTime.getTime()) {
+		return { valid: false, message: "Exam has not started yet." };
+	}
+	if (currentDateTime > endTime) {
+		return { valid: false, message: "Exam has already ended." };
+	}
+
+	return { valid: true };
+}
+
 module.exports = {
 	verifySignature,
 	validateEmail,
 	pinToIPFS,
 	extractImageCid,
 	processQuestion,
+	checkExamTimes,
 };
