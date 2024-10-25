@@ -1,8 +1,8 @@
 const Queue = require("bull");
 const redisClient = require("../config/redis");
-const ParticipatedUser = require("../models/ParticipatedUser");
-const Score = require("../models/Score");
-const Question = require("../models/Question");
+const ParticipatedUser = require("../models/participatedUser.model");
+const Score = require("../models/score.model");
+const Question = require("../models/question.model");
 const { getUserScore, checkScore } = require("../middleware/protokit");
 const { sendExamResultEmail } = require("../mailer");
 

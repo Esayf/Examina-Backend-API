@@ -3,22 +3,24 @@ const {
 	checkExamTimes,
 } = require("../helpers/helperFunctions");
 const Exam = require("../models/exam.model");
-const Question = require("../models/Question");
+const Question = require("../models/question.model");
 const participatedUserService = require("./participatedUser.service");
 const questionService = require("../services/question.service");
-const { map_questions } = require("../models/projections");
+const answerService = require("./answer.service");
 
 async function create(examData, questions) {
 	const newExam = new Exam({
 		creator: examData.creator,
 		title: examData.title,
 		description: examData.description,
-		startDate: examData.startDate,
 		duration: examData.duration,
+		startDate: examData.startDate,
 		rootHash: examData.rootHash,
 		secretKey: examData.secretKey,
 		questionCount: questions.length,
 	});
+
+	console.log("New Exam: ", newExam);
 
 	try {
 		const savedExam = await newExam.save(); // Save exam to database
@@ -29,27 +31,32 @@ async function create(examData, questions) {
 			message: "Exam created successfully",
 			newExam: savedExam,
 		};
-	} catch (err) {
-		console.error("Error saving exam:", err);
-		throw new Error("Error when saving exam");
+	} catch (error) {
+		console.error("Error saving exam:", error);
+		throw new Error("Error saving exam");
 	}
 }
 
 async function saveQuestions(questions, examId) {
-	// Process each question before saving
-	const processedQuestions = await Promise.all(
-		questions.map((question) => processQuestion(question))
-	);
+	try {
+		// Process each question before saving
+		const processedQuestions = await Promise.all(
+			questions.map((question) => processQuestion(question))
+		);
 
-	// Save each processed question with a reference to the exam
-	const savedQuestions = await Promise.all(
-		processedQuestions.map((question) => {
-			question.exam = examId;
-			return new Question(question).save();
-		})
-	);
+		// Save each processed question with a reference to the exam
+		const savedQuestions = await Promise.all(
+			processedQuestions.map((question) => {
+				question.exam = examId;
+				return new Question(question).save();
+			})
+		);
 
-	return savedQuestions;
+		return savedQuestions;
+	} catch (error) {
+		console.error("Error saving questions:", error);
+		throw new Error("Error saving questions");
+	}
 }
 
 async function getAllByUser(userId) {
@@ -58,8 +65,8 @@ async function getAllByUser(userId) {
 			startDate: -1,
 		});
 		return exams;
-	} catch (err) {
-		console.error("Error fetching exams:", err);
+	} catch (error) {
+		console.error("Error fetching exams:", error);
 		throw new Error("Error fetching exams");
 	}
 }
@@ -69,8 +76,8 @@ async function getById(examId) {
 		const exam = await Exam.findById(examId);
 		return exam;
 	} catch (error) {
-		console.log(error);
-		throw new Error("Exam not found");
+		console.log("Error fetching exam:", error);
+		throw new Error("Error fetching exam");
 	}
 }
 
@@ -78,21 +85,39 @@ async function getByIdWithOrWithoutParticipation(examId, userId) {
 	try {
 		const exam = await getById(examId);
 
+		if (!exam) {
+			return { status: 404, message: "Exam not found" };
+		}
+
 		if (userId) {
 			const participation = await participatedUserService.get(
 				examId,
 				userId
 			);
 
+			if (!participation) {
+				return { status: 404, message: "Participation not found" };
+			}
+
 			return {
-				exam,
-				isFinished: participation ? participation.isFinished : false,
+				status: 200,
+				message: "Exam and participation fetched successfully",
+				data: {
+					exam,
+					isFinished: participation
+						? participation.isFinished
+						: false,
+				},
 			};
-		} else {
-			return exam;
 		}
-	} catch (err) {
-		console.error("Error fetching exam:", err);
+
+		return {
+			status: 200,
+			message: "Exam fetched successfully",
+			data: { exam },
+		};
+	} catch (error) {
+		console.error("Error fetching exam:", error);
 		throw new Error("Error fetching exam");
 	}
 }
@@ -101,31 +126,38 @@ async function start(examId, userId) {
 	try {
 		const exam = await getById(examId);
 
-		// Sınav zamanı kontrolü
+		if (!exam) {
+			return { status: 404, message: "Exam not found" };
+		}
+
+		// Check exam times
 		const examTimeCheck = checkExamTimes(exam);
 		if (!examTimeCheck.valid) {
 			return { status: 400, message: examTimeCheck.message };
 		}
 
-		// Katılımcı kullanıcıyı kontrol et
-		return await participatedUserService.checkParticipation(
+		// Check or create participation
+		const response = await participatedUserService.checkParticipation(
 			userId,
 			examId,
-			{
-				createIfNotExist: true,
-			}
+			{ createIfNotExist: true }
 		);
+
+		return response;
 	} catch (error) {
 		console.log("Error starting exam: ", error);
-		return { status: 500, message: "Internal Server Error" };
+		throw new Error("Error starting exam");
 	}
 }
 
-// This function should move to question.service. It would be better.
-// These controls should be inside service or controller? Which one is more proper?
+// Q: This function should move to question.service. It would be better.
+// Q: These controls should be inside service or controller? Which one is more proper?
 async function getQuestionsByExam(examId, userId) {
 	try {
 		const exam = await getById(examId);
+		if (!exam) {
+			return { status: 404, message: "Exam not found" };
+		}
 
 		// Check if the exam has started or ended
 		const examTimeCheck = checkExamTimes(exam);
@@ -152,7 +184,57 @@ async function getQuestionsByExam(examId, userId) {
 		return { status: 200, data: questions };
 	} catch (err) {
 		console.error("Error fetching exam questions:", err);
-		throw { status: 500, message: "Internal Server Error" };
+		throw new Error("Error fetching exam questions");
+	}
+}
+
+async function finish(userId, examId, answers, walletAddress) {
+	try {
+		const exam = await getById(examId);
+		if (!exam) {
+			return { status: 404, message: "Exam not found" };
+		}
+
+		const examTimeCheck = checkExamTimes(exam);
+		if (!examTimeCheck.valid) {
+			return { status: 400, message: examTimeCheck.message };
+		}
+
+		const participationResult =
+			await participatedUserService.checkParticipation(userId, examId, {
+				createIfNotExist: false,
+			});
+
+		if (!participationResult.success) {
+			return {
+				status: participationResult.status,
+				message: participationResult.message,
+			};
+		}
+
+		let answer = await answerService.get(userId, examId);
+
+		if (!answer) {
+			answer = await answerService.create(
+				userId,
+				examId,
+				answers,
+				walletAddress
+			);
+		}
+
+		await participatedUserService.updatePariticipationStatus(
+			userId,
+			examId
+		);
+
+		return {
+			status: 200,
+			message: "Exam finished and answers submitted successfully",
+		};
+	} catch (error) {
+		console.log("Error finishing exam: ", error);
+		throw new Error("Error finishing exam");
 	}
 }
 
@@ -163,4 +245,5 @@ module.exports = {
 	getByIdWithOrWithoutParticipation,
 	start,
 	getQuestionsByExam,
+	finish,
 };

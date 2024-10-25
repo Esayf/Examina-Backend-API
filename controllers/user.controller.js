@@ -2,24 +2,31 @@ const userService = require("../services/user.service");
 const sessionHelper = require("../helpers/sessionHelper");
 
 async function getMessageToSign(req, res) {
-	const { walletAddress } = req.params;
-	const message = sessionHelper.createTokenAndMessage(req, walletAddress);
-	res.json({ message: message });
+	try {
+		const { walletAddress } = req.params;
+		const message = sessionHelper.createTokenAndMessage(req, walletAddress);
+		return res.json({ message: message });
+	} catch (error) {
+		console.log("Error message creating: ", error);
+		return res.status(500).json({ message: "Internal server error" });
+	}
 }
 
 async function registerUser(req, res) {
 	const { walletAddress } = req.body;
 	try {
 		await userService.registerOrLogin(req, walletAddress);
-		res.status(200).json({ success: true, session: req.session.user });
+		return res
+			.status(201)
+			.json({ success: true, session: req.session.user });
 	} catch (error) {
 		console.log(error);
-		res.status(500).json({ message: "Internal server error" });
+		return res.status(500).json({ message: "Internal server error" });
 	}
 }
 
 async function getSession(req, res) {
-	res.json({ success: true, session: req.session.user });
+	return res.status(200).json({ success: true, session: req.session.user });
 }
 
 async function logout(req, res) {
@@ -27,31 +34,34 @@ async function logout(req, res) {
 		if (err) {
 			return res.status(500).json({ message: "Failed to logout" });
 		}
-		res.json({ success: true, message: "Logged out" });
+		return res.json({ success: true, message: "Logged out" });
 	});
 }
 
 async function getAllUsers(req, res) {
 	try {
-		const users = await userService.findAllUsers();
-		res.status(200).json(users);
+		const users = await userService.getAll();
+		if (!users) {
+			return res.status(404).json({ message: "Users not found" });
+		}
+		return res.status(200).json(users);
 	} catch (err) {
 		console.error(err);
-		res.status(500).json({ message: "Internal server error" });
+		return res.status(500).json({ message: "Internal server error" });
 	}
 }
 
 async function putEmail(req, res) {
 	const { email } = req.body;
 	try {
-		const user = await userService.updateUserEmail(
+		const user = await userService.updateEmail(
 			req.session.user.userId,
 			email
 		);
-		res.status(200).json({ success: true, user: user });
+		return res.status(200).json({ success: true, user: user });
 	} catch (err) {
 		console.error(err);
-		res.status(500).json({ message: "Internal server error" });
+		return res.status(500).json({ message: "Internal server error" });
 	}
 }
 

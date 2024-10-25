@@ -1,6 +1,7 @@
 var Client = require("mina-signer");
 const signerClient = new Client({ network: "mainnet" });
 const axios = require("axios");
+const crypto = require("crypto");
 
 function verifySignature(message, walletAddress, signature) {
 	const parsedSignature =
@@ -101,6 +102,28 @@ function checkExamTimes(exam) {
 	return { valid: true };
 }
 
+function generateAnswerArray(answers, walletAddress) {
+	return answers.map((answer) => {
+		const hashInput = walletAddress + JSON.stringify(answer.answer);
+		const answerHash = crypto
+			.createHash("sha256")
+			.update(hashInput)
+			.digest("hex");
+		return {
+			question: answer.questionID,
+			selectedOption: answer.answer,
+			answerHash: answerHash,
+		};
+	});
+}
+
+function isExamCompleted(exam) {
+	const startTime = new Date(exam.startDate);
+	const endTime = startTime.getTime() + exam.duration * 60000;
+	const currentDateTime = new Date().getTime();
+	return endTime < currentDateTime;
+}
+
 module.exports = {
 	verifySignature,
 	validateEmail,
@@ -108,4 +131,6 @@ module.exports = {
 	extractImageCid,
 	processQuestion,
 	checkExamTimes,
+	generateAnswerArray,
+	isExamCompleted,
 };

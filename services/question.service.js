@@ -1,5 +1,5 @@
-const Question = require("../models/Question");
-const { map_questions } = require("../models/projections");
+const Question = require("../models/question.model");
+const { map_questions, project_questions } = require("../models/projections");
 
 async function getAllByExam(examId) {
 	try {
@@ -14,4 +14,20 @@ async function getAllByExam(examId) {
 	}
 }
 
-module.exports = { getAllByExam };
+async function getById(questionId) {
+	try {
+		const question = await Question.findById(questionId).select(
+			project_questions
+		);
+
+		return question;
+	} catch (error) {
+		console.error("Error fetching question:", error);
+		throw new Error("Error fetching question");
+	}
+}
+
+module.exports = {
+	getAllByExam,
+	getById,
+};

@@ -32,26 +32,29 @@ async function createExam(req, res) {
 async function getAllExams(req, res) {
 	try {
 		const exams = await examService.getAllByUser(req.session.user.userId);
-		res.status(200).json(exams);
+		return res.status(200).json(exams);
 	} catch (err) {
 		console.error(err);
-		res.status(500).json({ message: "Internal Server Error" });
+		return res.status(500).json({ message: "Internal Server Error" });
 	}
 }
 
 async function getExamById(req, res) {
 	try {
-		const result = await examService.getByIdWithOrWithoutParticipation(
-			req.params.id,
-			req.session.user?.userId
-		);
-		res.status(200).json(result);
-	} catch (err) {
-		if (err.message === "Exam not found") {
-			return res.status(404).json({ message: "Exam not found" });
+		const userId = req.session.user?.userId;
+		const examId = req.params.id;
+
+		const { status, message, data } =
+			await examService.getByIdWithOrWithoutParticipation(examId, userId);
+
+		if (status !== 200) {
+			return res.status(status).json({ message });
 		}
-		console.error(err);
-		res.status(500).json({ message: "Internal Server Error" });
+
+		return res.status(200).json(data);
+	} catch (err) {
+		console.error("Error fetching exam: ", err);
+		return res.status(500).json({ message: "Internal Server Error" });
 	}
 }
 
@@ -60,12 +63,12 @@ async function startExam(req, res) {
 
 	try {
 		const userId = req.session.user.userId;
-		const response = await examService.start(examId, userId);
+		const { status, message } = await examService.start(examId, userId);
 
-		res.status(response.status).json({ message: response.message });
-	} catch (error) {
-		console.error("Error starting exam: ", error);
-		res.status(500).json({ message: "Internal Server Error" });
+		return res.status(status).json({ message });
+	} catch (err) {
+		console.error("Error starting exam: ", err);
+		return res.status(500).json({ message: "Internal Server Error" });
 	}
 }
 
@@ -80,9 +83,26 @@ async function getExamQuestions(req, res) {
 			.json(response.data || { message: response.message });
 	} catch (err) {
 		console.error(err);
-		res.status(err.status || 500).json({
+		return res.status(err.status || 500).json({
 			message: err.message || "Internal Server Error",
 		});
+	}
+}
+
+async function finishExam(req, res) {
+	try {
+		const result = await examService.finish(
+			req.session.user.userId,
+			req.body.examId,
+			req.body.answers,
+			req.session.user.walletAddress
+		);
+		return res.status(result.status).json({ message: result.message });
+	} catch (err) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ message: "Error finishing exam and submitting answers" });
 	}
 }
 
@@ -92,4 +112,5 @@ module.exports = {
 	getExamById,
 	startExam,
 	getExamQuestions,
+	finishExam,
 };

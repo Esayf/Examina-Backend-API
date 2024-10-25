@@ -1,4 +1,4 @@
-const ParticipatedUser = require("../models/ParticipatedUser");
+const ParticipatedUser = require("../models/participatedUser.model");
 
 async function get(userId, examId) {
 	try {
@@ -9,7 +9,7 @@ async function get(userId, examId) {
 		return userParticipation;
 	} catch (err) {
 		console.error("Error fetching participation:", err);
-		return { status: 500, message: "Error fetching participation" };
+		throw new Error("Error fetching participation");
 	}
 }
 
@@ -23,87 +23,60 @@ async function create(userId, examId) {
 		await newParticipatedUser.save();
 	} catch (err) {
 		console.error("Error creating participation:", err);
-		return { status: 500, message: "Error creating participation" };
+		throw new Error("Error creating participation");
 	}
 }
 
-// async function checkParticipationToStartExam(userId, examId) {
-// 	let participatedUser = await get(userId, examId);
+async function checkParticipation(userId, examId, options) {
+	try {
+		const participatedUser = await get(userId, examId);
 
-// 	if (participatedUser) {
-// 		if (participatedUser.isFinished) {
-// 			return {
-// 				status: 400,
-// 				message: "User has already finished the exam.",
-// 			};
-// 		}
-// 		return { status: 200, message: "Continue the exam" };
-// 	} else {
-// 		await create(userId, examId);
-// 		return {
-// 			status: 200,
-// 			message: "Exam participation updated successfully",
-// 		};
-// 	}
-// }
-
-// async function checkParticipationForQuestions(userId, examId) {
-// 	const participatedUser = await get(userId, examId);
-// 	if (!participatedUser) {
-// 		return {
-// 			status: 404,
-// 			message: "User has not participated in the exam",
-// 		};
-// 	}
-// 	if (participatedUser.isFinished) {
-// 		return {
-// 			status: 400,
-// 			message: "User has already finished the exam",
-// 		};
-// 	}
-// }
-
-async function checkParticipation(
-	userId,
-	examId,
-	options = { createIfNotExist: false }
-) {
-	const participatedUser = await get(userId, examId);
-
-	if (!participatedUser) {
-		if (options.createIfNotExist) {
-			// Create new participation if the flag is set
-			await create(userId, examId);
-			return {
-				success: true,
-				status: 200,
-				message: "Exam participation created successfully",
-			};
-		} else {
-			// Return error if participation is required but not found
+		if (!participatedUser) {
+			if (options.createIfNotExist) {
+				await create(userId, examId);
+				return {
+					success: true,
+					status: 201,
+					message: "Exam participation created successfully",
+				};
+			}
 			return {
 				success: false,
 				status: 404,
 				message: "User has not participated in the exam",
 			};
 		}
-	}
 
-	// Check if the user has finished the exam
-	if (participatedUser.isFinished) {
-		return {
-			success: false,
-			status: 400,
-			message: "User has already finished the exam",
-		};
-	}
+		if (participatedUser.isFinished) {
+			return {
+				success: false,
+				status: 400,
+				message: "User has already finished the exam",
+			};
+		}
 
-	// Return a success response if participation exists and is not finished
-	return { success: true, status: 200, message: "Continue the exam" };
+		return { success: true, status: 200, message: "Continue the exam" };
+	} catch (err) {
+		console.error("Error in participation check: ", err);
+		throw new Error("Error checking participation");
+	}
+}
+
+async function updatePariticipationStatus(userId, examId) {
+	try {
+		let participatedUser = await get(userId, examId);
+
+		participatedUser.isFinished = true;
+		await participatedUser.save();
+	} catch (err) {
+		console.error("Error updating participation:", err);
+		throw new Error("Error updating participation");
+	}
 }
 
 module.exports = {
 	get,
 	create,
 	checkParticipation,
+	updatePariticipationStatus,
 };

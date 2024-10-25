@@ -4,12 +4,9 @@ const sessionHelper = require("../helpers/sessionHelper");
 async function getByWalletAddress(walletAddress) {
 	try {
 		const user = await User.find({ walletAddress: walletAddress });
-		if (!user) {
-			throw new Error("User not found");
-		}
 		return user;
 	} catch (error) {
-		console.error("Error in findUserByWalletAddress: ", error);
+		console.error("Error finding user by wallet address: ", error);
 		throw new Error("Error finding user by wallet address");
 	}
 }
@@ -17,12 +14,9 @@ async function getByWalletAddress(walletAddress) {
 async function getById(userId) {
 	try {
 		const user = await User.findById(userId);
-		if (!user) {
-			throw new Error("User not found");
-		}
 		return user;
 	} catch (error) {
-		console.error("Error in findUserById: ", error);
+		console.error("Error finding user by ID: ", error);
 		throw new Error("Error finding user by ID");
 	}
 }
@@ -30,12 +24,9 @@ async function getById(userId) {
 async function getAll() {
 	try {
 		const users = await User.find();
-		if (!users) {
-			throw new Error("Users not found");
-		}
 		return users;
 	} catch (error) {
-		console.error("Error in findAllUsers: ", error);
+		console.error("Error finding all users: ", error);
 		throw new Error("Error finding all users");
 	}
 }
@@ -49,7 +40,7 @@ async function create(walletAddress) {
 		const savedUser = await newUser.save();
 		return savedUser;
 	} catch (error) {
-		console.error("Error in createUser: ", error);
+		console.error("Error creating new user: ", error);
 		throw new Error("Error creating new user");
 	}
 }
@@ -60,18 +51,18 @@ async function findAndLogin(req, walletAddress) {
 		sessionHelper.setSessionUser(req, user[0]);
 		return user[0];
 	} catch (error) {
-		console.error("Error in findAndLogin: ", error);
+		console.error("Error finding and logging in user: ", error);
 		throw new Error("Error finding and logging in user");
 	}
 }
 
 async function createAndRegister(req, walletAddress) {
 	try {
-		let newUser = await createUser(walletAddress);
+		let newUser = await create(walletAddress);
 		sessionHelper.setSessionUser(req, newUser);
 		return newUser;
 	} catch (error) {
-		console.error("Error in createAndRegister: ", error);
+		console.error("Error creating and registering new user: ", error);
 		throw new Error("Error creating and registering new user");
 	}
 }
@@ -85,19 +76,19 @@ async function registerOrLogin(req, walletAddress) {
 			return await findAndLogin(req, walletAddress);
 		}
 	} catch (error) {
-		console.error("Error in registerOrLogin: ", error);
+		console.error("Error during register or login: ", error);
 		throw new Error("Error during register or login");
 	}
 }
 
 async function updateEmail(userId, email) {
 	try {
-		let user = await findById(userId);
+		let user = await getById(userId);
 		user.email = email;
 		const savedUser = await user.save();
 		return savedUser;
 	} catch (error) {
-		console.error("Error in updateUserEmail: ", error);
+		console.error("Error in updating user email: ", error);
 		throw new Error("Error updating user email");
 	}
 }

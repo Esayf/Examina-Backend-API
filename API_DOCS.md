@@ -26,8 +26,7 @@
   - `Session-Token` (string, required): Session token for validation.
 - **Response**:
   - **201 Created**: User successfully registered.
-  <!-- - **400 Bad Request**: Invalid signature or missing data. -->
-  - **401 Unauthorized**: Session token is invalid or expired.
+  - **400 Bad Request**: Invalid signature.
   - **500 Internal Server Error**: Server error.
 
 ---

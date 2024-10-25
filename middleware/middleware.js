@@ -1,5 +1,6 @@
 const { validateEmail } = require("../helpers/helperFunctions");
 const helperFunctions = require("../helpers/helperFunctions");
+const { finishExamSchema } = require("../validators/examValidators");
 
 const ensureAuthenticated = (req, res, next) => {
 	if (!req.session.user) {
@@ -21,6 +22,8 @@ const validateSessionToken = (req, res, next) => {
 	next();
 };
 
+// TODO: create validateUserWallet
+
 const validateRequestedEmail = (req, res, next) => {
 	const { email } = req.body;
 	if (!validateEmail(email)) {
@@ -41,15 +44,25 @@ const verifyUserSignature = (req, res, next) => {
 
 	if (!verifyResult) {
 		return res
-			.status(401)
+			.status(400)
 			.json({ success: false, message: "Invalid signature" });
 	}
 
 	next();
 };
+
+const validateBody = (req, res, next) => {
+	const { error } = finishExamSchema.validate(req.body);
+	if (error) {
+		return res.status(400).json({ message: error.details[0].message });
+	}
+	next();
+};
+
 module.exports = {
 	ensureAuthenticated,
 	validateSessionToken,
 	validateRequestedEmail,
 	verifyUserSignature,
+	validateBody,
 };

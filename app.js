@@ -70,8 +70,11 @@ setTimeout(() => {
 
 		app.use("/exams", require("./routes/exam.route"));
 		app.use("/users", require("./routes/user.route"));
-		app.use("/questions", require("./routes/questions"));
+		app.use("/answers", require("./routes/answer.route"));
+		app.use("/questions", require("./routes/question.route"));
+		app.use("/scores", require("./routes/score.route"));
 		require("./cron/checkParticipantScoreAndMail");
+		require("./cron/checkCompletedExams");
 	} catch (error) {
 		console.log("Error from appjs: ", error);
 		throw new Error("Logged Error in app.js", error);
