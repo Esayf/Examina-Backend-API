@@ -27,14 +27,15 @@ setTimeout(() => {
 			resave: false,
 			saveUninitialized: true,
 		};
-		var store = process.env.NODE_ENV === "test"
-			? new MemoryStore({
-					checkPeriod: 86400000, // prune expired entries every 24h
-			  })
-			: new MongoDBStore({
-					uri: `${process.env.MONGO_URI}/connect_mongodb_session_test`,
-					collection: "mySessions",
-			  });
+		var store =
+			process.env.NODE_ENV === "test"
+				? new MemoryStore({
+						checkPeriod: 86400000, // prune expired entries every 24h
+				  })
+				: new MongoDBStore({
+						uri: `${process.env.MONGO_URI}/connect_mongodb_session_test`,
+						collection: "mySessions",
+				  });
 		// Catch errors
 		store.on("error", function (error) {
 			console.log(error);
@@ -67,12 +68,13 @@ setTimeout(() => {
 			app.use(morgan("dev"));
 		}
 
-		app.use("/exams", require("./routes/exams"));
-		app.use("/register", require("./routes/register"));
-		app.use("/user", require("./routes/user"));
-		app.use("/questions", require("./routes/questions"));
+		app.use("/exams", require("./routes/exam.route"));
+		app.use("/users", require("./routes/user.route"));
+		app.use("/answers", require("./routes/answer.route"));
+		app.use("/questions", require("./routes/question.route"));
+		app.use("/scores", require("./routes/score.route"));
 		require("./cron/checkParticipantScoreAndMail");
-		
+		require("./cron/checkCompletedExams");
 	} catch (error) {
 		console.log("Error from appjs: ", error);
 		throw new Error("Logged Error in app.js", error);

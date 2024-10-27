@@ -1,9 +1,8 @@
 const Queue = require("bull");
 const redisClient = require("../config/redis");
-const ParticipatedUser = require("../models/ParticipatedUser");
-const Score = require("../models/Score");
-const Question = require("../models/Question");
-const { getUserScore, checkScore } = require("../middleware/protokit");
+const ParticipatedUser = require("../models/participatedUser.model");
+const Score = require("../models/score.model");
+const Question = require("../models/question.model");
 const { sendExamResultEmail } = require("../mailer");
 
 async function calculateScore(exam, user) {
@@ -13,8 +12,8 @@ async function calculateScore(exam, user) {
 		console.log("Calculation score for User: ", user.email);
 		console.log("Delayed for 1 second.");
 
-		const result = await checkScore(exam.uniqueId, user.uniqueId);
-		return result;
+		let result;
+		return result ? result : 0;
 	} catch (error) {}
 }
 const examResultsQueue = new Queue("examResultsQueue", {
@@ -64,10 +63,7 @@ examResultsQueue.process(1, async (job, done) => {
 			await calculateScore(participated.exam, participated.user);
 			await delay(1500);
 			score = {
-				score: await getUserScore(
-					participated.exam.uniqueId,
-					participated.user.uniqueId
-				),
+				score: 0,
 			};
 		}
 
