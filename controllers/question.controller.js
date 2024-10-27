@@ -16,6 +16,24 @@ async function getQuestionById(req, res) {
 	}
 }
 
+async function getExamQuestions(req, res) {
+	const userId = req.session.user.userId;
+	const { examId } = req.params;
+
+	try {
+		const response = await questionService.getAllByExam(examId, userId);
+		return res
+			.status(response.status)
+			.json(response.data || { message: response.message });
+	} catch (err) {
+		console.error(err);
+		return res.status(err.status || 500).json({
+			message: err.message || "Internal Server Error",
+		});
+	}
+}
+
 module.exports = {
 	getQuestionById,
+	getExamQuestions,
 };

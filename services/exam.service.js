@@ -5,7 +5,6 @@ const {
 const Exam = require("../models/exam.model");
 const Question = require("../models/question.model");
 const participatedUserService = require("./participatedUser.service");
-const questionService = require("../services/question.service");
 const answerService = require("./answer.service");
 
 async function create(examData, questions) {
@@ -150,44 +149,6 @@ async function start(examId, userId) {
 	}
 }
 
-// Q: This function should move to question.service. It would be better.
-// Q: These controls should be inside service or controller? Which one is more proper?
-async function getQuestionsByExam(examId, userId) {
-	try {
-		const exam = await getById(examId);
-		if (!exam) {
-			return { status: 404, message: "Exam not found" };
-		}
-
-		// Check if the exam has started or ended
-		const examTimeCheck = checkExamTimes(exam);
-		if (!examTimeCheck.valid) {
-			return { status: 400, message: examTimeCheck.message };
-		}
-
-		// Check if the user has participated
-		const participationResult =
-			await participatedUserService.checkParticipation(userId, examId, {
-				createIfNotExist: false,
-			});
-
-		if (!participationResult.success) {
-			return {
-				status: participationResult.status,
-				message: participationResult.message,
-			};
-		}
-
-		// Retrieve the questions for the exam
-		const questions = await questionService.getAllByExam(examId);
-
-		return { status: 200, data: questions };
-	} catch (err) {
-		console.error("Error fetching exam questions:", err);
-		throw new Error("Error fetching exam questions");
-	}
-}
-
 async function finish(userId, examId, answers, walletAddress) {
 	try {
 		const exam = await getById(examId);
@@ -244,6 +205,5 @@ module.exports = {
 	getById,
 	getByIdWithOrWithoutParticipation,
 	start,
-	getQuestionsByExam,
 	finish,
 };

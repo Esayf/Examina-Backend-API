@@ -72,23 +72,6 @@ async function startExam(req, res) {
 	}
 }
 
-async function getExamQuestions(req, res) {
-	const userId = req.session.user.userId;
-	const examId = req.params.id;
-
-	try {
-		const response = await examService.getQuestionsByExam(examId, userId);
-		return res
-			.status(response.status)
-			.json(response.data || { message: response.message });
-	} catch (err) {
-		console.error(err);
-		return res.status(err.status || 500).json({
-			message: err.message || "Internal Server Error",
-		});
-	}
-}
-
 async function finishExam(req, res) {
 	try {
 		const result = await examService.finish(
@@ -111,6 +94,5 @@ module.exports = {
 	getAllExams,
 	getExamById,
 	startExam,
-	getExamQuestions,
 	finishExam,
 };
