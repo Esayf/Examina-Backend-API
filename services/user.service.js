@@ -31,11 +31,12 @@ async function getAll() {
 	}
 }
 
-async function create(walletAddress) {
+async function create(walletAddress, role) {
 	try {
 		const newUser = new User({
 			username: walletAddress,
 			walletAddress: walletAddress,
+			role: role ? role : "user",
 		});
 		const savedUser = await newUser.save();
 		return savedUser;
@@ -48,8 +49,8 @@ async function create(walletAddress) {
 async function findAndLogin(req, walletAddress) {
 	try {
 		let user = await getByWalletAddress(walletAddress);
-		sessionHelper.setSessionUser(req, user[0]);
-		return user[0];
+		sessionHelper.setSessionUser(req, user[user.length - 1]);
+		return user[user.length - 1];
 	} catch (error) {
 		console.error("Error finding and logging in user: ", error);
 		throw new Error("Error finding and logging in user");
@@ -88,8 +89,47 @@ async function updateEmail(userId, email) {
 		const savedUser = await user.save();
 		return savedUser;
 	} catch (error) {
-		console.error("Error in updating user email: ", error);
+		console.error("Error updating user email: ", error);
 		throw new Error("Error updating user email");
+	}
+}
+
+async function promoteToAdmin(walletAddress) {
+	try {
+		let user = await getByWalletAddress(walletAddress);
+		user.role = "admin";
+		const savedUser = await user.save();
+		return savedUser;
+	} catch (error) {
+		console.error("Error finding and logging in user: ", error);
+		throw new Error("Error finding and logging in user");
+	}
+}
+
+async function createAdmin(req, walletAddress) {
+	try {
+		let newUser = await create(walletAddress, "admin");
+		sessionHelper.setSessionUser(req, newUser);
+		return newUser;
+	} catch (error) {
+		console.error("Error creating and registering new user: ", error);
+		throw new Error("Error creating and registering new user");
+	}
+}
+
+async function createOrPromote(req, walletAddress) {
+	try {
+		let user = await getByWalletAddress(walletAddress);
+		if (user.length === 0) {
+			return await createAdmin(req, walletAddress);
+		} else if (user.role !== "admin") {
+			return await promoteToAdmin(walletAddress);
+		} else {
+			return user;
+		}
+	} catch (error) {
+		console.error("Error during register or login: ", error);
+		throw new Error("Error during register or login");
 	}
 }
 
@@ -100,4 +140,5 @@ module.exports = {
 	create,
 	registerOrLogin,
 	updateEmail,
+	createOrPromote,
 };

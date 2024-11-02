@@ -59,10 +59,20 @@ const validateBody = (req, res, next) => {
 	next();
 };
 
+const ensureAdminAccess = (req, res, next) => {
+	if (req.session.user.role !== "admin") {
+		return res
+			.status(403)
+			.json({ message: "Unauthorized, admins only access" });
+	}
+	next();
+};
+
 module.exports = {
 	ensureAuthenticated,
 	validateSessionToken,
 	validateRequestedEmail,
 	verifyUserSignature,
 	validateBody,
+	ensureAdminAccess,
 };

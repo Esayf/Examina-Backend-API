@@ -5,6 +5,7 @@ const {
 	validateSessionToken,
 	validateRequestedEmail,
 	verifyUserSignature,
+	ensureAdminAccess,
 } = require("../middleware/middleware");
 
 const router = express.Router();
@@ -24,14 +25,13 @@ if (process.env.NODE_ENV === "development") {
 }
 router.get("/session", ensureAuthenticated, userController.getSession);
 router.post("/logout", ensureAuthenticated, userController.logout);
-
-router.get("/", userController.getAllUsers);
-
+router.get("/", ensureAdminAccess, userController.getAllUsers);
 router.post(
 	"/put/email",
 	ensureAuthenticated,
 	validateRequestedEmail,
 	userController.putEmail
 );
+router.post("/createAdmin", ensureAdminAccess, userController.createAdmin);
 
 module.exports = router;
