@@ -1,10 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const questionController = require("../controllers/question.controller");
-const { ensureAuthenticated } = require("../middleware/middleware");
+const {
+	ensureAuthenticated,
+	ensureAdminAccess,
+} = require("../middleware/middleware");
 
-// TODO: admin auth
-router.get("/question/:questionId", questionController.getQuestionById);
+router.get(
+	"/question/:questionId",
+	ensureAdminAccess,
+	questionController.getQuestionById
+);
 
 router.get(
 	"/:examId",

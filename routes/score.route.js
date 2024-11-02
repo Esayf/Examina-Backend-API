@@ -1,10 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const scoreController = require("../controllers/score.controller");
-const { ensureAuthenticated } = require("../middleware/middleware");
+const {
+	ensureAuthenticated,
+	ensureAdminAccess,
+} = require("../middleware/middleware");
 
-// TODO: admin auth
-router.get("/allScores", scoreController.getAllScores);
+router.get("/allScores", ensureAdminAccess, scoreController.getAllScores);
 router.get("/:examId", ensureAuthenticated, scoreController.getScoresByExamId);
 
 module.exports = router;

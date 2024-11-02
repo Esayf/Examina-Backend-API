@@ -9,6 +9,8 @@ const session = require("express-session");
 var MongoDBStore = require("connect-mongodb-session")(session);
 const MemoryStore = require("memorystore")(session);
 
+const { initializeAdmin } = require("./helpers/initializers");
+
 dotenv.config({ path: "./.env" });
 const isTestEnv = require("./middleware/isTestEnv");
 const app = express();
@@ -75,6 +77,15 @@ setTimeout(() => {
 		app.use("/scores", require("./routes/score.route"));
 		require("./cron/checkParticipantScoreAndMail");
 		require("./cron/checkCompletedExams");
+
+		// Q: Is this a right approach for an async function in sync app.js?
+		initializeAdmin()
+			.then(() => {
+				console.log("Admin initialization success");
+			})
+			.catch((error) => {
+				console.error("Admin initialization error", error);
+			});
 	} catch (error) {
 		console.log("Error from appjs: ", error);
 		throw new Error("Logged Error in app.js", error);

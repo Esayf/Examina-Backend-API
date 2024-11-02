@@ -15,6 +15,7 @@ function setSessionUser(req, user) {
 	req.session.user = {
 		userId: user._id,
 		walletAddress: user.walletAddress,
+		role: user.role,
 	};
 }
 

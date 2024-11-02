@@ -65,6 +65,19 @@ async function putEmail(req, res) {
 	}
 }
 
+async function createAdmin(req, res) {
+	const { walletAddress } = req.body;
+	try {
+		await userService.createOrPromote(req, walletAddress);
+		return res
+			.status(201)
+			.json({ success: true, session: req.session.user });
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({ message: "Internal server error" });
+	}
+}
+
 module.exports = {
 	getMessageToSign,
 	registerUser,
@@ -72,4 +85,5 @@ module.exports = {
 	logout,
 	getAllUsers,
 	putEmail,
+	createAdmin,
 };
