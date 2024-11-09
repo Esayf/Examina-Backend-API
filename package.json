@@ -2,11 +2,14 @@
 	"name": "choz",
 	"version": "1.0.0",
 	"description": "choz backend api",
-	"main": "server.js",
+	"module": "src/server.ts",
+	"type": "module",
 	"scripts": {
-		"start": "cross-env NODE_ENV=production node server",
-		"dev": "cross-env NODE_ENV=development nodemon server",
-		"test": "jest --detectOpenHandles --forceExit --maxWorkers=1"
+		"start": "bun run src/server.ts",
+		"dev": "bun --watch run src/server.ts",
+		"test": "bun test",
+		"format": "prettier --write \"src/**/*.{ts,tsx}\"",
+		"postinstall": "husky"
 	},
 	"author": "Lruquaf",
 	"license": "MIT",
@@ -19,6 +22,7 @@
 		"crypto": "^1.0.1",
 		"dotenv": "^16.3.1",
 		"express": "^4.18.2",
+		"express-jsdoc-swagger": "^1.8.0",
 		"express-session": "^1.18.0",
 		"ioredis": "^5.4.1",
 		"joi": "^17.13.3",
@@ -30,21 +34,25 @@
 		"mongodb-memory-server": "^9.1.7",
 		"mongoose": "^8.6.3",
 		"morgan": "^1.10.0",
-		"node-cron": "^3.0.3",
 		"nodemailer": "^6.9.13",
-		"passport": "^0.7.0",
-		"passport-google-oauth20": "^2.0.0",
-		"passport-local-mongoose": "^8.0.0",
-		"supertest-session": "^5.0.1"
+		"o1js": "^2.0.0",
+		"zkcloudworker": "^0.16.5"
 	},
 	"devDependencies": {
-		"@babel/preset-env": "^7.24.0",
-		"@babel/preset-react": "^7.23.3",
-		"chai": "^5.1.0",
-		"cross-env": "^7.0.3",
-		"jest": "^29.7.0",
-		"mocha": "^10.4.0",
-		"nodemon": "^3.0.2",
-		"supertest": "^6.3.3"
+		"@types/bull": "^4.10.0",
+		"@types/compression": "^1.7.5",
+		"@types/connect-mongodb-session": "^2.4.7",
+		"@types/cors": "^2.8.17",
+		"@types/express": "^4.17.21",
+		"@types/express-session": "^1.17.10",
+		"@types/ioredis": "^5.0.0",
+		"@types/joi": "^17.2.3",
+		"@types/morgan": "^1.9.9",
+		"@types/node": "^20.11.24",
+		"@types/nodemailer": "^6.4.14",
+		"bun-types": "latest",
+		"prettier": "^3.2.5",
+		"typescript": "^5.3.3",
+		"husky": "^9.0.11"
 	}
 }
