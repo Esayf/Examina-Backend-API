@@ -37,24 +37,26 @@ async function checkParticipantScoreAndMail() {
 				},
 			},
 			{
+				$unwind: "$exam",
+			},
+			{
 				$match: {
 					"exam.isCompleted": true,
 				},
 			},
 			{
-				$unwind: "$exam",
-			},
-			{
 				$limit: 1,
 			},
-		]).exec();
+		]);
 
 		if (!participated || participated.length === 0) {
 			return;
 		}
 
 		const participatedUser = participated[0];
+
 		await examResultsQueue.add({ participated: participatedUser });
+		console.log("Participated user added to the queue");
 
 		await ParticipatedUser.updateOne({ _id: participatedUser._id }, { $set: { jobAdded: true } });
 	} catch (error) {

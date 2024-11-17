@@ -1,21 +1,45 @@
-import { ExamDocument } from "../types";
+import { ExamDocument, QuestionInput, QuestionDocument, Answer, AnswerKey } from "../types";
 import Exam from "../models/exam.model";
+import Question from "../models/question.model";
 import participatedUserService from "./participatedUser.service";
 import answerService from "./answer.service";
-import { checkExamTimes } from "../helpers/helperFunctions";
+import { calculateScore, checkExamTimes, processQuestion } from "../helpers/helperFunctions";
+import scoreService from "./score.service";
 
 interface ExamResult {
 	status: number;
 	message: string;
 }
 
-async function create(examData: Partial<ExamDocument>): Promise<ExamDocument> {
+async function create(examData: Partial<ExamDocument>, questions: Array<QuestionInput>): Promise<ExamDocument> {
 	try {
 		const exam = new Exam(examData);
-		return await exam.save();
+		const savedExam = await exam.save();
+		await saveQuestions(questions, savedExam.id);
+		return savedExam;
 	} catch (error) {
 		console.error("Error creating exam:", error);
 		throw new Error("Error creating exam");
+	}
+}
+
+async function saveQuestions(questions: QuestionInput[], examId: string): Promise<QuestionDocument[]> {
+	try {
+		// Process each question before saving
+		const processedQuestions = await Promise.all(questions.map((question) => processQuestion(question)));
+
+		// Save each processed question with a reference to the exam
+		const savedQuestions = await Promise.all(
+			processedQuestions.map((question) => {
+				question.exam = examId;
+				return new Question(question).save();
+			})
+		);
+
+		return savedQuestions;
+	} catch (error) {
+		console.error("Error saving questions:", error);
+		throw new Error("Error saving questions");
 	}
 }
 
@@ -66,7 +90,29 @@ async function start(examId: string, userId: string): Promise<ExamResult> {
 	}
 }
 
-async function finish(userId: string, examId: string, answers: any[], walletAddress: string): Promise<ExamResult> {
+async function getAnswerKey(examId: string): Promise<AnswerKey[]> {
+	// Verify the exam exists
+	const exam = await Exam.findById(examId);
+	if (!exam) {
+		throw new Error("Exam not found");
+	}
+
+	// Fetch questions related to the exam, selecting question number and correct answer, and sort by question number
+	const questions = await Question.find({ exam: examId })
+		.select("number correctAnswer") // Select question number and correct answer
+		.sort({ number: 1 }); // Sort by question number in ascending order
+
+	// Create the answer key array
+	const answerKey: AnswerKey[] = questions.map((question) => ({
+		questionId: question.id,
+		questionNumber: question.number,
+		correctAnswer: question.correctAnswer,
+	}));
+
+	return answerKey;
+}
+
+async function finish(userId: string, examId: string, answers: Answer[], walletAddress: string): Promise<ExamResult> {
 	try {
 		const exam = await getById(examId);
 		if (!exam) {
@@ -85,6 +131,25 @@ async function finish(userId: string, examId: string, answers: any[], walletAddr
 		}
 
 		await answerService.create(userId, examId, answers, walletAddress);
+
+		const answerKey = await getAnswerKey(examId);
+
+		// Calculate score
+		const { score, correctAnswers } = calculateScore(answers, answerKey);
+
+		console.log("Score: ", score);
+		console.log("Correct Answers: ", correctAnswers);
+
+		// Save the score
+		await scoreService.createScore({
+			user: userId,
+			exam: examId,
+			score: parseInt(score),
+			totalQuestions: exam.questionCount,
+			correctAnswers: correctAnswers,
+		});
+
+		await participatedUserService.updateParticipationStatus(userId, examId);
 
 		return { status: 200, message: "Exam completed successfully" };
 	} catch (error) {

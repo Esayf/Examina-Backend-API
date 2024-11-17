@@ -27,7 +27,13 @@ async function createScore(scoreData: {
 	correctAnswers: number;
 }): Promise<ScoreDocument> {
 	try {
-		const score = new Score(scoreData);
+		const score = new Score({
+			user: scoreData.user,
+			exam: scoreData.exam,
+			score: scoreData.score,
+			totalQuestions: scoreData.totalQuestions,
+			correctAnswers: scoreData.correctAnswers,
+		});
 		return await score.save();
 	} catch (error) {
 		console.error("Error creating score:", error);

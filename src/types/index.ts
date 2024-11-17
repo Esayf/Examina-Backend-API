@@ -50,6 +50,13 @@ export interface QuestionDocument extends Document {
 	uniqueId: string;
 }
 
+export interface QuestionInput {
+	number: number;
+	text: string;
+	options: Array<{ number: number; text: string }>;
+	correctAnswer: number;
+}
+
 export interface ParticipatedUserDocument extends Document {
 	user: string;
 	exam: string;
@@ -69,14 +76,20 @@ export interface AnswerDocument extends Document {
 }
 
 export interface Answer {
-	questionID: string;
-	answer: any;
+	questionId: string;
+	answer: number;
 }
 
 export interface ProcessedAnswer {
 	question: string;
-	selectedOption: any;
+	selectedOption: number;
 	answerHash: string;
+}
+
+export interface AnswerKey {
+	questionId: string;
+	questionNumber: number;
+	correctAnswer: number;
 }
 
 export interface ScoreDocument extends Document {

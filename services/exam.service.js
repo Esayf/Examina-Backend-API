@@ -1,7 +1,4 @@
-const {
-	processQuestion,
-	checkExamTimes,
-} = require("../helpers/helperFunctions");
+const { processQuestion, checkExamTimes } = require("../helpers/helperFunctions");
 const Exam = require("../models/exam.model");
 const Question = require("../models/question.model");
 const participatedUserService = require("./participatedUser.service");
@@ -39,9 +36,7 @@ async function create(examData, questions) {
 async function saveQuestions(questions, examId) {
 	try {
 		// Process each question before saving
-		const processedQuestions = await Promise.all(
-			questions.map((question) => processQuestion(question))
-		);
+		const processedQuestions = await Promise.all(questions.map((question) => processQuestion(question)));
 
 		// Save each processed question with a reference to the exam
 		const savedQuestions = await Promise.all(
@@ -89,10 +84,7 @@ async function getByIdWithOrWithoutParticipation(examId, userId) {
 		}
 
 		if (userId) {
-			const participation = await participatedUserService.get(
-				examId,
-				userId
-			);
+			const participation = await participatedUserService.get(examId, userId);
 
 			if (!participation) {
 				return { status: 404, message: "Participation not found" };
@@ -103,9 +95,7 @@ async function getByIdWithOrWithoutParticipation(examId, userId) {
 				message: "Exam and participation fetched successfully",
 				data: {
 					exam,
-					isFinished: participation
-						? participation.isFinished
-						: false,
+					isFinished: participation ? participation.isFinished : false,
 				},
 			};
 		}
@@ -136,11 +126,7 @@ async function start(examId, userId) {
 		}
 
 		// Check or create participation
-		const response = await participatedUserService.checkParticipation(
-			userId,
-			examId,
-			{ createIfNotExist: true }
-		);
+		const response = await participatedUserService.checkParticipation(userId, examId, { createIfNotExist: true });
 
 		return response;
 	} catch (error) {
@@ -161,10 +147,9 @@ async function finish(userId, examId, answers, walletAddress) {
 			return { status: 400, message: examTimeCheck.message };
 		}
 
-		const participationResult =
-			await participatedUserService.checkParticipation(userId, examId, {
-				createIfNotExist: false,
-			});
+		const participationResult = await participatedUserService.checkParticipation(userId, examId, {
+			createIfNotExist: false,
+		});
 
 		if (!participationResult.success) {
 			return {
@@ -176,18 +161,10 @@ async function finish(userId, examId, answers, walletAddress) {
 		let answer = await answerService.get(userId, examId);
 
 		if (!answer) {
-			answer = await answerService.create(
-				userId,
-				examId,
-				answers,
-				walletAddress
-			);
+			answer = await answerService.create(userId, examId, answers, walletAddress);
 		}
 
-		await participatedUserService.updatePariticipationStatus(
-			userId,
-			examId
-		);
+		await participatedUserService.updatePariticipationStatus(userId, examId);
 
 		return {
 			status: 200,

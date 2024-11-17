@@ -37,6 +37,6 @@ async function checkCompletedExams() {
 }
 
 // Schedule the job to run every 2 minutes using Bun's scheduler
-setInterval(checkCompletedExams, 2 * 60 * 1000);
+setInterval(checkCompletedExams, 1 * 60 * 1000);
 
 export default checkCompletedExams;
