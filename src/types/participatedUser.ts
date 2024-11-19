@@ -1,9 +1,9 @@
 import { Document } from "mongoose";
-import { UserDocument } from "./index";
+import { ExamDocument, UserDocument } from "./index";
 
 export interface ParticipatedUserWithPopulatedUser extends Document {
 	user: UserDocument;
-	exam: string;
+	exam: ExamDocument;
 	isFinished: boolean;
 	isMailSent: boolean;
 	jobAdded: boolean;

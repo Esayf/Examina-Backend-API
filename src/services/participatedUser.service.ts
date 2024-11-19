@@ -77,8 +77,24 @@ async function checkParticipation(
 	}
 }
 
+async function updateParticipationStatus(userId: string, examId: string): Promise<void> {
+	try {
+		const participatedUser = await get(userId, examId);
+
+		if (!participatedUser) {
+			throw new Error(`Participation not found for userId: ${userId} and examId: ${examId}`);
+		}
+		participatedUser.isFinished = true;
+		await participatedUser.save();
+	} catch (err) {
+		console.error("Error updating participation:", err);
+		throw new Error("Error updating participation");
+	}
+}
+
 export default {
 	get,
 	create,
 	checkParticipation,
+	updateParticipationStatus,
 };

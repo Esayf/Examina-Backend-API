@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { CustomRequest } from "../types";
+import { CustomRequest, QuestionInput } from "../types";
 import examService from "../services/exam.service";
 
 interface ExamInput {
@@ -16,16 +16,16 @@ async function createExam(req: CustomRequest, res: Response) {
 	try {
 		const examData = req.body as ExamInput;
 		const userId = req.session.user?.userId;
+		const questions = req.body.questions as Array<QuestionInput>;
 
-		if (!userId) {
-			return res.status(401).json({ message: "Unauthorized" });
-		}
-
-		const exam = await examService.create({
-			...examData,
-			creator: userId,
-			startDate: new Date(examData.startDate),
-		});
+		const exam = await examService.create(
+			{
+				...examData,
+				creator: userId,
+				startDate: new Date(examData.startDate),
+			},
+			questions
+		);
 
 		return res.status(201).json(exam);
 	} catch (err) {
