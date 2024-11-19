@@ -1,14 +1,14 @@
-# Use the official Node.js LTS image
-FROM node:18-alpine
+# Use the official Bun image
+FROM oven/bun:1
 
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
+# Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN bun install
 
 # Copy the rest of the application code
 COPY . .
@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["bun", "start"]
