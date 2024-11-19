@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === "development") {
 	router.post("/register/dev", userController.registerUser);
 }
 
-router.get("/session", ensureAuthenticated, userController.getSession);
+router.get("/session", userController.getSession);
 router.post("/logout", ensureAuthenticated, userController.logout);
 router.get("/", ensureAuthenticated, ensureAdmin, userController.getAllUsers);
 router.post("/put/email", ensureAuthenticated, validateRequestedEmail, userController.putEmail);
