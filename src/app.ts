@@ -68,15 +68,13 @@ const MemoryStore = memorystore(session);
 const sessionConfig: session.SessionOptions = {
 	secret: process.env.SESSION_SECRET || "examina the best",
 	resave: true,
-	saveUninitialized: false,
+	saveUninitialized: true,
 	cookie: {
 		secure: process.env.NODE_ENV === "production",
 		httpOnly: true,
 		maxAge: 24 * 60 * 60 * 1000,
 		sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-		domain: process.env.NODE_ENV === "production" ? ".choz.io" : undefined,
 	},
-	name: "sessionId",
 };
 
 // Set up store based on environment
@@ -107,7 +105,8 @@ app.use(session(sessionConfig));
 
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
 	console.log("Session ID:", req.sessionID);
-	console.log("Session:", req.session);
+	console.log("Custom session message:", req.session.message);
+	console.log("Custom session user:", req.session.user);
 	next();
 });
 

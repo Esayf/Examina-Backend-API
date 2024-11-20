@@ -7,18 +7,36 @@ async function createTokenAndMessage(req: Request, walletAddress: string): Promi
 	const message = `${token}${walletAddress}`;
 	req.session.message = process.env.NODE_ENV === "test" ? { message } : message;
 
-	// Wait for the session to be saved
-	await new Promise<void>((resolve, reject) => {
-		req.session.save((err) => {
-			if (err) {
-				console.error("Session save error:", err);
-				reject(err);
-			}
-			resolve();
-		});
+	// Debug logs
+	console.log("Setting session data:", {
+		token: req.session.token,
+		message: req.session.message,
 	});
 
-	return message;
+	try {
+		// Wait for the session to be saved
+		await new Promise<void>((resolve, reject) => {
+			req.session.save((err) => {
+				if (err) {
+					console.error("Session save error:", err);
+					reject(err);
+				}
+				console.log("Session saved successfully");
+				resolve();
+			});
+		});
+
+		// Verify session data after save
+		console.log("Session data after save:", {
+			token: req.session.token,
+			message: req.session.message,
+		});
+
+		return message;
+	} catch (error) {
+		console.error("Failed to save session:", error);
+		throw new Error("Failed to create session message");
+	}
 }
 
 function getSessionUser(req: Request): SessionUser | null {
