@@ -16,14 +16,17 @@ export interface SessionUser {
 	isAdmin: boolean;
 }
 
-export interface CustomSession extends Session {
-	user?: SessionUser;
-	token?: string;
-	message?: string | { message: string };
+// Extend the Session interface
+declare module "express-session" {
+	interface Session {
+		user?: SessionUser;
+		token?: string;
+		message?: string | { message: string };
+	}
 }
 
 export interface CustomRequest extends Request<ParamsDictionary, any, any, any> {
-	session: CustomSession;
+	session: Session;
 }
 
 export interface ExamDocument extends Document {

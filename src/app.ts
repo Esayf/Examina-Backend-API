@@ -68,7 +68,7 @@ const MemoryStore = memorystore(session);
 const sessionConfig: session.SessionOptions = {
 	secret: process.env.SESSION_SECRET || "examina the best",
 	resave: true,
-	saveUninitialized: true,
+	saveUninitialized: false,
 	cookie: {
 		secure: process.env.NODE_ENV === "production",
 		httpOnly: true,
