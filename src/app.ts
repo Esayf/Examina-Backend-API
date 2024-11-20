@@ -47,7 +47,7 @@ if (process.env.NODE_ENV === "development") {
 	app.use(morgan("dev"));
 }
 
-// CORS setup
+// CORS setup - must come BEFORE session middleware
 app.use(
 	cors({
 		origin: [
@@ -57,9 +57,9 @@ app.use(
 			"https://choz.io",
 			"https://choz.io/",
 		],
-		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization"],
 		credentials: true,
+		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+		allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
 		exposedHeaders: ["set-cookie"],
 	})
 );
@@ -69,30 +69,41 @@ const MongoDBStoreSession = MongoDBStore(session);
 const MemoryStore = memorystore(session);
 
 const sessionConfig: session.SessionOptions = {
+	name: "sid", // Set a specific name for the session cookie
 	secret: process.env.SESSION_SECRET || "examina the best",
-	resave: false,
-	saveUninitialized: true,
+	resave: true, // Changed to true
+	rolling: true, // Reset expiration on every request
+	saveUninitialized: false, // Changed to false
 	cookie: {
 		secure: process.env.NODE_ENV === "production",
 		httpOnly: true,
-		maxAge: 24 * 60 * 60 * 1000,
+		maxAge: 24 * 60 * 60 * 1000, // 24 hours
 		sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+		path: "/",
+		domain: process.env.NODE_ENV === "production" ? ".choz.io" : undefined,
 	},
+	proxy: process.env.NODE_ENV === "production", // Enable if behind a proxy
 };
 
 // Set up store based on environment
 if (process.env.NODE_ENV === "development") {
 	sessionConfig.store = new MemoryStore({
 		checkPeriod: 86400000,
+		ttl: 86400000, // 24 hours
+		noDisposeOnSet: true,
+		dispose: false,
 	});
 } else {
 	const store = new MongoDBStoreSession({
 		uri: `${process.env.MONGO_URI}/connect_mongodb_session_test`,
 		collection: "mySessions",
+		expires: 24 * 60 * 60 * 1000, // 24 hours
 		connectionOptions: {
 			useNewUrlParser: true,
 			useUnifiedTopology: true,
 		},
+		autoReconnect: true,
+		touchAfter: 24 * 3600, // Only update the session every 24 hours unless there are changes
 	});
 
 	store.on("error", function (error) {
@@ -105,10 +116,19 @@ if (process.env.NODE_ENV === "development") {
 // Apply session middleware
 app.use(session(sessionConfig));
 
+// Add session debug middleware
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+	const oldEnd = res.end;
+	res.end = function (...args: any[]) {
+		console.log("Response Headers:", res.getHeaders());
+		// @ts-ignore
+		return oldEnd.apply(this, args);
+	};
+
+	console.log("Request Cookies:", req.headers.cookie);
 	console.log("Session ID:", req.sessionID);
-	console.log("Custom session message:", req.session.message);
-	console.log("Custom session user:", req.session.user);
+	console.log("Session Message:", req.session.message);
+	console.log("Session User:", req.session.user);
 	next();
 });
 
