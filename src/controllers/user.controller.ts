@@ -9,7 +9,7 @@ async function getMessageToSign(req: CustomRequest, res: Response) {
 		if (!walletAddress) {
 			return res.status(400).json({ message: "Wallet address is required" });
 		}
-		const message = sessionHelper.createTokenAndMessage(req, walletAddress);
+		const message = await sessionHelper.createTokenAndMessage(req, walletAddress);
 		return res.json({ message });
 	} catch (error) {
 		console.error("Error creating message: ", error);
