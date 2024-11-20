@@ -5,8 +5,7 @@ import { connectDB } from "./config/db";
 import redisClient from "./config/redis";
 import mongoose from "mongoose";
 import session from "express-session";
-import MongoDBStore from "connect-mongodb-session";
-import memorystore from "memorystore";
+import RedisStore from "connect-redis";
 import compression from "compression";
 import morgan from "morgan";
 
@@ -64,16 +63,20 @@ app.use(
 	})
 );
 
-// Session setup
-const MongoDBStoreSession = MongoDBStore(session);
-const MemoryStore = memorystore(session);
+// Initialize store
+const redisStore = new RedisStore({
+	client: redisClient,
+	prefix: "sess:", // prefix for session keys
+	ttl: 86400, // 24 hours
+});
 
+// Session configuration
 const sessionConfig: session.SessionOptions = {
-	name: "sid", // Set a specific name for the session cookie
+	store: redisStore,
+	name: "choz.sid", // Custom cookie name
 	secret: process.env.SESSION_SECRET || "examina the best",
-	resave: true, // Changed to true
-	rolling: true, // Reset expiration on every request
-	saveUninitialized: false, // Changed to false
+	resave: false,
+	saveUninitialized: false,
 	cookie: {
 		secure: process.env.NODE_ENV === "production",
 		httpOnly: true,
@@ -82,42 +85,21 @@ const sessionConfig: session.SessionOptions = {
 		path: "/",
 		domain: process.env.NODE_ENV === "production" ? ".choz.io" : undefined,
 	},
-	proxy: process.env.NODE_ENV === "production", // Enable if behind a proxy
+	proxy: process.env.NODE_ENV === "production",
 };
-
-// Set up store based on environment
-if (process.env.NODE_ENV === "development") {
-	sessionConfig.store = new MemoryStore({
-		checkPeriod: 86400000,
-		ttl: 86400000, // 24 hours
-		noDisposeOnSet: true,
-		dispose: false,
-	});
-} else {
-	const store = new MongoDBStoreSession({
-		uri: `${process.env.MONGO_URI}/connect_mongodb_session_test`,
-		collection: "mySessions",
-		expires: 24 * 60 * 60 * 1000, // 24 hours
-		connectionOptions: {
-			useNewUrlParser: true,
-			useUnifiedTopology: true,
-		},
-		autoReconnect: true,
-		touchAfter: 24 * 3600, // Only update the session every 24 hours unless there are changes
-	});
-
-	store.on("error", function (error) {
-		console.error("Session store error:", error);
-	});
-
-	sessionConfig.store = store;
-}
 
 // Apply session middleware
 app.use(session(sessionConfig));
 
-// Add session debug middleware
-app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+// Debug middleware
+app.use((req, res, next) => {
+	// Log incoming request details
+	console.log("Request URL:", req.url);
+	console.log("Cookie Header:", req.headers.cookie);
+	console.log("Session ID:", req.sessionID);
+	console.log("Session Data:", req.session);
+
+	// Monitor response headers
 	const oldEnd = res.end;
 	res.end = function (...args: any[]) {
 		console.log("Response Headers:", res.getHeaders());
@@ -125,10 +107,6 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 		return oldEnd.apply(this, args);
 	};
 
-	console.log("Request Cookies:", req.headers.cookie);
-	console.log("Session ID:", req.sessionID);
-	console.log("Session Message:", req.session.message);
-	console.log("Session User:", req.session.user);
 	next();
 });
 
