@@ -20,6 +20,10 @@ import scoreRoutes from "./routes/score.route";
 import checkCompletedExams from "./cron/checkCompletedExams";
 import checkParticipantScoreAndMail from "./cron/checkParticipantScoreAndMail";
 
+// Import middleware
+import { syncSessionFromRedis } from "./middleware/sessionMiddleware";
+import sessionHelper from "./helpers/sessionHelper";
+
 dotenv.config();
 
 const app = express();
@@ -91,6 +95,9 @@ const sessionConfig: session.SessionOptions = {
 // Apply session middleware
 app.use(session(sessionConfig));
 
+// Sync session data from Redis
+app.use(syncSessionFromRedis);
+
 // Debug middleware
 app.use((req, res, next) => {
 	// Log incoming request details
@@ -100,6 +107,7 @@ app.use((req, res, next) => {
 	console.log("Session message:", req.session.message);
 	console.log("Session token:", req.session.token);
 	console.log("Session user:", req.session.user);
+	console.log("session from redis:", redisClient.get(`auth:${sessionHelper.getStableCookieId(req)}:user`));
 
 	// Monitor response headers
 	const oldEnd = res.end;
