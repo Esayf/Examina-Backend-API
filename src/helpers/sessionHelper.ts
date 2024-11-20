@@ -6,6 +6,7 @@ function createTokenAndMessage(req: Request, walletAddress: string): string {
 	(req.session as CustomSession).token = token;
 	const message = `${token}${walletAddress}`;
 	(req.session as CustomSession).message = process.env.NODE_ENV == "test" ? { message } : message;
+	req.session.save();
 	return message;
 }
 
@@ -15,6 +16,7 @@ function getSessionUser(req: Request): SessionUser | null {
 
 function setSessionUser(req: Request, sessionUser: SessionUser): void {
 	(req.session as CustomSession).user = sessionUser;
+	req.session.save();
 }
 
 function destroySession(req: Request, callback: (err?: any) => void): void {
