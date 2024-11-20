@@ -14,9 +14,17 @@ function getSessionUser(req: Request): SessionUser | null {
 	return (req.session as CustomSession).user || null;
 }
 
-function setSessionUser(req: Request, sessionUser: SessionUser): void {
+async function setSessionUser(req: Request, sessionUser: SessionUser): Promise<void> {
 	(req.session as CustomSession).user = sessionUser;
-	req.session.save();
+	return new Promise((resolve, reject) => {
+		req.session.save((err) => {
+			if (err) {
+				console.error("Session save error:", err);
+				reject(err);
+			}
+			resolve();
+		});
+	});
 }
 
 function destroySession(req: Request, callback: (err?: any) => void): void {

@@ -57,6 +57,7 @@ app.use(
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
 		credentials: true,
+		exposedHeaders: ["set-cookie"],
 	})
 );
 
@@ -66,14 +67,16 @@ const MemoryStore = memorystore(session);
 
 const sessionConfig: session.SessionOptions = {
 	secret: process.env.SESSION_SECRET || "examina the best",
-	resave: false,
-	saveUninitialized: false,
+	resave: true,
+	saveUninitialized: true,
 	cookie: {
 		secure: process.env.NODE_ENV === "production",
 		httpOnly: true,
 		maxAge: 24 * 60 * 60 * 1000,
 		sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+		domain: process.env.NODE_ENV === "production" ? ".choz.io" : undefined,
 	},
+	name: "sessionId",
 };
 
 // Set up store based on environment
@@ -101,6 +104,12 @@ if (process.env.NODE_ENV === "development") {
 
 // Apply session middleware
 app.use(session(sessionConfig));
+
+app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+	console.log("Session ID:", req.sessionID);
+	console.log("Session:", req.session);
+	next();
+});
 
 // Health check route
 app.get("/health", (req, res) => {

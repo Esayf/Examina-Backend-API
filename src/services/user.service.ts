@@ -53,7 +53,7 @@ async function createAndRegister(req: Request, walletAddress: string): Promise<U
 			walletAddress: newUser.walletAddress,
 			isAdmin: newUser.isAdmin,
 		};
-		sessionHelper.setSessionUser(req, sessionUser);
+		await sessionHelper.setSessionUser(req, sessionUser);
 		return newUser;
 	} catch (error) {
 		console.error("Error creating and registering new user: ", error);
@@ -73,7 +73,7 @@ async function findAndLogin(req: Request, walletAddress: string): Promise<UserDo
 			walletAddress: user.walletAddress,
 			isAdmin: user.isAdmin,
 		};
-		sessionHelper.setSessionUser(req, sessionUser);
+		await sessionHelper.setSessionUser(req, sessionUser);
 		return user;
 	} catch (error) {
 		console.error("Error finding and logging in user: ", error);
