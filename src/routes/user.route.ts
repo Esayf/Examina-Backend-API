@@ -5,13 +5,14 @@ import {
 	ensureAdmin,
 	validateSessionToken,
 	validateRequestedEmail,
+	verifyUserSignature,
 } from "../middleware/middleware";
 
 const router = express.Router();
 
 router.get("/session/get-message-to-sign/:walletAddress", userController.getMessageToSign);
 
-router.post("/register", userController.registerUser);
+router.post("/register", verifyUserSignature, userController.registerUser);
 
 if (process.env.NODE_ENV === "development") {
 	router.post("/register/dev", userController.registerUser);
