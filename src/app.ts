@@ -69,16 +69,12 @@ const MongoDBStoreSession = MongoDBStore(session);
 const MemoryStore = memorystore(session);
 
 const sessionConfig: session.SessionOptions = {
-	name: "sid", // Set a specific name for the session cookie
 	secret: process.env.SESSION_SECRET || "examina the best",
-	resave: true, // Changed to true
-	rolling: true, // Reset expiration on every request
-	saveUninitialized: false, // Changed to false
+	resave: false,
+	saveUninitialized: true, // Changed to false
 	cookie: {
-		secure: process.env.NODE_ENV === "production",
-		httpOnly: true,
+		secure: false,
 		maxAge: 24 * 60 * 60 * 1000, // 24 hours
-		sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 		path: "/",
 		domain: process.env.NODE_ENV === "production" ? ".choz.io" : undefined,
 	},
@@ -96,7 +92,7 @@ if (process.env.NODE_ENV === "development") {
 } else {
 	const store = new MongoDBStoreSession({
 		uri: `${process.env.MONGO_URI}/connect_mongodb_session_test`,
-		collection: "mySessions",
+		collection: "sessions",
 		expires: 24 * 60 * 60 * 1000, // 24 hours
 		connectionOptions: {
 			useNewUrlParser: true,
