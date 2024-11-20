@@ -19,6 +19,7 @@ export interface SessionUser {
 // Extend the Session interface
 declare module "express-session" {
 	interface Session {
+		stableId?: string;
 		user?: SessionUser;
 		token?: string;
 		message?: string | { message: string };
