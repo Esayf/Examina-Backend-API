@@ -97,7 +97,9 @@ app.use((req, res, next) => {
 	console.log("Request URL:", req.url);
 	console.log("Cookie Header:", req.headers.cookie);
 	console.log("Session ID:", req.sessionID);
-	console.log("Session Data:", req.session);
+	console.log("Session message:", req.session.message);
+	console.log("Session token:", req.session.token);
+	console.log("Session user:", req.session.user);
 
 	// Monitor response headers
 	const oldEnd = res.end;
