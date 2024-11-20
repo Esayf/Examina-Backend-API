@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import { ExamDocument, Answer, ProcessedAnswer, AnswerKey } from "../types";
 import axios from "axios";
+import Client from "mina-signer";
+const signerClient = new Client({ network: "mainnet" });
 
 export function generateAnswerArray(answers: Answer[], walletAddress: string): ProcessedAnswer[] {
 	return answers.map((answer) => {
@@ -12,6 +14,33 @@ export function generateAnswerArray(answers: Answer[], walletAddress: string): P
 			answerHash: answerHash,
 		};
 	});
+}
+
+type VerifyBody = {
+	data: string;
+	publicKey: string;
+	signature: any; // Eğer signature'ın kesin bir tipi varsa (örneğin `string` veya `object`), burayı güncelleyebilirsiniz
+};
+
+export default function verifySignature(
+	message: string | object,
+	walletAddress: string,
+	signature: string | object
+): boolean {
+	const parsedMessage = typeof message === "string" ? message : JSON.stringify(message);
+
+	const parsedSignature = typeof signature === "string" ? JSON.parse(signature) : signature;
+
+	const verifyBody: VerifyBody = {
+		data: parsedMessage,
+		publicKey: walletAddress,
+		signature: parsedSignature,
+	};
+
+	const verifyResult = signerClient.verifyMessage(verifyBody);
+	console.log("Result: ", verifyResult);
+
+	return verifyResult;
 }
 
 async function pinToIPFS(hash: string): Promise<string> {

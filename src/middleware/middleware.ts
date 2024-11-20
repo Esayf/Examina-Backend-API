@@ -1,6 +1,7 @@
 import { Response, NextFunction } from "express";
 import { CustomRequest } from "../types";
 import { finishExamSchema } from "../validators/examValidators";
+import verifySignature from "../helpers/helperFunctions";
 
 export function ensureAuthenticated(req: CustomRequest, res: Response, next: NextFunction): Response | void {
 	if (req.session && req.session.user) {
@@ -21,6 +22,24 @@ export function validateSessionToken(req: CustomRequest, res: Response, next: Ne
 		return res.status(401).json({ message: "No session token found" });
 	}
 	return next();
+}
+
+export function verifyUserSignature(req: CustomRequest, res: Response, next: NextFunction): Response | void {
+	const { walletAddress, signature } = req.body;
+	const message = req.session?.message;
+	if (!message) {
+		return res.status(401).json({ success: false, message: "No session token" });
+	}
+
+	// Signature doğrulama
+	const verifyResult = verifySignature(message, walletAddress, signature);
+
+	if (!verifyResult) {
+		res.status(400).json({ success: false, message: "Invalid signature" });
+		return;
+	}
+
+	next();
 }
 
 export function validateRequestedEmail(req: CustomRequest, res: Response, next: NextFunction): Response | void {

@@ -35,8 +35,8 @@ async function create(walletAddress: string): Promise<UserDocument> {
 		const isAdmin = walletAddress === process.env.ADMIN_PUBLIC_KEY;
 		const newUser = new User({
 			username: walletAddress,
-			walletAddress,
-			isAdmin,
+			walletAddress: walletAddress,
+			isAdmin: isAdmin,
 		});
 		return await newUser.save();
 	} catch (error) {
@@ -45,28 +45,29 @@ async function create(walletAddress: string): Promise<UserDocument> {
 	}
 }
 
-async function registerOrLogin(req: Request, walletAddress: string): Promise<UserDocument> {
+async function createAndRegister(req: Request, walletAddress: string): Promise<UserDocument> {
 	try {
-		let users = await getByWalletAddress(walletAddress);
+		let newUser = await create(walletAddress);
+		const sessionUser: SessionUser = {
+			userId: newUser.id,
+			walletAddress: newUser.walletAddress,
+			isAdmin: newUser.isAdmin,
+		};
+		sessionHelper.setSessionUser(req, sessionUser);
+		return newUser;
+	} catch (error) {
+		console.error("Error creating and registering new user: ", error);
+		throw new Error("Error creating and registering new user");
+	}
+}
 
-		if (!users || users.length === 0) {
-			const newUser = await create(walletAddress);
-			const sessionUser: SessionUser = {
-				userId: newUser.id,
-				walletAddress: newUser.walletAddress,
-				isAdmin: newUser.isAdmin,
-			};
-			sessionHelper.setSessionUser(req, sessionUser);
-			return newUser;
-		}
-
-		const user = users[0];
-		// Update admin status if wallet matches ADMIN_PUBLIC_KEY
+async function findAndLogin(req: Request, walletAddress: string): Promise<UserDocument> {
+	try {
+		let user = (await getByWalletAddress(walletAddress))[0];
 		if (walletAddress === process.env.ADMIN_PUBLIC_KEY && !user.isAdmin) {
 			user.isAdmin = true;
 			await user.save();
 		}
-
 		const sessionUser: SessionUser = {
 			userId: user.id,
 			walletAddress: user.walletAddress,
@@ -74,6 +75,44 @@ async function registerOrLogin(req: Request, walletAddress: string): Promise<Use
 		};
 		sessionHelper.setSessionUser(req, sessionUser);
 		return user;
+	} catch (error) {
+		console.error("Error finding and logging in user: ", error);
+		throw new Error("Error finding and logging in user");
+	}
+}
+
+async function registerOrLogin(req: Request, walletAddress: string): Promise<UserDocument> {
+	try {
+		let users = await getByWalletAddress(walletAddress);
+
+		if (!users || users.length === 0) {
+			return await createAndRegister(req, walletAddress);
+			// const newUser = await create(walletAddress);
+			// const sessionUser: SessionUser = {
+			// 	userId: newUser.id,
+			// 	walletAddress: newUser.walletAddress,
+			// 	isAdmin: newUser.isAdmin,
+			// };
+			// sessionHelper.setSessionUser(req, sessionUser);
+			// return newUser;
+		} else {
+			return await findAndLogin(req, walletAddress);
+		}
+
+		// const user = users[0];
+		// // Update admin status if wallet matches ADMIN_PUBLIC_KEY
+		// if (walletAddress === process.env.ADMIN_PUBLIC_KEY && !user.isAdmin) {
+		// 	user.isAdmin = true;
+		// 	await user.save();
+		// }
+
+		// const sessionUser: SessionUser = {
+		// 	userId: user.id,
+		// 	walletAddress: user.walletAddress,
+		// 	isAdmin: user.isAdmin,
+		// };
+		// sessionHelper.setSessionUser(req, sessionUser);
+		// return user;
 	} catch (error) {
 		console.error("Error registering/logging in user: ", error);
 		throw new Error("Error registering/logging in user");
