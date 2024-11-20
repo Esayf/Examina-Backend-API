@@ -42,7 +42,10 @@ app.use(
 // Basic middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan("dev"));
+
+if (process.env.NODE_ENV === "development") {
+	app.use(morgan("dev"));
+}
 
 // CORS setup
 app.use(
@@ -67,7 +70,7 @@ const MemoryStore = memorystore(session);
 
 const sessionConfig: session.SessionOptions = {
 	secret: process.env.SESSION_SECRET || "examina the best",
-	resave: true,
+	resave: false,
 	saveUninitialized: true,
 	cookie: {
 		secure: process.env.NODE_ENV === "production",
@@ -84,9 +87,8 @@ if (process.env.NODE_ENV === "development") {
 	});
 } else {
 	const store = new MongoDBStoreSession({
-		uri: process.env.MONGO_URI!,
-		collection: "sessions",
-		expires: 24 * 60 * 60 * 1000,
+		uri: `${process.env.MONGO_URI}/connect_mongodb_session_test`,
+		collection: "mySessions",
 		connectionOptions: {
 			useNewUrlParser: true,
 			useUnifiedTopology: true,
