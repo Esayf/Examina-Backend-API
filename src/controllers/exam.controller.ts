@@ -1,6 +1,6 @@
-import { Response } from "express";
-import { CustomRequest, QuestionInput } from "../types";
-import examService from "../services/exam.service";
+import { Request, Response } from "express";
+import { QuestionInput } from "../types/index.js";
+import examService from "../services/exam.service.js";
 
 interface ExamInput {
 	title: string;
@@ -12,7 +12,7 @@ interface ExamInput {
 	questionCount: number;
 }
 
-async function createExam(req: CustomRequest, res: Response) {
+async function createExam(req: Request, res: Response) {
 	try {
 		const examData = req.body as ExamInput;
 		const userId = req.session.user?.userId;
@@ -34,7 +34,7 @@ async function createExam(req: CustomRequest, res: Response) {
 	}
 }
 
-async function getAllExams(req: CustomRequest, res: Response) {
+async function getAllExams(req: Request, res: Response) {
 	try {
 		const userId = req.session.user?.userId;
 		if (!userId) {
@@ -48,7 +48,7 @@ async function getAllExams(req: CustomRequest, res: Response) {
 	}
 }
 
-async function getExamById(req: CustomRequest, res: Response) {
+async function getExamById(req: Request, res: Response) {
 	try {
 		const { id } = req.params;
 		const exam = await examService.getById(id);
@@ -62,7 +62,7 @@ async function getExamById(req: CustomRequest, res: Response) {
 	}
 }
 
-async function startExam(req: CustomRequest, res: Response) {
+async function startExam(req: Request, res: Response) {
 	try {
 		const { examId } = req.body as { examId: string };
 		const userId = req.session.user?.userId;
@@ -87,7 +87,7 @@ interface FinishExamInput {
 	}>;
 }
 
-async function finishExam(req: CustomRequest, res: Response) {
+async function finishExam(req: Request, res: Response) {
 	try {
 		const { examId, answers } = req.body as FinishExamInput;
 		const userId = req.session.user?.userId;

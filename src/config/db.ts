@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ConnectOptions } from "mongoose";
 
 export async function connectDB(): Promise<boolean> {
 	try {

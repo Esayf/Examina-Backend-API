@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { ScoreDocument } from "../types";
+import { ScoreDocument } from "../types/score.js";
 
 const ScoreSchema = new Schema({
 	user: {

@@ -1,10 +1,10 @@
-import { ExamDocument, QuestionInput, QuestionDocument, Answer, AnswerKey } from "../types";
-import Exam from "../models/exam.model";
-import Question from "../models/question.model";
-import participatedUserService from "./participatedUser.service";
-import answerService from "./answer.service";
-import { calculateScore, checkExamTimes, processQuestion } from "../helpers/helperFunctions";
-import scoreService from "./score.service";
+import { ExamDocument, QuestionInput, QuestionDocument, Answer, AnswerKey } from "../types/index.js";
+import Exam from "../models/exam.model.js";
+import Question from "../models/question.model.js";
+import participatedUserService from "./participatedUser.service.js";
+import answerService from "./answer.service.js";
+import { calculateScore, checkExamTimes, processQuestion } from "../helpers/helperFunctions.cjs";
+import scoreService from "./score.service.js";
 
 interface ExamResult {
 	status: number;

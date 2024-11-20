@@ -25,11 +25,6 @@ declare module "express-session" {
 		message?: string | { message: string };
 	}
 }
-
-export interface CustomRequest extends Request<ParamsDictionary, any, any, any> {
-	session: Session;
-}
-
 export interface ExamDocument extends Document {
 	creator: string;
 	title: string;

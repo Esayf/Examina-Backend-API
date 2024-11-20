@@ -1,9 +1,8 @@
-import { Response } from "express";
-import { CustomRequest } from "../types";
-import userService from "../services/user.service";
-import sessionHelper from "../helpers/sessionHelper";
+import { Response, Request } from "express";
+import userService from "../services/user.service.js";
+import sessionHelper from "../helpers/sessionHelper.js";
 
-async function getMessageToSign(req: CustomRequest, res: Response) {
+async function getMessageToSign(req: Request, res: Response) {
 	try {
 		const { walletAddress } = req.params;
 		if (!walletAddress) {
@@ -17,7 +16,7 @@ async function getMessageToSign(req: CustomRequest, res: Response) {
 	}
 }
 
-async function registerUser(req: CustomRequest, res: Response) {
+async function registerUser(req: Request, res: Response) {
 	try {
 		const { walletAddress } = req.body;
 		if (!walletAddress) {
@@ -40,19 +39,19 @@ async function registerUser(req: CustomRequest, res: Response) {
 	}
 }
 
-async function getSession(req: CustomRequest, res: Response) {
+async function getSession(req: Request, res: Response) {
 	try {
-		if (!req.session.user) {
+		if (!sessionHelper.getSessionUser(req)) {
 			return res.status(401).json({ message: "No active session" });
 		}
-		return res.status(200).json({ success: true, session: req.session.user });
+		return res.status(200).json({ success: true, session: sessionHelper.getSessionUser(req) });
 	} catch (error) {
 		console.error("Error getting session:", error);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
 
-async function logout(req: CustomRequest, res: Response) {
+async function logout(req: Request, res: Response) {
 	try {
 		sessionHelper.destroySession(req, (err) => {
 			if (err) {
@@ -67,7 +66,7 @@ async function logout(req: CustomRequest, res: Response) {
 	}
 }
 
-async function getAllUsers(req: CustomRequest, res: Response) {
+async function getAllUsers(req: Request, res: Response) {
 	try {
 		const users = await userService.getAll();
 		if (!users || users.length === 0) {
@@ -80,7 +79,7 @@ async function getAllUsers(req: CustomRequest, res: Response) {
 	}
 }
 
-async function putEmail(req: CustomRequest, res: Response) {
+async function putEmail(req: Request, res: Response) {
 	try {
 		const userId = req.session.user?.userId;
 		if (!userId) {

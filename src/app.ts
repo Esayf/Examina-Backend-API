@@ -1,28 +1,25 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import { connectDB } from "./config/db";
-import redisClient from "./config/redis";
+import { connectDB } from "./config/db.js";
+import redisClient from "./config/redis.js";
 import mongoose from "mongoose";
 import session from "express-session";
-import RedisStore from "connect-redis";
+import MongoDBStore from "connect-mongodb-session";
+import memorystore from "memorystore";
 import compression from "compression";
 import morgan from "morgan";
 
 // Import routes
-import examRoutes from "./routes/exam.route";
-import userRoutes from "./routes/user.route";
-import answerRoutes from "./routes/answer.route";
-import questionRoutes from "./routes/question.route";
-import scoreRoutes from "./routes/score.route";
+import examRoutes from "./routes/exam.route.js";
+import userRoutes from "./routes/user.route.js";
+import answerRoutes from "./routes/answer.route.js";
+import questionRoutes from "./routes/question.route.js";
+import scoreRoutes from "./routes/score.route.js";
 
 // Import cron jobs
-import checkCompletedExams from "./cron/checkCompletedExams";
-import checkParticipantScoreAndMail from "./cron/checkParticipantScoreAndMail";
-
-// Import middleware
-import { syncSessionFromRedis } from "./middleware/sessionMiddleware";
-import sessionHelper from "./helpers/sessionHelper";
+import checkCompletedExams from "./cron/checkCompletedExams.js";
+import checkParticipantScoreAndMail from "./cron/checkParticipantScoreAndMail.js";
 
 dotenv.config();
 
@@ -45,12 +42,9 @@ app.use(
 // Basic middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(morgan("dev"));
 
-if (process.env.NODE_ENV === "development") {
-	app.use(morgan("dev"));
-}
-
-// CORS setup - must come BEFORE session middleware
+// CORS setup
 app.use(
 	cors({
 		origin: [
@@ -60,66 +54,54 @@ app.use(
 			"https://choz.io",
 			"https://choz.io/",
 		],
-		credentials: true,
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-		exposedHeaders: ["set-cookie"],
+		allowedHeaders: ["Content-Type", "Authorization"],
+		credentials: true,
 	})
 );
 
-// Initialize store
-const redisStore = new RedisStore({
-	client: redisClient,
-	prefix: "sess:", // prefix for session keys
-	ttl: 86400, // 24 hours
-});
+// Session setup
+const MongoDBStoreSession = MongoDBStore(session);
+const MemoryStore = memorystore(session);
 
-// Session configuration
 const sessionConfig: session.SessionOptions = {
-	store: redisStore,
-	name: "choz.sid", // Custom cookie name
 	secret: process.env.SESSION_SECRET || "examina the best",
 	resave: false,
-	saveUninitialized: false,
+	saveUninitialized: true,
 	cookie: {
-		secure: process.env.NODE_ENV === "production",
-		httpOnly: true,
-		maxAge: 24 * 60 * 60 * 1000, // 24 hours
+		secure: false,
+		maxAge: 24 * 60 * 60 * 1000,
 		sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-		path: "/",
-		domain: process.env.NODE_ENV === "production" ? ".choz.io" : undefined,
 	},
-	proxy: process.env.NODE_ENV === "production",
 };
+
+// Set up store based on environmen
+if (process.env.NODE_ENV === "development") {
+	sessionConfig.store = new MemoryStore({
+		checkPeriod: 86400000,
+	});
+} else {
+	app.set("trust proxy", 1);
+
+	const store = new MongoDBStoreSession({
+		uri: `${process.env.MONGO_URI}/connect_mongodb_session_test`,
+		collection: "sessions",
+		expires: 24 * 60 * 60 * 1000,
+		connectionOptions: {
+			useNewUrlParser: true,
+			useUnifiedTopology: true,
+		},
+	});
+
+	store.on("error", function (error) {
+		console.error("Session store error:", error);
+	});
+
+	sessionConfig.store = store;
+}
 
 // Apply session middleware
 app.use(session(sessionConfig));
-
-// Sync session data from Redis
-app.use(async (req, res, next) => {
-	await syncSessionFromRedis(req, res, next);
-});
-// Debug middleware
-app.use((req, res, next) => {
-	// Log incoming request details
-	console.log("Request URL:", req.url);
-	console.log("Cookie Header:", req.headers.cookie);
-	console.log("Session ID:", req.sessionID);
-	console.log("Session message:", req.session.message);
-	console.log("Session token:", req.session.token);
-	console.log("Session user:", req.session.user);
-	console.log("session from redis:", redisClient.get(`auth:${sessionHelper.getStableCookieId(req)}:user`));
-
-	// Monitor response headers
-	const oldEnd = res.end;
-	res.end = function (...args: any[]) {
-		console.log("Response Headers:", res.getHeaders());
-		// @ts-ignore
-		return oldEnd.apply(this, args);
-	};
-
-	next();
-});
 
 // Health check route
 app.get("/health", (req, res) => {

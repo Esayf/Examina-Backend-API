@@ -1,10 +1,9 @@
 import Queue from "bull";
-import { ParticipatedUserWithPopulatedUser } from "../types/participatedUser";
-import { sendExamResultEmail } from "../mailer";
-import redisClient from "../config/redis";
-import ParticipatedUser from "../models/participatedUser.model";
-import Score from "../models/score.model";
-import { ScoreDocument } from "@/types";
+import { ParticipatedUserWithPopulatedUser } from "../types/participatedUser.js";
+import { sendExamResultEmail } from "../mailer.js";
+import redisClient from "../config/redis.js";
+import ParticipatedUser from "../models/participatedUser.model.js";
+import Score from "../models/score.model.js";
 
 const examResultsQueue = new Queue("examResults", {
 	redis: {

@@ -1,5 +1,5 @@
-import { ScoreDocument } from "../types";
-import Score from "../models/score.model";
+import { ScoreDocument } from "../types/score.js";
+import Score from "../models/score.model.js";
 
 async function getAll(): Promise<ScoreDocument[]> {
 	try {

@@ -1,14 +1,14 @@
-import { Response, NextFunction } from "express";
-import { CustomRequest, SessionUser } from "../types";
-import redisClient from "../config/redis";
+import { Request, Response, NextFunction } from "express";
+import { SessionUser } from "../types/index.js";
+import redisClient from "../config/redis.js";
 
-function getStableCookieId(req: CustomRequest): string | null {
+function getStableCookieId(req: Request): string | null {
 	const cookies = req.headers.cookie?.split(";");
 	const sessionCookie = cookies?.find((cookie) => cookie.trim().startsWith("choz.sid="));
 	return sessionCookie ? sessionCookie.split("=")[1].trim() : null;
 }
 
-export async function syncSessionFromRedis(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
+export async function syncSessionFromRedis(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
 		const cookieId = getStableCookieId(req);
 

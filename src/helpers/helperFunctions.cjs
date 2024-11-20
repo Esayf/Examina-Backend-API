@@ -1,10 +1,9 @@
 import crypto from "crypto";
-import { ExamDocument, Answer, ProcessedAnswer, AnswerKey } from "../types";
-import axios from "axios";
-import Client from "mina-signer";
-const signerClient = new Client({ network: "mainnet" });
+import axios from "axios"; 
+const MinaSigner = require("mina-signer");
+const signerClient = new MinaSigner({ network: "mainnet" });
 
-export function generateAnswerArray(answers: Answer[], walletAddress: string): ProcessedAnswer[] {
+export function generateAnswerArray(answers, walletAddress) {
 	return answers.map((answer) => {
 		const hashInput = walletAddress + JSON.stringify(answer.answer);
 		const answerHash = crypto.createHash("sha256").update(hashInput).digest("hex");
@@ -16,22 +15,16 @@ export function generateAnswerArray(answers: Answer[], walletAddress: string): P
 	});
 }
 
-type VerifyBody = {
-	data: string;
-	publicKey: string;
-	signature: any; // Eğer signature'ın kesin bir tipi varsa (örneğin `string` veya `object`), burayı güncelleyebilirsiniz
-};
-
-export default function verifySignature(
-	message: string | object,
-	walletAddress: string,
-	signature: string | object
-): boolean {
+export function verifySignature(
+	message,
+	walletAddress,
+	signature
+) {
 	const parsedMessage = typeof message === "string" ? message : JSON.stringify(message);
 
 	const parsedSignature = typeof signature === "string" ? JSON.parse(signature) : signature;
 
-	const verifyBody: VerifyBody = {
+	const verifyBody = {
 		data: parsedMessage,
 		publicKey: walletAddress,
 		signature: parsedSignature,
@@ -43,7 +36,7 @@ export default function verifySignature(
 	return verifyResult;
 }
 
-async function pinToIPFS(hash: string): Promise<string> {
+async function pinToIPFS(hash) {
 	try {
 		const response = await axios.post(
 			"https://api.pinata.cloud/pinning/pinByHash",
@@ -55,8 +48,8 @@ async function pinToIPFS(hash: string): Promise<string> {
 			},
 			{
 				headers: {
-					pinata_api_key: process.env.PINATA_API_KEY as string,
-					pinata_secret_api_key: process.env.PINATA_SECRET_KEY as string,
+					pinata_api_key: process.env.PINATA_API_KEY,
+					pinata_secret_api_key: process.env.PINATA_SECRET_KEY,
 				},
 			}
 		);
@@ -68,7 +61,7 @@ async function pinToIPFS(hash: string): Promise<string> {
 	}
 }
 
-async function extractImageCid(text: string): Promise<void> {
+async function extractImageCid(text) {
 	const markdownLinkRegex = /!\[.*?\]\((https?:\/\/[^\s)]+)\)/g;
 	const cidRegex = /\/ipfs\/(Qm[1-9A-Za-z]{44}|baf[1-9A-Za-z]{56})/;
 
@@ -88,7 +81,7 @@ async function extractImageCid(text: string): Promise<void> {
 	}
 }
 
-export async function processQuestion(question: any): Promise<any> {
+export async function processQuestion(question) {
 	console.log("Processing Question: ", question.text);
 
 	// Process images in the question text
@@ -97,7 +90,7 @@ export async function processQuestion(question: any): Promise<any> {
 	// Process question options
 	if (question.options && Array.isArray(question.options)) {
 		question.options = await Promise.all(
-			question.options.map(async (option: any) => {
+			question.options.map(async (option) => {
 				// Process images in the option text
 				await extractImageCid(option.text);
 				return option;
@@ -108,17 +101,14 @@ export async function processQuestion(question: any): Promise<any> {
 	return question;
 }
 
-export function isExamCompleted(exam: ExamDocument): boolean {
+export function isExamCompleted(exam) {
 	const startTime = new Date(exam.startDate);
 	const endTime = startTime.getTime() + exam.duration * 60000;
 	const currentDateTime = new Date().getTime();
 	return endTime < currentDateTime;
 }
 
-export function checkExamTimes(exam: ExamDocument): {
-	valid: boolean;
-	message?: string;
-} {
+export function checkExamTimes(exam) {
 	const now = new Date().getTime();
 	const startTime = new Date(exam.startDate).getTime();
 	const endTime = startTime + exam.duration * 60000;
@@ -140,7 +130,7 @@ export function checkExamTimes(exam: ExamDocument): {
 	return { valid: true };
 }
 
-export function calculateScore(userAnswers: Answer[], answerKey: AnswerKey[]) {
+export function calculateScore(userAnswers, answerKey) {
 	let correctAnswers = 0;
 
 	userAnswers.forEach((userAnswer) => {

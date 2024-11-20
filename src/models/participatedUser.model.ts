@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { ParticipatedUserDocument } from "../types";
+import { ParticipatedUserDocument } from "../types/participatedUser.js";
 
 const ParticipatedUserSchema = new Schema(
 	{

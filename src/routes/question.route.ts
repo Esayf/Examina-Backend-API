@@ -1,10 +1,10 @@
 import express from "express";
-import questionController from "../controllers/question.controller";
-import { ensureAuthenticated, ensureAdmin } from "../middleware/middleware";
+import questionController from "../controllers/question.controller.js";
+import { ensureAuthenticated } from "../middleware/middleware.js";
 
 const router = express.Router();
 
-router.get("/question/:questionId", ensureAuthenticated, ensureAdmin, questionController.getQuestionById);
+router.get("/question/:questionId", ensureAuthenticated, questionController.getQuestionById);
 router.get("/:examId", ensureAuthenticated, questionController.getExamQuestions);
 
 export default router;

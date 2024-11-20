@@ -1,8 +1,7 @@
-import { Response } from "express";
-import { CustomRequest } from "../types";
-import scoreService from "../services/score.service";
+import { Request, Response } from "express";
+import scoreService from "../services/score.service.js";
 
-async function getAllScores(req: CustomRequest, res: Response) {
+async function getAllScores(req: Request, res: Response) {
 	try {
 		const scores = await scoreService.getAll();
 		if (!scores) {
@@ -15,7 +14,7 @@ async function getAllScores(req: CustomRequest, res: Response) {
 	}
 }
 
-async function getScoresByExamId(req: CustomRequest, res: Response) {
+async function getScoresByExamId(req: Request, res: Response) {
 	try {
 		const { examId } = req.params;
 		const scores = await scoreService.getScoresByExamId(examId);

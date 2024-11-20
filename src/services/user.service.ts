@@ -1,7 +1,7 @@
 import { Request } from "express";
-import { UserDocument, SessionUser } from "../types";
-import User from "../models/user.model";
-import sessionHelper from "../helpers/sessionHelper";
+import { UserDocument, SessionUser } from "../types/index.js";
+import User from "../models/user.model.js";
+import sessionHelper from "../helpers/sessionHelper.js";
 
 async function getByWalletAddress(walletAddress: string): Promise<UserDocument[]> {
 	try {

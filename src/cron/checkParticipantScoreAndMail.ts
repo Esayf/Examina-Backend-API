@@ -1,5 +1,5 @@
-import ParticipatedUser from "../models/participatedUser.model";
-import examResultsQueue from "../queues/examResultsQueue";
+import ParticipatedUser from "../models/participatedUser.model.js";
+import examResultsQueue from "../queues/examResultsQueue.js";
 import { ParticipatedUserWithPopulatedUser } from "../types/participatedUser";
 
 async function checkParticipantScoreAndMail() {

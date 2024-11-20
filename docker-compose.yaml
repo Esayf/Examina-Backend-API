@@ -15,9 +15,11 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - SESSION_SECRET=${SESSION_SECRET}
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+      - /usr/src/app/dist
     depends_on:
       - db
       - redis

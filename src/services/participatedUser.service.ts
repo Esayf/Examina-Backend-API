@@ -1,5 +1,5 @@
-import { ParticipatedUserDocument } from "../types";
-import ParticipatedUser from "../models/participatedUser.model";
+import { ParticipatedUserDocument } from "../types/participatedUser.js";
+import ParticipatedUser from "../models/participatedUser.model.js";
 
 interface ParticipationResult {
 	success: boolean;

@@ -1,8 +1,6 @@
-import { Response } from "express";
-import { CustomRequest } from "../types";
-import questionService from "../services/question.service";
-
-async function getQuestionById(req: CustomRequest, res: Response) {
+import { Request, Response } from "express";
+import questionService from "../services/question.service.js";
+async function getQuestionById(req: Request, res: Response) {
 	const { questionId } = req.params;
 
 	try {
@@ -18,7 +16,7 @@ async function getQuestionById(req: CustomRequest, res: Response) {
 	}
 }
 
-async function getExamQuestions(req: CustomRequest, res: Response) {
+async function getExamQuestions(req: Request, res: Response) {
 	const userId = req.session.user?.userId;
 	const { examId } = req.params;
 

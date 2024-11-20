@@ -1,26 +1,18 @@
 import express from "express";
-import userController from "../controllers/user.controller";
-import {
-	ensureAuthenticated,
-	ensureAdmin,
-	validateSessionToken,
-	validateRequestedEmail,
-	verifyUserSignature,
-} from "../middleware/middleware";
+import userController from "../controllers/user.controller.js";
+import { ensureAuthenticated, validateRequestedEmail } from "../middleware/middleware.js";
 
 const router = express.Router();
 
 router.get("/session/get-message-to-sign/:walletAddress", userController.getMessageToSign);
 
-router.post("/register", verifyUserSignature, userController.registerUser);
+router.post("/register", userController.registerUser);
 
-if (process.env.NODE_ENV === "development") {
-	router.post("/register/dev", userController.registerUser);
-}
+router.post("/register/dev", userController.registerUser);
 
 router.get("/session", userController.getSession);
 router.post("/logout", ensureAuthenticated, userController.logout);
-router.get("/", ensureAuthenticated, ensureAdmin, userController.getAllUsers);
+router.get("/", ensureAuthenticated, userController.getAllUsers);
 router.post("/put/email", ensureAuthenticated, validateRequestedEmail, userController.putEmail);
 
 export default router;

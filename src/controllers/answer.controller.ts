@@ -1,8 +1,7 @@
-import { Response } from "express";
-import { CustomRequest } from "../types";
-import answerService from "../services/answer.service";
+import { Request, Response } from "express";
+import answerService from "../services/answer.service.js";
 
-async function getAnswers(req: CustomRequest, res: Response) {
+async function getAnswers(req: Request, res: Response) {
 	try {
 		const { examId } = req.body as { examId: string };
 		const userId = req.session.user?.userId;
@@ -24,7 +23,7 @@ async function getAnswers(req: CustomRequest, res: Response) {
 	}
 }
 
-async function getAnswerById(req: CustomRequest, res: Response) {
+async function getAnswerById(req: Request, res: Response) {
 	try {
 		const { answerId } = req.params;
 		const answer = await answerService.getById(answerId);

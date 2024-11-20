@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import { QuestionDocument } from "../types";
-import Counter from "./counter.model";
+import { QuestionDocument } from "../types/index.js";
+import Counter from "./counter.model.js";
 
 const QuestionSchema = new Schema(
 	{

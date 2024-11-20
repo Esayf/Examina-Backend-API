@@ -1,12 +1,15 @@
 import Redis from "ioredis";
+import { RedisOptions } from "ioredis";
+import dotenv from "dotenv";
 
-if (!process.env.REDIS_HOST || !process.env.REDIS_PORT) {
-	throw new Error("Redis configuration is missing in environment variables");
-}
+dotenv.config();
+
+const REDIS_HOST = process.env.REDIS_HOST || "localhost";
+const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379");
 
 const redisClient = new Redis({
-	host: process.env.REDIS_HOST,
-	port: Number(process.env.REDIS_PORT),
+	host: REDIS_HOST,
+	port: REDIS_PORT,
 	maxRetriesPerRequest: null,
 	enableReadyCheck: false,
 	retryStrategy(times: number) {

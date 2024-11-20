@@ -1,10 +1,10 @@
 import express from "express";
-import scoreController from "../controllers/score.controller";
-import { ensureAuthenticated, ensureAdmin } from "../middleware/middleware";
+import scoreController from "../controllers/score.controller.js";
+import { ensureAuthenticated } from "../middleware/middleware.js";
 
 const router = express.Router();
 
-router.get("/allScores", ensureAuthenticated, ensureAdmin, scoreController.getAllScores);
+router.get("/allScores", ensureAuthenticated, scoreController.getAllScores);
 router.get("/:examId", ensureAuthenticated, scoreController.getScoresByExamId);
 
 export default router;

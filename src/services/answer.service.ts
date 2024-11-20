@@ -1,7 +1,6 @@
-import { AnswerDocument, Answer } from "../types";
-import AnswerModel from "../models/answer.model";
-import { generateAnswerArray } from "../helpers/helperFunctions";
-
+import { AnswerDocument, Answer } from "../types/index.js";
+import AnswerModel from "../models/answer.model.js";
+import { generateAnswerArray } from "../helpers/helperFunctions.cjs";
 async function get(userId: string, examId: string): Promise<AnswerDocument | null> {
 	try {
 		const answer = await AnswerModel.findOne({ user: userId, exam: examId });

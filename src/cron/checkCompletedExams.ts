@@ -1,5 +1,5 @@
-import Exam from "../models/exam.model";
-import { ExamDocument } from "../types";
+import Exam from "../models/exam.model.js";
+import { ExamDocument } from "../types/index.js";
 
 async function checkCompletedExams() {
 	try {

@@ -1,8 +1,8 @@
-import { QuestionDocument } from "../types";
-import Question from "../models/question.model";
-import { checkExamTimes } from "../helpers/helperFunctions";
-import participatedUserService from "./participatedUser.service";
-import examService from "./exam.service";
+import { QuestionDocument } from "../types/index.js";
+import Question from "../models/question.model.js";
+import participatedUserService from "./participatedUser.service.js";
+import examService from "./exam.service.js";
+import { checkExamTimes } from "../helpers/helperFunctions.cjs";
 
 interface QuestionResponse {
 	status: number;

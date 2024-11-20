@@ -1,20 +1,16 @@
-# Use the official Bun image
-FROM oven/bun:1
+FROM node:18-alpine
 
-# Set the working directory
 WORKDIR /usr/src/app
 
-# Copy package files
 COPY package*.json ./
+COPY tsconfig.json ./
 
-# Install dependencies
-RUN bun install
+RUN npm install
 
-# Copy the rest of the application code
 COPY . .
 
-# Expose the application port
+RUN npm run build
+
 EXPOSE 3000
 
-# Start the application
-CMD ["bun", "start"]
+CMD ["npm", "run","start"]
