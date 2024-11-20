@@ -5,7 +5,7 @@ import redisClient from "../config/redis";
 // Helper to get the stable cookie ID
 function getStableCookieId(req: Request): string | null {
 	const cookies = req.headers.cookie?.split(";");
-	const sessionCookie = cookies?.find((cookie) => cookie.trim().startsWith("choz.sid="));
+	const sessionCookie = cookies?.find((cookie) => cookie.trim().startsWith("connect.sid="));
 	return sessionCookie ? sessionCookie.split("=")[1].trim() : null;
 }
 
