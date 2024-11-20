@@ -96,8 +96,9 @@ const sessionConfig: session.SessionOptions = {
 app.use(session(sessionConfig));
 
 // Sync session data from Redis
-app.use(syncSessionFromRedis);
-
+app.use(async (req, res, next) => {
+	await syncSessionFromRedis(req, res, next);
+});
 // Debug middleware
 app.use((req, res, next) => {
 	// Log incoming request details
