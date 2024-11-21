@@ -50,7 +50,19 @@ const ExamSchema = new Schema(
 			type: Number,
 			required: true,
 		},
+		isRewarded: {
+			type: Boolean,
+			required: true,
+		},
+		rewardPerWinner: {
+			type: Number,
+			required: true,
+		},
 		isCompleted: {
+			type: Boolean,
+			default: false,
+		},
+		isDistributed: {
 			type: Boolean,
 			default: false,
 		},

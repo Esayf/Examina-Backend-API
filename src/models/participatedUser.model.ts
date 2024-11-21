@@ -17,6 +17,10 @@ const ParticipatedUserSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
+		isWinner: {
+			type: Boolean,
+			default: false,
+		},
 		isMailSent: {
 			type: Boolean,
 			default: false,

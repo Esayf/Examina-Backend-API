@@ -10,6 +10,8 @@ interface ExamInput {
 	rootHash: string;
 	secretKey: string;
 	questionCount: number;
+	isRewarded: boolean;
+	rewardPerWinner: number;
 }
 
 async function createExam(req: CustomRequest, res: Response) {

@@ -20,6 +20,7 @@ import scoreRoutes from "./routes/score.route";
 // Import cron jobs
 import checkCompletedExams from "./cron/checkCompletedExams";
 import checkParticipantScoreAndMail from "./cron/checkParticipantScoreAndMail";
+import distributeRewardsToWinners from "./cron/distributeRewardsToWinners";
 
 dotenv.config();
 
@@ -156,6 +157,7 @@ const initializeApp = async () => {
 		// Initialize cron jobs
 		checkCompletedExams();
 		checkParticipantScoreAndMail();
+		distributeRewardsToWinners();
 		console.log("Cron jobs initialized");
 
 		// Routes
