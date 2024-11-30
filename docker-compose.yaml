@@ -5,11 +5,11 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3001:3001"
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - MONGO_URI=mongodb://db:27017
-      - PORT=3001
+      - PORT=3000
       - PINATA_API_KEY=${PINATA_API_KEY}
       - PINATA_SECRET_KEY=${PINATA_SECRET_KEY}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
@@ -23,7 +23,6 @@ services:
       - redis
     networks:
       - examina_network
-    command: ["bun", "dev"]
 
   db:
     container_name: mongodb
