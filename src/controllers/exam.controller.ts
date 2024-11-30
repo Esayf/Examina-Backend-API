@@ -10,6 +10,9 @@ interface ExamInput {
 	rootHash: string;
 	secretKey: string;
 	questionCount: number;
+	contractAddress: string;
+	deployJobId: string;
+	passingScore: number;
 }
 
 async function createExam(req: CustomRequest, res: Response) {

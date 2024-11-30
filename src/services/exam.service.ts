@@ -135,7 +135,7 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 		const answerKey = await getAnswerKey(examId);
 
 		// Calculate score
-		const { score, correctAnswers } = calculateScore(answers, answerKey);
+		const { score, correctAnswers } = await calculateScore(answers, answerKey);
 
 		console.log("Score: ", score);
 		console.log("Correct Answers: ", correctAnswers);
