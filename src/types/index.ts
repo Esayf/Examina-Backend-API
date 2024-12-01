@@ -38,7 +38,10 @@ export interface ExamDocument extends Document {
 	rootHash: string;
 	secretKey: string;
 	questionCount: number;
+	isRewarded: boolean;
+	rewardPerWinner: number;
 	isCompleted?: boolean;
+	isDistributed?: boolean;
 }
 
 export interface QuestionDocument extends Document {
@@ -64,6 +67,7 @@ export interface ParticipatedUserDocument extends Document {
 	user: string;
 	exam: string;
 	isFinished: boolean;
+	isWinner: boolean;
 	isMailSent: boolean;
 	jobAdded: boolean;
 }

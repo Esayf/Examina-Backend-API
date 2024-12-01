@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { CustomRequest, QuestionInput } from "../types";
 import examService from "../services/exam.service";
+import participatedUserService from "@/services/participatedUser.service";
 
 interface ExamInput {
 	title: string;
@@ -13,6 +14,8 @@ interface ExamInput {
 	contractAddress: string;
 	deployJobId: string;
 	passingScore: number;
+	isRewarded: boolean;
+	rewardPerWinner: number;
 }
 
 async function createExam(req: CustomRequest, res: Response) {
@@ -55,10 +58,18 @@ async function getExamById(req: CustomRequest, res: Response) {
 	try {
 		const { id } = req.params;
 		const exam = await examService.getById(id);
+		const userId = req.session.user?.userId;
+		if (!userId) {
+			return res.status(404).json({ message: "User not found" });
+		}
 		if (!exam) {
 			return res.status(404).json({ message: "Exam not found" });
 		}
-		return res.status(200).json(exam);
+
+		const participatedUser = await participatedUserService.get(userId, id);
+
+		const response = { exam: exam, participatedUser: participatedUser };
+		return res.status(200).json(response);
 	} catch (err) {
 		console.error("Error fetching exam:", err);
 		return res.status(500).json({ message: "Internal server error" });

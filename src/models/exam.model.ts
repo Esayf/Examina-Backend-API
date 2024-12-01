@@ -50,13 +50,37 @@ const ExamSchema = new Schema(
 			type: Number,
 			required: true,
 		},
+		isRewarded: {
+			type: Boolean,
+			required: true,
+		},
+		rewardPerWinner: {
+			type: Number,
+			required: true,
+		},
 		isCompleted: {
+			type: Boolean,
+			default: false,
+		},
+		isDistributed: {
 			type: Boolean,
 			default: false,
 		},
 		uniqueId: {
 			type: Number,
 			unique: true,
+		},
+		passingScore: {
+			type: Number,
+			required: true,
+		},
+		contractAddress: {
+			type: String,
+			required: true,
+		},
+		deployJobId: {
+			type: String,
+			required: true,
 		},
 	},
 	{

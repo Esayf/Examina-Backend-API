@@ -149,7 +149,10 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 			correctAnswers: correctAnswers,
 		});
 
-		await participatedUserService.updateParticipationStatus(userId, examId);
+		// WINNER DETERMINATION
+		const isWinner = parseInt(score) > 80 ? true : false;
+
+		await participatedUserService.updateParticipationStatus(userId, examId, isWinner);
 
 		return { status: 200, message: "Exam completed successfully" };
 	} catch (error) {

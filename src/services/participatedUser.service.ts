@@ -77,7 +77,7 @@ async function checkParticipation(
 	}
 }
 
-async function updateParticipationStatus(userId: string, examId: string): Promise<void> {
+async function updateParticipationStatus(userId: string, examId: string, isWinner: boolean): Promise<void> {
 	try {
 		const participatedUser = await get(userId, examId);
 
@@ -85,6 +85,7 @@ async function updateParticipationStatus(userId: string, examId: string): Promis
 			throw new Error(`Participation not found for userId: ${userId} and examId: ${examId}`);
 		}
 		participatedUser.isFinished = true;
+		participatedUser.isWinner = isWinner;
 		await participatedUser.save();
 	} catch (err) {
 		console.error("Error updating participation:", err);
