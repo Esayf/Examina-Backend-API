@@ -42,6 +42,9 @@ export interface ExamDocument extends Document {
 	rewardPerWinner: number;
 	isCompleted?: boolean;
 	isDistributed?: boolean;
+	contractAddress: string;
+	deployJobId: string;
+	passingScore: number;
 }
 
 export interface QuestionDocument extends Document {
@@ -106,6 +109,7 @@ export interface ScoreDocument extends Document {
 	totalQuestions: number;
 	correctAnswers: number;
 	createdAt: Date;
+	isWinner: boolean;
 }
 
 export interface PopulatedScoreDocument extends Omit<ScoreDocument, "user" | "exam"> {

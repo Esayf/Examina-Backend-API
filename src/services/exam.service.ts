@@ -3,7 +3,7 @@ import Exam from "../models/exam.model";
 import Question from "../models/question.model";
 import participatedUserService from "./participatedUser.service";
 import answerService from "./answer.service";
-import { calculateScore, checkExamTimes, processQuestion } from "../helpers/helperFunctions";
+import { checkExamTimes, processQuestion } from "../helpers/helperFunctions";
 import scoreService from "./score.service";
 
 interface ExamResult {
@@ -135,7 +135,7 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 		const answerKey = await getAnswerKey(examId);
 
 		// Calculate score
-		const { score, correctAnswers } = await calculateScore(answers, answerKey);
+		const { score, correctAnswers } = await scoreService.calculateScore(answers, answerKey);
 
 		console.log("Score: ", score);
 		console.log("Correct Answers: ", correctAnswers);
@@ -150,7 +150,7 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 		});
 
 		// WINNER DETERMINATION
-		const isWinner = parseInt(score) > 80 ? true : false;
+		const isWinner = parseInt(score) > exam.passingScore ? true : false;
 
 		await participatedUserService.updateParticipationStatus(userId, examId, isWinner);
 

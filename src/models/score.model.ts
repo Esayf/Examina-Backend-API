@@ -24,6 +24,10 @@ const ScoreSchema = new Schema({
 		type: Number,
 		required: true,
 	},
+	isWinner: {
+		type: Boolean,
+		default: false,
+	},
 	createdAt: {
 		type: Date,
 		default: Date.now,

@@ -1,5 +1,6 @@
-import { ScoreDocument } from "../types";
+import { Answer, AnswerKey, ScoreDocument } from "../types";
 import Score from "../models/score.model";
+import * as workerAPI from "../zkcloudworker/workerAPI";
 
 async function getAll(): Promise<ScoreDocument[]> {
 	try {
@@ -41,8 +42,36 @@ async function createScore(scoreData: {
 	}
 }
 
+async function calculateScore(userAnswers: Answer[], answerKey: AnswerKey[]) {
+	let correctAnswers = 0;
+
+	userAnswers.forEach((userAnswer) => {
+		const question = answerKey.find((key) => key.questionId.toString() === userAnswer.questionId.toString());
+		if (question && question.correctAnswer.toString() === userAnswer.answer.toString()) {
+			correctAnswers++;
+		}
+	});
+	// Make sure that userAnswers.questionId order in the array is the same as answerKey.questionId order in the array
+	const sortedUserAnswers = userAnswers.sort(
+		(a, b) =>
+			answerKey.findIndex((key) => key.questionId.toString() === a.questionId.toString()) -
+			answerKey.findIndex((key) => key.questionId.toString() === b.questionId.toString())
+	);
+	// Get exam correct answers as an array
+	const examCorrectAnswers = answerKey.map((answer) => answer.correctAnswer.toString());
+	const zkProgramScoreCalculationProof = await workerAPI.calculateScore({
+		userAnswers: { answers: sortedUserAnswers.map((answer) => answer.answer.toString()) },
+		correctAnswers: { answers: examCorrectAnswers },
+	});
+	console.log("ZK Program Score Calculation score: ", zkProgramScoreCalculationProof.score);
+	const score = ((correctAnswers / answerKey.length) * 100).toFixed(2).toString();
+
+	return { score, correctAnswers };
+}
+
 export default {
 	getAll,
 	getScoresByExamId,
 	createScore,
+	calculateScore,
 };
