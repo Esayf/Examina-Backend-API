@@ -35,7 +35,12 @@ async function distributeRewardsToWinners() {
 						winnerAddresses.push(user.walletAddress);
 					}
 
+					console.log("KAZANANLAR: ", winnerAddresses);
+
 					const amount = exam.rewardPerWinner;
+
+					exam.isDistributed = true;
+					await exam.save();
 
 					// Reward distribution
 					const results = await distributeRewards(winnerAddresses, amount);

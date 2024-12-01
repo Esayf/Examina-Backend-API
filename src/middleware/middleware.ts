@@ -30,6 +30,7 @@ export function verifyUserSignature(req: CustomRequest, res: Response, next: Nex
 	if (!message) {
 		return res.status(401).json({ success: false, message: "No session token" });
 	}
+	console.log("Meesage in session: ", message);
 
 	// Signature doğrulama
 	const verifyResult = verifySignature(message, walletAddress, signature);

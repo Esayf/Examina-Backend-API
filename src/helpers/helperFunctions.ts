@@ -29,6 +29,8 @@ export default function verifySignature(
 ): boolean {
 	const parsedMessage = typeof message === "string" ? message : JSON.stringify(message);
 
+	// console.log("Raw Signature: ", signature);
+
 	const parsedSignature = typeof signature === "string" ? JSON.parse(signature) : signature;
 
 	const verifyBody: VerifyBody = {
@@ -36,6 +38,9 @@ export default function verifySignature(
 		publicKey: walletAddress,
 		signature: parsedSignature,
 	};
+
+	console.log("Data: ", verifyBody.data);
+	console.log("Parsed Signature: ", verifyBody.signature);
 
 	const verifyResult = signerClient.verifyMessage(verifyBody);
 	console.log("Result: ", verifyResult);

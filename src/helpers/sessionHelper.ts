@@ -1,7 +1,7 @@
 import { Request } from "express";
-import { SessionUser } from "../types";
+import { CustomRequest, SessionUser } from "../types";
 
-async function createTokenAndMessage(req: Request, walletAddress: string): Promise<string> {
+async function createTokenAndMessage(req: CustomRequest, walletAddress: string): Promise<string> {
 	const token = Math.random().toString(36).substring(7);
 	req.session.token = token;
 	const message = `${token}${walletAddress}`;
