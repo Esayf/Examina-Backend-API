@@ -1,0 +1,144 @@
+{
+	"sampleExam": {
+		"title": "Testing Exam",
+		"description": "This is a description",
+		"questions": [
+			{
+				"number": 1,
+				"text": "Bqqntiwe",
+				"options": [
+					{
+						"number": 1,
+						"text": "Nsaaikephoros sII"
+					},
+					{
+						"number": 2,
+						"text": "Alexiodsaas Is"
+					},
+					{
+						"number": 3,
+						"text": "John IIs"
+					},
+					{
+						"number": 4,
+						"text": "Manuel Is"
+					},
+					{
+						"number": 5,
+						"text": "Manuel IIss"
+					}
+				],
+				"correctAnswer": 4
+			},
+			{
+				"number": 2,
+				"text": "Ottwqqoman",
+				"options": [
+					{
+						"number": 1,
+						"text": "Bayasaaad I"
+					},
+					{
+						"number": 2,
+						"text": "Mehdsdsmed I"
+					},
+					{
+						"number": 3,
+						"text": "Murad II"
+					},
+					{
+						"number": 4,
+						"text": "Mehmed II"
+					},
+					{
+						"number": 5,
+						"text": "Mehmed III"
+					}
+				],
+				"correctAnswer": 2
+			},
+			{
+				"number": 3,
+				"text": "Bqqntiwe",
+				"options": [
+					{
+						"number": 1,
+						"text": "Nsaaikephoros sII"
+					},
+					{
+						"number": 2,
+						"text": "Alexiodsaas Is"
+					},
+					{
+						"number": 3,
+						"text": "John IIs"
+					},
+					{
+						"number": 4,
+						"text": "Manuel Is"
+					},
+					{
+						"number": 5,
+						"text": "Manuel IIss"
+					}
+				],
+				"correctAnswer": 3
+			},
+			{
+				"number": 4,
+				"text": "Ottwqqoman",
+				"options": [
+					{
+						"number": 1,
+						"text": "Bayasaaad I"
+					},
+					{
+						"number": 2,
+						"text": "Mehdsdsmed I"
+					},
+					{
+						"number": 3,
+						"text": "Murad II"
+					},
+					{
+						"number": 4,
+						"text": "Mehmed II"
+					},
+					{
+						"number": 5,
+						"text": "Mehmed III"
+					}
+				],
+				"correctAnswer": 1
+			}
+		],
+		"startDate": "2024-11-21T19:23:17Z",
+		"duration": 1,
+		"rootHash": "0x0",
+		"secretKey": "SIOSDajksa",
+		"questionCount": "4",
+		"isRewarded": true,
+		"rewardPerWinner": 1
+	},
+	"sampleAnswer": {
+		"examId": "",
+		"answers": [
+			{
+				"questionId": "",
+				"answer": "4"
+			},
+			{
+				"questionId": "",
+				"answer": "2"
+			},
+			{
+				"questionId": "",
+				"answer": "3"
+			},
+			{
+				"questionId": "",
+				"answer": "1"
+			}
+		]
+	}
+}

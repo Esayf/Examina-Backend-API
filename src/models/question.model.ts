@@ -33,33 +33,10 @@ const QuestionSchema = new Schema(
 			type: Number,
 			required: true,
 		},
-		uniqueId: {
-			type: Number,
-			unique: true,
-		},
 	},
 	{
 		timestamps: true,
 	}
 );
-
-QuestionSchema.pre("save", async function (next) {
-	const doc = this;
-	if (doc.isNew) {
-		try {
-			const counter = await Counter.findOneAndUpdate(
-				{ _id: "questionId" },
-				{ $inc: { seq: 1 } },
-				{ new: true, upsert: true }
-			);
-			doc.uniqueId = counter.seq;
-			next();
-		} catch (error) {
-			next(error as Error);
-		}
-	} else {
-		next();
-	}
-});
 
 export default mongoose.model<QuestionDocument>("Question", QuestionSchema);

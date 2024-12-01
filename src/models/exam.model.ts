@@ -13,7 +13,6 @@ import Counter from "./counter.model";
  * @property {string} secretKey.required - Secret key
  * @property {number} questionCount.required - Number of questions
  * @property {boolean} isCompleted - Completion status
- * @property {number} uniqueId - Unique identifier
  */
 const ExamSchema = new Schema(
 	{
@@ -66,10 +65,6 @@ const ExamSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
-		uniqueId: {
-			type: Number,
-			unique: true,
-		},
 		passingScore: {
 			type: Number,
 			required: true,
@@ -87,24 +82,5 @@ const ExamSchema = new Schema(
 		timestamps: true,
 	}
 );
-
-ExamSchema.pre("save", async function (next) {
-	const doc = this;
-	if (doc.isNew) {
-		try {
-			const counter = await Counter.findOneAndUpdate(
-				{ _id: "examId" },
-				{ $inc: { seq: 1 } },
-				{ new: true, upsert: true }
-			);
-			doc.uniqueId = counter.seq;
-			next();
-		} catch (error) {
-			next(error as Error);
-		}
-	} else {
-		next();
-	}
-});
 
 export default mongoose.model<ExamDocument>("Exam", ExamSchema);

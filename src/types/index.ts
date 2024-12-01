@@ -56,7 +56,6 @@ export interface QuestionDocument extends Document {
 	}>;
 	correctAnswer: number;
 	number: number;
-	uniqueId: string;
 }
 
 export interface QuestionInput {
