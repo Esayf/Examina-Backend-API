@@ -1,62 +1,90 @@
-import cron from "node-cron";
-import { distributeRewards } from "../wallet";
+import { distributeRewardsWithWorker } from "../wallet";
 import Exam from "../models/exam.model";
 import ParticipatedUser from "../models/participatedUser.model";
 import User from "../models/user.model";
+import { Winner } from "@/zkcloudworker/workerAPI";
+import { ParticipatedUserWithPopulatedUser } from "@/types/participatedUser";
 
 async function distributeRewardsToWinners() {
 	// Every 1 minute
-	cron.schedule("* * * * *", async () => {
-		console.log(`[${new Date().toISOString()}] Ödül dağıtım cronjob'u çalıştı.`);
+	console.log(`[${new Date().toISOString()}] Reward distribution cronjob is running.`);
+	try {
+		const finishedExams = await Exam.find({ isCompleted: true, isRewarded: true });
 
-		try {
-			const finishedExams = await Exam.find({ isCompleted: true, isDistributed: false });
+		for (const exam of finishedExams) {
+			console.log(`Exam is being processed: ${exam.id}`);
 
-			for (const exam of finishedExams) {
-				console.log(`Sınav işleniyor: ${exam.id}`);
-
-				try {
-					const winners = await ParticipatedUser.find({ exam: exam.id, isWinner: true });
-
-					if (!winners) {
-						console.log(`Winner(s) not found for ${exam.id}`);
-						return;
-					}
-
-					const winnerAddresses: string[] = [];
-					for (const winner of winners) {
-						const user = await User.findById(winner.user);
-
-						if (!user || !user.walletAddress) {
-							console.warn(`Wallet address not found for ${winner.user}`);
-							continue;
-						}
-
-						winnerAddresses.push(user.walletAddress);
-					}
-
-					console.log("KAZANANLAR: ", winnerAddresses);
-
-					const amount = exam.rewardPerWinner;
-
-					exam.isDistributed = true;
-					await exam.save();
-
-					// Reward distribution
-					const results = await distributeRewards(winnerAddresses, amount);
-
-					console.log(`Rewards were distributed successfully for ${exam.id}`, results);
-
-					exam.isDistributed = true;
-					await exam.save();
-				} catch (error) {
-					console.error(`Error when distributing rewards ${exam.id}`, error);
+			try {
+				const participatedWinners = await ParticipatedUser.aggregate<ParticipatedUserWithPopulatedUser>([
+					{
+						$match: {
+							isFinished: true,
+							isWinner: true,
+							isRewardSent: false,
+						},
+					},
+					{
+						$lookup: {
+							from: "users",
+							localField: "user",
+							foreignField: "_id",
+							as: "user",
+						},
+					},
+					{
+						$unwind: "$user",
+					},
+					{
+						$match: {
+							"user.email": { $ne: null },
+						},
+					},
+					{
+						$lookup: {
+							from: "exams",
+							localField: "exam",
+							foreignField: "_id",
+							as: "exam",
+						},
+					},
+					{
+						$unwind: "$exam",
+					},
+					{
+						$match: {
+							"exam.isCompleted": true,
+						},
+					},
+					{
+						$limit: 1,
+					},
+				]);
+				console.log("Participated Winners: ", participatedWinners);
+				if (!participatedWinners) {
+					console.log(`Winner(s) not found for ${exam.id}`);
+					return;
 				}
+				if (participatedWinners.length == 0) return;
+				exam.isDistributed = true;
+				await exam.save();
+
+				// Reward distribution
+				const results = await distributeRewardsWithWorker(
+					exam.contractAddress,
+					exam.rewardPerWinner,
+					participatedWinners
+				);
+				console.log(`Rewards were distributed successfully for ${exam.id}`, results);
+			} catch (error) {
+				console.error(`Error when distributing rewards ${exam.id}`, error);
 			}
-		} catch (error) {
-			console.error("Error scheduling job:", error);
 		}
-	});
+	} catch (error) {
+		console.error("Error scheduling job:", error);
+	}
 }
+
+// Schedule the job to run every 1 minute
+setInterval(distributeRewardsToWinners, 60000);
 
 export default distributeRewardsToWinners;

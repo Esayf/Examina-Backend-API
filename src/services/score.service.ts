@@ -59,11 +59,11 @@ async function calculateScore(userAnswers: Answer[], answerKey: AnswerKey[]) {
 	);
 	// Get exam correct answers as an array
 	const examCorrectAnswers = answerKey.map((answer) => answer.correctAnswer.toString());
-	const zkProgramScoreCalculationProof = await workerAPI.calculateScore({
-		userAnswers: { answers: sortedUserAnswers.map((answer) => answer.answer.toString()) },
-		correctAnswers: { answers: examCorrectAnswers },
-	});
-	console.log("ZK Program Score Calculation score: ", zkProgramScoreCalculationProof.score);
+	/* 	const zkProgramScoreCalculationProof = await workerAPI.calculateScore({
+			userAnswers: { answers: sortedUserAnswers.map((answer) => answer.answer.toString()) },
+			correctAnswers: { answers: examCorrectAnswers },
+		}); */
+	//console.log("ZK Program Score Calculation score: ", zkProgramScoreCalculationProof.score);
 	const score = ((correctAnswers / answerKey.length) * 100).toFixed(2).toString();
 
 	return { score, correctAnswers };

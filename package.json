@@ -36,8 +36,9 @@
 		"mongoose": "^8.6.3",
 		"morgan": "^1.10.0",
 		"nodemailer": "^6.9.13",
-		"zkcloudworker": "^0.18.29",
-		"tough-cookie": "^5.0.0"
+		"o1js": "^2.1.0",
+		"tough-cookie": "^5.0.0",
+		"zkcloudworker": "^0.18.29"
 	},
 	"devDependencies": {
 		"@types/bull": "^4.10.0",

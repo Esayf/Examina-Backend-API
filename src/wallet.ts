@@ -1,7 +1,15 @@
 import { PrivateKey, PublicKey, Mina, UInt64, AccountUpdate, fetchAccount } from "o1js";
 import dotenv from "dotenv";
 import axios from "axios";
-
+import { parseMina } from "./helpers/helperFunctions";
+import {
+	Winner,
+	addWinnersAndPayout,
+	initWinnerMapAddOneWinnerAndPayout,
+	initWinnerMapAddTwoWinnersAndPayout,
+} from "./zkcloudworker/workerAPI";
+import { ParticipatedUserDocument } from "./types";
+import User from "./models/user.model";
 dotenv.config();
 
 const devnetTestnet = Mina.Network("https://api.minascan.io/node/devnet/v1/graphql");
@@ -61,12 +69,70 @@ const checkTransactionStatus = async (transactionId: string) => {
 };
 
 /**
+ * Distribute rewards with the worker
+ * @param {Winner[]} winners - Winners
+ */
+export const distributeRewardsWithWorker = async (
+	contractAddress: string,
+	rewardPerWinner: number,
+	participatedWinners: ParticipatedUserDocument[]
+) => {
+	const winners: Winner[] = [];
+	console.log("Distribution starts: ");
+	for (const winner of participatedWinners) {
+		const user = await User.findById(winner.user);
+		if (!user || !user.walletAddress) {
+			console.warn(`Wallet address not found for ${winner.user}`);
+			continue;
+		}
+		winners.push({
+			publicKey: user.walletAddress,
+			reward: rewardPerWinner.toString(),
+		});
+	}
+
+	console.log("Winners: ", winners);
+	if (winners.length == 1) {
+		const initMapAndPayoutResult = await initWinnerMapAddOneWinnerAndPayout(
+			JSON.stringify({
+				contractAddress,
+				winner: winners[0],
+			})
+		);
+		return initMapAndPayoutResult;
+	} else {
+		const initWinnerMapResult = await initWinnerMapAddTwoWinnersAndPayout(
+			JSON.stringify({
+				contractAddress,
+				winner1: winners[0],
+				winner2: winners[1],
+			})
+		);
+
+		if (winners.length > 2) {
+			// Every two winners we will call the worker
+			for (let i = 2; i < winners.length; i += 2) {
+				const winner1 = winners[i];
+				const winner2 = winners[i + 1];
+
+				await addWinnersAndPayout({
+					contractAddress,
+					previousProof: initWinnerMapResult.proof!,
+					serializedStringPreviousMap: initWinnerMapResult.auxiliaryOutput!,
+					winner1,
+					winner2,
+				});
+			}
+		}
+	}
+};
+/**
  * @param {Array<string>} winners - Addresses of winners
  * @param {number} amount - Reward amount in nanomina
  */
-export const distributeRewards = async (winners: string[], amount: number) => {
+export const distributeManualRewards = async (winners: string[], amount: number) => {
 	const txs: any = [];
-	const nanominaAmount = amount * 2_000_000_000; // convert to nanomina
+	const nanominaAmount = parseMina(amount); // convert to nanomina
 	let nonce: any = await getAdminNonce(); // Fetch the initial nonce
 
 	for (const winner of winners) {

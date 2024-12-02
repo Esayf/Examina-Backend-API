@@ -21,6 +21,16 @@ const ParticipatedUserSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
+		isRewardSent: {
+			type: Boolean,
+			default: false,
+		},
+		rewardSentDate: {
+			type: Date,
+		},
+		rewardAmount: {
+			type: Number,
+		},
 		isMailSent: {
 			type: Boolean,
 			default: false,

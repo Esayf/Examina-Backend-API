@@ -2,8 +2,11 @@ import nodemailer, { Transporter } from "nodemailer";
 import fs from "fs";
 import path from "path";
 
-const htmlFilePath = path.join(__dirname, "../quiz-results.html");
-let htmlContent = fs.readFileSync(htmlFilePath, "utf-8");
+const regularResultsHtmlPath = path.join(__dirname, "../quiz-results.html");
+const winnerResultsHtmlPath = path.join(__dirname, "../winner-quiz-result-mail.html");
+
+const regularHtmlContent = fs.readFileSync(regularResultsHtmlPath, "utf-8");
+const winnerHtmlContent = fs.readFileSync(winnerResultsHtmlPath, "utf-8");
 
 import SMTPTransport from "nodemailer/lib/smtp-transport"; // SMTP transport tipini içe aktar
 
@@ -26,7 +29,9 @@ async function sendExamResultEmail(
 	userEmail: string,
 	examName: string,
 	totalQuestions: number,
-	correctAnswers: number
+	correctAnswers: number,
+	isWinner: boolean,
+	rewardAmount?: number
 ): Promise<void> {
 	try {
 		if (!totalQuestions) {
@@ -34,16 +39,25 @@ async function sendExamResultEmail(
 			return;
 		}
 
-		const htmlBody = htmlContent
+		const score = ((correctAnswers / totalQuestions) * 100).toFixed(2);
+		const templateContent = isWinner ? winnerHtmlContent : regularHtmlContent;
+
+		let htmlBody = templateContent
 			.replace("{{examName}}", examName)
-			.replace("{{score}}", ((+correctAnswers / totalQuestions) * 100).toFixed(2))
+			.replace("{{score}}", score)
 			.replace("{{correctAnswers}}", correctAnswers.toString())
 			.replace("{{totalQuestions}}", totalQuestions.toString());
+
+		if (isWinner && rewardAmount) {
+			htmlBody = htmlBody.replace("{{rewardAmount}}", rewardAmount.toString());
+		}
+
+		const subject = isWinner ? "🎉 Congratulations! You're a Choz Quiz Winner! 🏆" : "Your Quiz Results from Choz!";
 
 		const info = await transporter.sendMail({
 			from: '"Choz Support" <info@choz.io>',
 			to: userEmail,
-			subject: "Your Quiz Results from Choz!",
+			subject: subject,
 			html: htmlBody,
 		});
 

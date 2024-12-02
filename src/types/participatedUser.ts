@@ -7,4 +7,6 @@ export interface ParticipatedUserWithPopulatedUser extends Document {
 	isFinished: boolean;
 	isMailSent: boolean;
 	jobAdded: boolean;
+	isDistributed: boolean;
+	isWinner: boolean;
 }

@@ -1,12 +1,12 @@
 import axios from "axios";
 import { IndexedMapSerialized } from "zkcloudworker";
 import { JsonProof } from "o1js";
-interface InitWinnerMapParams {
+export interface InitWinnerMapParams {
 	contractAddress: string;
 	[key: string]: any;
 }
 
-interface AddWinnerParams {
+export interface AddWinnerParams {
 	contractAddress: string;
 	winner: string;
 	previousProof: string;
@@ -14,7 +14,7 @@ interface AddWinnerParams {
 	[key: string]: any;
 }
 
-interface PayoutWinnersParams {
+export interface PayoutWinnersParams {
 	contractAddress: string;
 	winner1: string;
 	winner2: string;
@@ -23,12 +23,12 @@ interface PayoutWinnersParams {
 	[key: string]: any;
 }
 
-interface Winner {
+export interface Winner {
 	publicKey: string;
 	reward: string;
 }
 
-interface AddWinnersAndPayoutParams {
+export interface AddWinnersAndPayoutParams {
 	previousProof: JsonProof;
 	serializedStringPreviousMap: IndexedMapSerialized;
 	contractAddress: string;
@@ -36,12 +36,19 @@ interface AddWinnersAndPayoutParams {
 	winner2: Winner;
 }
 
-interface AddWinnersAndPayoutResult {
+export interface AddOneWinnerAndPayoutParams {
+	previousProof: JsonProof;
+	serializedStringPreviousMap: IndexedMapSerialized;
+	contractAddress: string;
+	winner: Winner;
+}
+
+export interface AddWinnersAndPayoutResult {
 	auxiliaryOutput?: string;
 	proof?: string;
 }
 
-interface CalculateScoreParams {
+export interface CalculateScoreParams {
 	userAnswers: {
 		answers: string[];
 	};
@@ -68,6 +75,7 @@ export async function initWinnerMap(params: InitWinnerMapParams): Promise<{
 		jobId: result.jobId,
 		printLogs: true,
 	});
+	console.log("jobResult", jobResult.result);
 	return { isPrepared: true, ...JSON.parse(jobResult.result.result) };
 }
 
@@ -96,6 +104,26 @@ export async function addWinner(params: string): Promise<{
 		console.error(jobResult.result);
 		throw new Error("No result from addWinner");
 	}
+	return { isPrepared: true, ...JSON.parse(jobResult.result.result) };
+}
+
+export async function payoutOneWinner(params: string): Promise<{
+	isPrepared: boolean;
+	transaction?: string;
+	fee?: number;
+	memo?: string;
+	serializedTransaction?: string;
+	payoutParams?: string;
+}> {
+	const response = await execute({
+		task: "payoutOneWinner",
+		args: params,
+		metadata: "payout one winner test",
+	});
+	let jobResult = await waitForJobResult({
+		jobId: response.jobId,
+		printLogs: true,
+	});
 	return { isPrepared: true, ...JSON.parse(jobResult.result.result) };
 }
 
@@ -154,6 +182,46 @@ export async function addWinnersAndPayout(params: AddWinnersAndPayoutParams) {
 		})
 	);
 	return { addSecondWinnerResult };
+}
+export async function initWinnerMapAddOneWinnerAndPayout(params: string): Promise<{
+	isPrepared: boolean;
+	transaction?: string;
+	fee?: number;
+	memo?: string;
+	serializedTransaction?: string;
+	auxiliaryOutput?: IndexedMapSerialized;
+	proof?: JsonProof;
+}> {
+	const { contractAddress, winner } = JSON.parse(params);
+	const initWinnerMapResult = await initWinnerMap({ contractAddress });
+	console.log("initWinnerMapResult is here:", initWinnerMapResult);
+	const addOneWinnerAndPayoutResult = await addOneWinnerAndPayout({
+		previousProof: initWinnerMapResult.proof!,
+		serializedStringPreviousMap: initWinnerMapResult.auxiliaryOutput!,
+		contractAddress,
+		winner,
+	});
+	return addOneWinnerAndPayoutResult;
+}
+
+export async function addOneWinnerAndPayout(params: AddOneWinnerAndPayoutParams) {
+	const addWinnerResult = await addWinner(
+		JSON.stringify({
+			previousProof: params.previousProof,
+			serializedStringPreviousMap: params.serializedStringPreviousMap,
+			contractAddress: params.contractAddress,
+			winner: params.winner,
+		})
+	);
+
+	const payoutOneWinnerResult = await payoutOneWinner(
+		JSON.stringify({
+			contractAddress: params.contractAddress,
+			winner: params.winner.publicKey,
+			winnerProof: addWinnerResult.proof,
+		})
+	);
+	return payoutOneWinnerResult;
 }
 
 export async function initWinnerMapAddTwoWinnersAndPayout(params: string): Promise<{

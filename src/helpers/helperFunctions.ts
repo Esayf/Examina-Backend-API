@@ -4,7 +4,7 @@ import axios from "axios";
 import Client from "mina-signer";
 import * as workerAPI from "../zkcloudworker/workerAPI";
 
-const signerClient = new Client({ network: "mainnet" });
+const signerClient = new Client({ network: "testnet" });
 
 export function generateAnswerArray(answers: Answer[], walletAddress: string): ProcessedAnswer[] {
 	return answers.map((answer) => {
@@ -145,4 +145,8 @@ export function checkExamTimes(exam: ExamDocument): {
 	}
 
 	return { valid: true };
+}
+
+export function parseMina(amount: string | number) {
+	return Number(amount.toString()) * 1_000_000_000;
 }

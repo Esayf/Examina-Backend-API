@@ -52,11 +52,17 @@ examResultsQueue.process(1, async (job) => {
 			return;
 		}
 
+		// Determine if user is a winner and get reward amount
+		const isWinner = participated.isWinner;
+		const rewardAmount = isWinner ? participated.exam.rewardPerWinner : undefined;
+
 		await sendExamResultEmail(
 			participated.user.email,
 			participated.exam.title,
 			participated.exam.questionCount,
-			score.correctAnswers
+			score.correctAnswers,
+			isWinner,
+			rewardAmount
 		);
 
 		participatedUser.isMailSent = true;
