@@ -5,6 +5,7 @@ import participatedUserService from "./participatedUser.service";
 import answerService from "./answer.service";
 import { checkExamTimes, processQuestion } from "../helpers/helperFunctions";
 import scoreService from "./score.service";
+import Joi from "joi";
 
 interface ExamResult {
 	status: number;
@@ -13,6 +14,34 @@ interface ExamResult {
 
 async function create(examData: Partial<ExamDocument>, questions: Array<QuestionInput>): Promise<ExamDocument> {
 	try {
+		const schema = Joi.object({
+			isRewarded: Joi.boolean(),
+			rewardPerWinner: Joi.when("isRewarded", {
+				is: true,
+				then: Joi.number().positive().required(),
+				otherwise: Joi.optional(),
+			}),
+			passingScore: Joi.when("isRewarded", {
+				is: true,
+				then: Joi.number().min(1).max(100).required(),
+				otherwise: Joi.optional(),
+			}),
+			deployJobId: Joi.when("isRewarded", {
+				is: true,
+				then: Joi.string().required(),
+				otherwise: Joi.optional(),
+			}),
+			contractAddress: Joi.when("isRewarded", {
+				is: true,
+				then: Joi.string().required(),
+				otherwise: Joi.optional(),
+			}),
+		});
+		const { error } = schema.validate(examData);
+		if (error) {
+			throw new Error(error.details[0].message);
+		}
+		examData.isDistributed = false;
 		const exam = new Exam(examData);
 		const savedExam = await exam.save();
 		await saveQuestions(questions, savedExam.id);

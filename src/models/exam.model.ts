@@ -55,7 +55,6 @@ const ExamSchema = new Schema(
 		},
 		rewardPerWinner: {
 			type: Number,
-			required: true,
 		},
 		isCompleted: {
 			type: Boolean,
@@ -67,15 +66,12 @@ const ExamSchema = new Schema(
 		},
 		passingScore: {
 			type: Number,
-			required: true,
 		},
 		contractAddress: {
 			type: String,
-			required: true,
 		},
 		deployJobId: {
 			type: String,
-			required: true,
 		},
 	},
 	{

@@ -1,15 +1,17 @@
 import { PrivateKey, PublicKey, Mina, UInt64, AccountUpdate, fetchAccount } from "o1js";
 import dotenv from "dotenv";
 import axios from "axios";
-import { parseMina } from "./helpers/helperFunctions";
+import { formatMina, parseMina } from "./helpers/helperFunctions";
 import {
 	Winner,
+	addOneWinnerAndPayout,
 	addWinnersAndPayout,
 	initWinnerMapAddOneWinnerAndPayout,
 	initWinnerMapAddTwoWinnersAndPayout,
 } from "./zkcloudworker/workerAPI";
 import { ParticipatedUserDocument } from "./types";
 import User from "./models/user.model";
+import participatedUserService from "./services/participatedUser.service";
 dotenv.config();
 
 const devnetTestnet = Mina.Network("https://api.minascan.io/node/devnet/v1/graphql");
@@ -77,53 +79,112 @@ export const distributeRewardsWithWorker = async (
 	rewardPerWinner: number,
 	participatedWinners: ParticipatedUserDocument[]
 ) => {
-	const winners: Winner[] = [];
-	console.log("Distribution starts: ");
-	for (const winner of participatedWinners) {
-		const user = await User.findById(winner.user);
-		if (!user || !user.walletAddress) {
-			console.warn(`Wallet address not found for ${winner.user}`);
-			continue;
+	try {
+		const winners: Winner[] = [];
+		console.log("Distribution starts: ");
+		for (const winner of participatedWinners) {
+			const user = await User.findById(winner.user);
+			if (!user || !user.walletAddress) {
+				console.warn(`Wallet address not found for ${winner.user}`);
+				continue;
+			}
+			winners.push({
+				publicKey: user.walletAddress,
+				reward: rewardPerWinner.toString(),
+			});
+			winner.rewardAmount = rewardPerWinner;
+			winner.isRewardSent = true;
+			winner.rewardSentDate = new Date();
+			await winner.save();
 		}
-		winners.push({
-			publicKey: user.walletAddress,
-			reward: rewardPerWinner.toString(),
-		});
-	}
 
-	console.log("Winners: ", winners);
-	if (winners.length == 1) {
-		const initMapAndPayoutResult = await initWinnerMapAddOneWinnerAndPayout(
-			JSON.stringify({
-				contractAddress,
-				winner: winners[0],
-			})
-		);
-		return initMapAndPayoutResult;
-	} else {
-		const initWinnerMapResult = await initWinnerMapAddTwoWinnersAndPayout(
-			JSON.stringify({
-				contractAddress,
-				winner1: winners[0],
-				winner2: winners[1],
-			})
-		);
-
-		if (winners.length > 2) {
-			// Every two winners we will call the worker
-			for (let i = 2; i < winners.length; i += 2) {
-				const winner1 = winners[i];
-				const winner2 = winners[i + 1];
-
-				await addWinnersAndPayout({
+		console.log("Winners: ", winners);
+		if (winners.length == 1) {
+			const initMapAndPayoutResult = await initWinnerMapAddOneWinnerAndPayout(
+				JSON.stringify({
 					contractAddress,
-					previousProof: initWinnerMapResult.proof!,
-					serializedStringPreviousMap: initWinnerMapResult.auxiliaryOutput!,
-					winner1,
-					winner2,
-				});
+					winner: winners[0],
+				})
+			);
+			return initMapAndPayoutResult;
+		} else {
+			const initWinnerMapResult = await initWinnerMapAddTwoWinnersAndPayout(
+				JSON.stringify({
+					contractAddress,
+					winner1: winners[0],
+					winner2: winners[1],
+				})
+			);
+			let previousProof = initWinnerMapResult.proof;
+			let auxiliaryOutput = initWinnerMapResult.auxiliaryOutput;
+
+			if (winners.length > 2) {
+				// Every two winners we will call the worker
+				for (let i = 2; i < winners.length; i += 2) {
+					if (winners.length % 2 != 0 && i + 1 == winners.length) {
+						const addOneWinnerAndPayoutResult = await addOneWinnerAndPayout({
+							contractAddress,
+							previousProof,
+							serializedStringPreviousMap: auxiliaryOutput,
+							winner: winners[i],
+						});
+						break;
+					}
+					const winner1 = winners[i];
+					const winner2 = winners[i + 1];
+
+					const payoutResult = await addWinnersAndPayout({
+						contractAddress,
+						previousProof,
+						serializedStringPreviousMap: auxiliaryOutput,
+						winner1,
+						winner2,
+					});
+					if (payoutResult.isError) {
+						console.error(
+							"There was an error while distributing rewards to these winners: ",
+							winner1,
+							winner2
+						);
+						await participatedUserService.updateParticipatedUserRewardStatusByWalletAndContractAddress(
+							winner1.publicKey,
+							contractAddress,
+							false,
+							null,
+							null
+						);
+						await participatedUserService.updateParticipatedUserRewardStatusByWalletAndContractAddress(
+							winner2.publicKey,
+							contractAddress,
+							false,
+							null,
+							null
+						);
+						continue;
+					} else {
+						await participatedUserService.updateParticipatedUserRewardStatusByWalletAndContractAddress(
+							winner1.publicKey,
+							contractAddress,
+							true,
+							formatMina(winner1.reward),
+							new Date()
+						);
+						await participatedUserService.updateParticipatedUserRewardStatusByWalletAndContractAddress(
+							winner2.publicKey,
+							contractAddress,
+							true,
+							formatMina(winner2.reward),
+							new Date()
+						);
+					}
+					previousProof = payoutResult.proof;
+					auxiliaryOutput = payoutResult.auxiliaryOutput;
+				}
 			}
 		}
+	} catch (error) {
+		console.error("Error distributing rewards:", error);
+		throw error;
 	}
 };
 /**

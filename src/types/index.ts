@@ -72,6 +72,9 @@ export interface ParticipatedUserDocument extends Document {
 	isWinner: boolean;
 	isMailSent: boolean;
 	jobAdded: boolean;
+	isRewardSent: boolean;
+	rewardSentDate: Date | null;
+	rewardAmount: number | null;
 }
 
 export interface AnswerDocument extends Document {

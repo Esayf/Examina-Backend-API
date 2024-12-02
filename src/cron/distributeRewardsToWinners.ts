@@ -9,7 +9,7 @@ async function distributeRewardsToWinners() {
 	// Every 1 minute
 	console.log(`[${new Date().toISOString()}] Reward distribution cronjob is running.`);
 	try {
-		const finishedExams = await Exam.find({ isCompleted: true, isRewarded: true });
+		const finishedExams = await Exam.find({ isCompleted: true, isRewarded: true, isDistributed: false });
 
 		for (const exam of finishedExams) {
 			console.log(`Exam is being processed: ${exam.id}`);
@@ -37,6 +37,7 @@ async function distributeRewardsToWinners() {
 					{
 						$match: {
 							"user.email": { $ne: null },
+							"user.walletAddress": { $ne: null },
 						},
 					},
 					{
@@ -54,9 +55,6 @@ async function distributeRewardsToWinners() {
 						$match: {
 							"exam.isCompleted": true,
 						},
-					},
-					{
-						$limit: 1,
 					},
 				]);
 				console.log("Participated Winners: ", participatedWinners);
@@ -76,6 +74,8 @@ async function distributeRewardsToWinners() {
 				);
 				console.log(`Rewards were distributed successfully for ${exam.id}`, results);
 			} catch (error) {
+				exam.isDistributed = false;
+				await exam.save();
 				console.error(`Error when distributing rewards ${exam.id}`, error);
 			}
 		}

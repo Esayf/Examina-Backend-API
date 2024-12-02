@@ -1,5 +1,7 @@
 import { ParticipatedUserDocument } from "../types";
 import ParticipatedUser from "../models/participatedUser.model";
+import User from "../models/user.model";
+import Exam from "../models/exam.model";
 
 interface ParticipationResult {
 	success: boolean;
@@ -16,6 +18,29 @@ async function get(userId: string, examId: string): Promise<ParticipatedUserDocu
 		const userParticipation = await ParticipatedUser.findOne({
 			user: userId,
 			exam: examId,
+		});
+		return userParticipation;
+	} catch (err) {
+		console.error("Error fetching participation:", err);
+		throw new Error("Error fetching participation");
+	}
+}
+
+async function getByWalletAddressAndQuizContractAddress(
+	walletAddress: string,
+	contractAddress: string
+): Promise<ParticipatedUserDocument | null> {
+	try {
+		const user = await User.findOne({ walletAddress: walletAddress });
+		const exam = await Exam.findOne({ contractAddress: contractAddress });
+
+		if (!user || !exam) {
+			throw new Error("User or Exam not found");
+		}
+
+		const userParticipation = await ParticipatedUser.findOne({
+			user: user._id,
+			exam: exam._id,
 		});
 		return userParticipation;
 	} catch (err) {
@@ -93,9 +118,34 @@ async function updateParticipationStatus(userId: string, examId: string, isWinne
 	}
 }
 
+async function updateParticipatedUserRewardStatusByWalletAndContractAddress(
+	walletAddress: string,
+	contractAddress: string,
+	isRewardSent: boolean,
+	rewardAmount: number | null,
+	rewardSentDate: Date | null
+): Promise<void> {
+	try {
+		const participatedUser = await getByWalletAddressAndQuizContractAddress(walletAddress, contractAddress);
+		if (!participatedUser) {
+			throw new Error(
+				`Participation not found for walletAddress: ${walletAddress} and contractAddress: ${contractAddress}`
+			);
+		}
+		participatedUser.isRewardSent = isRewardSent;
+		participatedUser.rewardAmount = rewardAmount;
+		participatedUser.rewardSentDate = rewardSentDate;
+		await participatedUser.save();
+	} catch (err) {
+		console.error("Error updating participation reward status:", err);
+		throw new Error("Error updating participation reward status");
+	}
+}
+
 export default {
 	get,
 	create,
 	checkParticipation,
 	updateParticipationStatus,
+	updateParticipatedUserRewardStatusByWalletAndContractAddress,
 };

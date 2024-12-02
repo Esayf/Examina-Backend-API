@@ -150,3 +150,7 @@ export function checkExamTimes(exam: ExamDocument): {
 export function parseMina(amount: string | number) {
 	return Number(amount.toString()) * 1_000_000_000;
 }
+
+export function formatMina(amount: string | number): number {
+	return Number(BigInt(amount.toString()) / BigInt(1_000_000_000));
+}

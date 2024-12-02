@@ -1,5 +1,5 @@
 import axios from "axios";
-import { IndexedMapSerialized } from "zkcloudworker";
+import { blockchain, IndexedMapSerialized, zkCloudWorkerClient } from "zkcloudworker";
 import { JsonProof } from "o1js";
 export interface InitWinnerMapParams {
 	contractAddress: string;
@@ -57,6 +57,8 @@ export interface CalculateScoreParams {
 	};
 }
 
+const workerAPI = new zkCloudWorkerClient({ jwt: process.env.ZKCW_JWT!, chain: process.env.CHAIN! as blockchain });
+
 export async function initWinnerMap(params: InitWinnerMapParams): Promise<{
 	isPrepared: boolean;
 	transaction?: string;
@@ -71,22 +73,27 @@ export async function initWinnerMap(params: InitWinnerMapParams): Promise<{
 		args: params,
 		metadata: "init winner map test",
 	});
-	let jobResult = await waitForJobResult({
+	let jobResult = await workerAPI.waitForJobResult({
 		jobId: result.jobId,
 		printLogs: true,
 	});
 	console.log("jobResult", jobResult.result);
+	if (jobResult.result.result === undefined) {
+		console.error(jobResult.error);
+		throw new Error("No result from initWinnerMap:" + jobResult.error);
+	}
 	return { isPrepared: true, ...JSON.parse(jobResult.result.result) };
 }
 
 export async function addWinner(params: string): Promise<{
+	isError?: boolean;
 	isPrepared: boolean;
 	transaction?: string;
 	fee?: number;
 	memo?: string;
-	serializedTransaction?: string;
-	auxiliaryOutput?: IndexedMapSerialized;
-	proof?: JsonProof;
+	serializedTransaction: string;
+	auxiliaryOutput: IndexedMapSerialized;
+	proof: JsonProof;
 }> {
 	console.log("addWinner", params);
 
@@ -96,7 +103,7 @@ export async function addWinner(params: string): Promise<{
 		metadata: "add winner test",
 	});
 
-	let jobResult = await waitForJobResult({
+	let jobResult = await workerAPI.waitForJobResult({
 		jobId: result.jobId,
 		printLogs: true,
 	});
@@ -120,20 +127,20 @@ export async function payoutOneWinner(params: string): Promise<{
 		args: params,
 		metadata: "payout one winner test",
 	});
-	let jobResult = await waitForJobResult({
+	let jobResult = await workerAPI.waitForJobResult({
 		jobId: response.jobId,
 		printLogs: true,
 	});
+	if (jobResult.result.result === undefined) {
+		console.error(jobResult.error);
+		throw new Error("Error when payout one winner:" + jobResult.error);
+	}
 	return { isPrepared: true, ...JSON.parse(jobResult.result.result) };
 }
 
 export async function payoutWinners(params: string): Promise<{
 	isPrepared: boolean;
-	transaction?: string;
-	fee?: number;
-	memo?: string;
-	serializedTransaction?: string;
-	payoutParams?: string;
+	isSent: boolean;
 }> {
 	console.log("payoutWinners", params);
 	const response = await execute({
@@ -142,48 +149,64 @@ export async function payoutWinners(params: string): Promise<{
 		metadata: "payout winners test",
 	});
 
-	let jobResult = await waitForJobResult({
+	let jobResult = await workerAPI.waitForJobResult({
 		jobId: response.jobId,
 		printLogs: true,
 	});
 
 	console.log(`zkCloudWorker answer:`, jobResult);
-	const jobId = jobResult.jobId;
+	const jobId = response.jobId;
 	console.log(`jobId:`, jobId);
-	return { isPrepared: true, ...JSON.parse(jobResult.result.result) };
+	if (jobResult.result.result === undefined) {
+		console.error(jobResult.error);
+		throw new Error("No result from payoutWinners:" + jobResult.error);
+	}
+	return { isPrepared: true, isSent: JSON.parse(jobResult.result.result) == "Sended tx" };
 }
 
 export async function addWinnersAndPayout(params: AddWinnersAndPayoutParams) {
-	const addWinnerResult = await addWinner(
-		JSON.stringify({
-			previousProof: params.previousProof,
-			serializedStringPreviousMap: params.serializedStringPreviousMap,
-			contractAddress: params.contractAddress,
-			winner: params.winner1,
-		})
-	);
+	try {
+		const addWinnerResult = await addWinner(
+			JSON.stringify({
+				previousProof: params.previousProof,
+				serializedStringPreviousMap: params.serializedStringPreviousMap,
+				contractAddress: params.contractAddress,
+				winner: params.winner1,
+			})
+		);
 
-	const addSecondWinnerResult = await addWinner(
-		JSON.stringify({
-			previousProof: addWinnerResult.proof,
-			serializedStringPreviousMap: addWinnerResult.auxiliaryOutput,
-			contractAddress: params.contractAddress,
-			winner: params.winner2,
-		})
-	);
+		const addSecondWinnerResult = await addWinner(
+			JSON.stringify({
+				previousProof: addWinnerResult.proof,
+				serializedStringPreviousMap: addWinnerResult.auxiliaryOutput,
+				contractAddress: params.contractAddress,
+				winner: params.winner2,
+			})
+		);
 
-	const payoutWinnersResult = await payoutWinners(
-		JSON.stringify({
-			contractAddress: params.contractAddress,
-			winner1: params.winner1.publicKey,
-			winner2: params.winner2.publicKey,
-			winner1Proof: addWinnerResult.proof,
-			winner2Proof: addSecondWinnerResult.proof,
-		})
-	);
-	return { addSecondWinnerResult };
+		const payoutWinnersResult = await payoutWinners(
+			JSON.stringify({
+				contractAddress: params.contractAddress,
+				winner1: params.winner1.publicKey,
+				winner2: params.winner2.publicKey,
+				winner1Proof: addWinnerResult.proof,
+				winner2Proof: addSecondWinnerResult.proof,
+			})
+		);
+		return { ...addSecondWinnerResult };
+	} catch (error) {
+		console.error("Error adding winners and payout:", error);
+		return {
+			isError: true,
+			isPrepared: false,
+			serializedTransaction: "",
+			auxiliaryOutput: {} as IndexedMapSerialized,
+			proof: {} as JsonProof,
+		};
+	}
 }
 export async function initWinnerMapAddOneWinnerAndPayout(params: string): Promise<{
+	isError?: boolean;
 	isPrepared: boolean;
 	transaction?: string;
 	fee?: number;
@@ -192,16 +215,21 @@ export async function initWinnerMapAddOneWinnerAndPayout(params: string): Promis
 	auxiliaryOutput?: IndexedMapSerialized;
 	proof?: JsonProof;
 }> {
-	const { contractAddress, winner } = JSON.parse(params);
-	const initWinnerMapResult = await initWinnerMap({ contractAddress });
-	console.log("initWinnerMapResult is here:", initWinnerMapResult);
-	const addOneWinnerAndPayoutResult = await addOneWinnerAndPayout({
-		previousProof: initWinnerMapResult.proof!,
-		serializedStringPreviousMap: initWinnerMapResult.auxiliaryOutput!,
-		contractAddress,
-		winner,
-	});
-	return addOneWinnerAndPayoutResult;
+	try {
+		const { contractAddress, winner } = JSON.parse(params);
+		const initWinnerMapResult = await initWinnerMap({ contractAddress });
+		console.log("initWinnerMapResult is here:", initWinnerMapResult);
+		const addOneWinnerAndPayoutResult = await addOneWinnerAndPayout({
+			previousProof: initWinnerMapResult.proof!,
+			serializedStringPreviousMap: initWinnerMapResult.auxiliaryOutput!,
+			contractAddress,
+			winner,
+		});
+		return addOneWinnerAndPayoutResult;
+	} catch (error) {
+		console.error("Error adding one winner and payout:", error);
+		return { isError: true, isPrepared: false };
+	}
 }
 
 export async function addOneWinnerAndPayout(params: AddOneWinnerAndPayoutParams) {
@@ -225,25 +253,45 @@ export async function addOneWinnerAndPayout(params: AddOneWinnerAndPayoutParams)
 }
 
 export async function initWinnerMapAddTwoWinnersAndPayout(params: string): Promise<{
+	isError?: boolean;
 	isPrepared: boolean;
 	transaction?: string;
 	fee?: number;
 	memo?: string;
-	serializedTransaction?: string;
-	auxiliaryOutput?: IndexedMapSerialized;
-	proof?: JsonProof;
+	serializedTransaction: string;
+	auxiliaryOutput: IndexedMapSerialized;
+	proof: JsonProof;
 }> {
-	const { contractAddress, winner1, winner2 } = JSON.parse(params);
-	const initWinnerMapResult = await initWinnerMap({ contractAddress });
-	console.log("initWinnerMapResult is here:", initWinnerMapResult);
-	const addTwoWinnersAndPayoutResult = await addWinnersAndPayout({
-		previousProof: initWinnerMapResult.proof!,
-		serializedStringPreviousMap: initWinnerMapResult.auxiliaryOutput!,
-		contractAddress,
-		winner1,
-		winner2,
-	});
-	return { isPrepared: true, ...addTwoWinnersAndPayoutResult };
+	try {
+		const { contractAddress, winner1, winner2 } = JSON.parse(params);
+		const initWinnerMapResult = await initWinnerMap({ contractAddress });
+		console.log("initWinnerMapResult is here:", initWinnerMapResult);
+		const addTwoWinnersAndPayoutResult = await addWinnersAndPayout({
+			previousProof: initWinnerMapResult.proof!,
+			serializedStringPreviousMap: initWinnerMapResult.auxiliaryOutput!,
+			contractAddress,
+			winner1,
+			winner2,
+		});
+		if (addTwoWinnersAndPayoutResult.isError) {
+			return {
+				isError: true,
+				isPrepared: false,
+				serializedTransaction: "",
+				auxiliaryOutput: {} as IndexedMapSerialized,
+				proof: {} as JsonProof,
+			};
+		}
+		return {
+			isPrepared: true,
+			serializedTransaction: addTwoWinnersAndPayoutResult.serializedTransaction,
+			auxiliaryOutput: addTwoWinnersAndPayoutResult.auxiliaryOutput,
+			proof: addTwoWinnersAndPayoutResult.proof,
+		};
+	} catch (error) {
+		console.error("Error adding two winners and payout:", error);
+		throw error;
+	}
 }
 
 export async function calculateScore(params: CalculateScoreParams): Promise<{
@@ -263,46 +311,38 @@ export async function calculateScore(params: CalculateScoreParams): Promise<{
 		metadata: "calculate score test",
 	});
 
-	let jobResult = await waitForJobResult({
+	let jobResult = await workerAPI.waitForJobResult({
 		jobId: result.jobId,
 		printLogs: true,
 	});
-
+	if (jobResult.result.result === undefined) {
+		console.error(jobResult.error);
+		throw new Error("No result from calculateScore:" + jobResult.error);
+	}
 	return { isPrepared: true, ...JSON.parse(jobResult.result.result) };
 }
 
 async function zkCloudWorkerRequest(params: {
-	command: string;
-	task?: string;
+	task: string;
 	transactions?: string[];
-	args?: string;
+	args: string;
 	metadata?: string;
 	mode?: string;
 	jobId?: string;
 }) {
-	const { command, task, transactions, args, metadata, mode, jobId } = params;
+	const { task, transactions, args, metadata, mode, jobId } = params;
 	const chain = process.env.CHAIN;
 	if (chain === undefined) throw new Error("Chain is undefined");
 
-	const apiData = {
-		auth: process.env.ZKCW_AUTH,
-		command: command,
-		jwtToken: process.env.ZKCW_JWT,
-		data: {
-			task,
-			transactions: transactions ?? [],
-			args,
-			repo: process.env.ZKCW_REPO || "choz-worker",
-			developer: process.env.ZKCW_DEVELOPER || "BlocksOnChains",
-			metadata,
-			mode: mode ?? "sync",
-			jobId,
-		},
-		chain,
-	};
-	const endpoint = process.env.ZKCW_ENDPOINT + chain;
-	const response = await axios.post(endpoint, apiData);
-	return response.data;
+	return await workerAPI.execute({
+		task,
+		transactions: transactions ?? [],
+		args,
+		metadata,
+		mode: mode ?? "async",
+		developer: "BlocksOnChain",
+		repo: "choz-worker",
+	});
 }
 
 export async function execute(params: {
@@ -315,7 +355,6 @@ export async function execute(params: {
 	const { task, transactions = [], args, metadata, mode = "async" } = params;
 
 	const answer = await zkCloudWorkerRequest({
-		command: "execute",
 		task,
 		transactions,
 		args: typeof args === "string" ? args : JSON.stringify(args),
@@ -324,33 +363,6 @@ export async function execute(params: {
 	});
 
 	return answer;
-}
-
-export async function waitForJobResult(params: { jobId: string; printLogs?: boolean }): Promise<any> {
-	const { jobId, printLogs = false } = params;
-	let result;
-	let answer;
-
-	while (true) {
-		answer = await zkCloudWorkerRequest({
-			command: "jobResult",
-			jobId,
-		});
-
-		if (printLogs) {
-			console.log(`jobResult api call result:`, answer);
-		}
-
-		if (answer.jobStatus === "failed") {
-			return { success: false, result: answer };
-		}
-
-		if (answer.result !== undefined) {
-			return { success: true, result: answer };
-		}
-
-		await sleep(5000);
-	}
 }
 
 function sleep(ms: number) {
