@@ -27,6 +27,7 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 			secretKey: Joi.string().optional(),
 			questionCount: Joi.number().required(),
 			isRewarded: Joi.boolean(),
+			isPrivate: Joi.boolean(),
 			rewardPerWinner: Joi.when("isRewarded", {
 				is: true,
 				then: Joi.number().positive().required(),
@@ -137,9 +138,12 @@ async function start(examId: string, userId: string, passcode: string): Promise<
 			return { status: 404, message: "Exam not found" };
 		}
 
-		const isPasscodeValid = await passcodeService.validate(passcode);
-		if (!isPasscodeValid) {
-			return { status: 400, message: "Invalid passcode" };
+		console.log("Exam: ", exam);
+		if (exam.isPrivate) {
+			const isPasscodeValid = await passcodeService.validate(passcode);
+			if (!isPasscodeValid) {
+				return { status: 400, message: "Invalid passcode" };
+			}
 		}
 
 		const examTimeCheck = checkExamTimes(exam);

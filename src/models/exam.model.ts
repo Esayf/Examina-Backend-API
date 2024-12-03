@@ -73,6 +73,10 @@ const ExamSchema = new Schema(
 		deployJobId: {
 			type: String,
 		},
+		isPrivate: {
+			type: Boolean,
+			default: false,
+		},
 	},
 	{
 		timestamps: true,

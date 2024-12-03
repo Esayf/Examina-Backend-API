@@ -45,6 +45,7 @@ export interface ExamDocument extends Document {
 	contractAddress: string;
 	deployJobId: string;
 	passingScore: number;
+	isPrivate?: boolean;
 }
 
 export interface QuestionDocument extends Document {

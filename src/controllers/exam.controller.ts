@@ -16,6 +16,7 @@ interface ExamInput {
 	passingScore: number;
 	isRewarded: boolean;
 	rewardPerWinner: number;
+	isPrivate: boolean;
 }
 
 async function createExam(req: CustomRequest, res: Response) {
