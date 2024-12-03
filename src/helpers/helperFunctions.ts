@@ -147,10 +147,21 @@ export function checkExamTimes(exam: ExamDocument): {
 	return { valid: true };
 }
 
-export function parseMina(amount: string | number) {
-	return Number(amount.toString()) * 1_000_000_000;
+export function parseMina(amount: string | number): string {
+	return (Number(amount.toString()) * 1_000_000_000).toString();
 }
 
-export function formatMina(amount: string | number): number {
-	return Number(BigInt(amount.toString()) / BigInt(1_000_000_000));
+export function formatMina(amount: string | number): string {
+	const bigIntAmount = BigInt(amount.toString());
+	const quotient = bigIntAmount / BigInt(1_000_000_000);
+	const remainder = bigIntAmount % BigInt(1_000_000_000);
+
+	// Convert remainder to decimal places
+	const decimals = remainder.toString().padStart(9, "0");
+	// Remove trailing zeros
+	const trimmedDecimals = decimals.replace(/0+$/, "");
+	// Take only first 5 digits if longer
+	const limitedDecimals = trimmedDecimals.slice(0, 5);
+
+	return limitedDecimals ? `${quotient}.${limitedDecimals}` : quotient.toString();
 }

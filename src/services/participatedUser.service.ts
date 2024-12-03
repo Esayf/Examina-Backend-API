@@ -122,7 +122,7 @@ async function updateParticipatedUserRewardStatusByWalletAndContractAddress(
 	walletAddress: string,
 	contractAddress: string,
 	isRewardSent: boolean,
-	rewardAmount: number | null,
+	rewardAmount: string | null,
 	rewardSentDate: Date | null
 ): Promise<void> {
 	try {
@@ -133,7 +133,7 @@ async function updateParticipatedUserRewardStatusByWalletAndContractAddress(
 			);
 		}
 		participatedUser.isRewardSent = isRewardSent;
-		participatedUser.rewardAmount = rewardAmount;
+		participatedUser.rewardAmount = rewardAmount ? parseFloat(rewardAmount) : null;
 		participatedUser.rewardSentDate = rewardSentDate;
 		await participatedUser.save();
 	} catch (err) {

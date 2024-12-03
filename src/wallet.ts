@@ -92,10 +92,6 @@ export const distributeRewardsWithWorker = async (
 				publicKey: user.walletAddress,
 				reward: rewardPerWinner.toString(),
 			});
-			winner.rewardAmount = rewardPerWinner;
-			winner.isRewardSent = true;
-			winner.rewardSentDate = new Date();
-			await winner.save();
 		}
 
 		console.log("Winners: ", winners);
@@ -105,6 +101,13 @@ export const distributeRewardsWithWorker = async (
 					contractAddress,
 					winner: winners[0],
 				})
+			);
+			await participatedUserService.updateParticipatedUserRewardStatusByWalletAndContractAddress(
+				winners[0].publicKey,
+				contractAddress,
+				true,
+				formatMina(winners[0].reward),
+				new Date()
 			);
 			return initMapAndPayoutResult;
 		} else {
