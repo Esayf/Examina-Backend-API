@@ -87,6 +87,13 @@ export interface AnswerDocument extends Document {
 	}>;
 }
 
+export interface PasscodeDocument extends Document {
+	exam: string; // Exam ile ilişki
+	passcode: string; // Benzersiz passcode
+	isUsed: boolean; // Kullanılıp kullanılmadığı bilgisi
+	// expiresAt: Date; // Son kullanma tarihi
+}
+
 export interface Answer {
 	questionId: string;
 	answer: number;

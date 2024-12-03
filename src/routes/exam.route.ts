@@ -27,6 +27,8 @@ const router = express.Router();
  */
 router.post("/create", ensureAuthenticated, examController.createExam);
 
+router.post("/generateExamLinks", ensureAuthenticated, examController.generateLinks);
+
 /**
  * GET /exams/myExams
  * @tags Exam

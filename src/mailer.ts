@@ -68,4 +68,20 @@ async function sendExamResultEmail(
 	}
 }
 
-export { transporter, sendExamResultEmail };
+async function sendGeneratedExamLink(examLink: string, participantEmail: string): Promise<void> {
+	const subject = "Your magic link to join the quiz";
+	const htmlBody = `<p>Click the link below to join the quiz:</p>
+            <a href="${examLink}">${examLink}</a>
+            <p>This link is valid for one-time use only.</p>`;
+
+	const info = await transporter.sendMail({
+		from: '"Choz Support" <info@choz.io>',
+		to: participantEmail,
+		subject: subject,
+		html: htmlBody,
+	});
+
+	console.log("Message sent: %s", info.messageId);
+}
+
+export { transporter, sendExamResultEmail, sendGeneratedExamLink };
