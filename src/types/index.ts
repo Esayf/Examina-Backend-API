@@ -45,6 +45,7 @@ export interface ExamDocument extends Document {
 	contractAddress: string;
 	deployJobId: string;
 	passingScore: number;
+	isPrivate?: boolean;
 }
 
 export interface QuestionDocument extends Document {
@@ -85,6 +86,13 @@ export interface AnswerDocument extends Document {
 		selectedOption: any;
 		answerHash: string;
 	}>;
+}
+
+export interface PasscodeDocument extends Document {
+	exam: string; // Exam ile ilişki
+	passcode: string; // Benzersiz passcode
+	isUsed: boolean; // Kullanılıp kullanılmadığı bilgisi
+	// expiresAt: Date; // Son kullanma tarihi
 }
 
 export interface Answer {

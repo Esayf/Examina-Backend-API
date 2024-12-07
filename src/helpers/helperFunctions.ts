@@ -3,6 +3,7 @@ import { ExamDocument, Answer, ProcessedAnswer, AnswerKey } from "../types";
 import axios from "axios";
 import Client from "mina-signer";
 import * as workerAPI from "../zkcloudworker/workerAPI";
+import { v4 as uuidv4 } from "uuid";
 
 const signerClient = new Client({ network: "testnet" });
 
@@ -164,4 +165,15 @@ export function formatMina(amount: string | number): string {
 	const limitedDecimals = trimmedDecimals.slice(0, 5);
 
 	return limitedDecimals ? `${quotient}.${limitedDecimals}` : quotient.toString();
+}
+
+export function generatePasscodes(count: number): string[] {
+	const passcodes: string[] = [];
+
+	for (let i = 0; i < count; i++) {
+		const passcode = uuidv4();
+		passcodes.push(passcode);
+	}
+
+	return passcodes;
 }

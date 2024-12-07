@@ -3,9 +3,11 @@ import Exam from "../models/exam.model";
 import Question from "../models/question.model";
 import participatedUserService from "./participatedUser.service";
 import answerService from "./answer.service";
-import { checkExamTimes, processQuestion } from "../helpers/helperFunctions";
+import { checkExamTimes, processQuestion, generatePasscodes } from "../helpers/helperFunctions";
 import scoreService from "./score.service";
 import Joi from "joi";
+import { sendGeneratedExamLink } from "@/mailer";
+import passcodeService from "./passcode.service";
 
 interface ExamResult {
 	status: number;
@@ -15,7 +17,17 @@ interface ExamResult {
 async function create(examData: Partial<ExamDocument>, questions: Array<QuestionInput>): Promise<ExamDocument> {
 	try {
 		const schema = Joi.object({
+			title: Joi.string().required(),
+			creator: Joi.string().required(),
+			description: Joi.string().required(),
+			startDate: Joi.date().required(),
+			questions: Joi.array().required(),
+			duration: Joi.number().required(),
+			rootHash: Joi.string().optional(),
+			secretKey: Joi.string().optional(),
+			questionCount: Joi.number().required(),
 			isRewarded: Joi.boolean(),
+			isPrivate: Joi.boolean(),
 			rewardPerWinner: Joi.when("isRewarded", {
 				is: true,
 				then: Joi.number().positive().required(),
@@ -31,11 +43,7 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 				then: Joi.string().required(),
 				otherwise: Joi.optional(),
 			}),
-			contractAddress: Joi.when("isRewarded", {
-				is: true,
-				then: Joi.string().required(),
-				otherwise: Joi.optional(),
-			}),
+			contractAddress: Joi.string().optional(),
 		});
 		const { error } = schema.validate({
 			isRewarded: examData.isRewarded,
@@ -47,10 +55,13 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 		if (error) {
 			throw new Error(error.details[0].message);
 		}
+
 		examData.isDistributed = false;
 		const exam = new Exam(examData);
 		const savedExam = await exam.save();
+
 		await saveQuestions(questions, savedExam.id);
+
 		return savedExam;
 	} catch (error) {
 		console.error("Error creating exam:", error);
@@ -78,6 +89,34 @@ async function saveQuestions(questions: QuestionInput[], examId: string): Promis
 	}
 }
 
+export type GeneratedLink = {
+	email: string;
+	link: string;
+};
+
+async function generateAndSendLinks(examId: string, emailList: string[]): Promise<GeneratedLink[]> {
+	try {
+		const passcodes = generatePasscodes(emailList.length);
+
+		// Passcode ve link üretimi
+		const links = await Promise.all(
+			emailList.map(async (email, index) => {
+				const link = `https://example.com/join-quiz/${examId}/${passcodes[index]}`;
+
+				await passcodeService.create(examId, passcodes[index]);
+
+				await sendGeneratedExamLink(link, email);
+
+				return { email, link };
+			})
+		);
+		return links;
+	} catch (error) {
+		console.error("Error generating or sending exam links:", error);
+		throw new Error("Error generating or sending exam links");
+	}
+}
+
 async function getAllByUser(userId: string): Promise<ExamDocument[]> {
 	try {
 		return await Exam.find({ creator: userId });
@@ -96,11 +135,19 @@ async function getById(examId: string): Promise<ExamDocument | null> {
 	}
 }
 
-async function start(examId: string, userId: string): Promise<ExamResult> {
+async function start(examId: string, userId: string, passcode: string): Promise<ExamResult> {
 	try {
 		const exam = await getById(examId);
 		if (!exam) {
 			return { status: 404, message: "Exam not found" };
+		}
+
+		console.log("Exam: ", exam);
+		if (exam.isPrivate) {
+			const isPasscodeValid = await passcodeService.validate(passcode);
+			if (!isPasscodeValid) {
+				return { status: 400, message: "Invalid passcode" };
+			}
 		}
 
 		const examTimeCheck = checkExamTimes(exam);
@@ -198,6 +245,7 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 
 export default {
 	create,
+	generateAndSendLinks,
 	getAllByUser,
 	getById,
 	start,

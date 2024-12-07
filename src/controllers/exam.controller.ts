@@ -16,6 +16,7 @@ interface ExamInput {
 	passingScore: number;
 	isRewarded: boolean;
 	rewardPerWinner: number;
+	isPrivate: boolean;
 }
 
 async function createExam(req: CustomRequest, res: Response) {
@@ -36,6 +37,25 @@ async function createExam(req: CustomRequest, res: Response) {
 		return res.status(201).json(exam);
 	} catch (err) {
 		console.error("Error creating exam:", err);
+		return res.status(500).json({ message: "Internal server error" });
+	}
+}
+
+async function generateLinks(req: CustomRequest, res: Response) {
+	try {
+		const { examId, emailList } = req.body;
+
+		if (!examId || !emailList || !Array.isArray(emailList)) {
+			return res.status(400).json({ message: "Invalid input" });
+		}
+		const exam = await examService.getById(examId);
+		if (exam?.creator != req.session.user?.userId) {
+			return res.status(401).json({ message: "Only creator can access!" });
+		}
+		const generatedLinks = await examService.generateAndSendLinks(examId, emailList);
+		return res.status(201).json({ success: true, result: generatedLinks });
+	} catch (err) {
+		console.error("Error generating links:", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -78,14 +98,14 @@ async function getExamById(req: CustomRequest, res: Response) {
 
 async function startExam(req: CustomRequest, res: Response) {
 	try {
-		const { examId } = req.body as { examId: string };
+		const { examId, passcode } = req.body as { examId: string; passcode: string };
 		const userId = req.session.user?.userId;
 
 		if (!userId) {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
 
-		const { status, message } = await examService.start(examId, userId);
+		const { status, message } = await examService.start(examId, userId, passcode);
 		return res.status(status).json({ message });
 	} catch (err) {
 		console.error("Error starting exam:", err);
@@ -121,6 +141,7 @@ async function finishExam(req: CustomRequest, res: Response) {
 
 export default {
 	createExam,
+	generateLinks,
 	getAllExams,
 	getExamById,
 	startExam,
