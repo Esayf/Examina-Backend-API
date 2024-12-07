@@ -98,7 +98,10 @@ async function registerOrLogin(req: Request, walletAddress: string): Promise<Use
 
 async function updateEmail(userId: string, email: string): Promise<void> {
 	try {
-		await User.findByIdAndUpdate(userId, { email });
+		const user = await User.findById(userId);
+		if (user && user.email !== email) {
+			await User.findByIdAndUpdate(userId, { email });
+		}
 	} catch (error) {
 		console.error("Error updating user email: ", error);
 		throw new Error("Error updating user email");
