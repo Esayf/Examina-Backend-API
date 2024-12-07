@@ -9,6 +9,7 @@ const regularHtmlContent = fs.readFileSync(regularResultsHtmlPath, "utf-8");
 const winnerHtmlContent = fs.readFileSync(winnerResultsHtmlPath, "utf-8");
 
 import SMTPTransport from "nodemailer/lib/smtp-transport"; // SMTP transport tipini içe aktar
+import { formatMina } from "./helpers/helperFunctions";
 
 const transporter: Transporter<SMTPTransport.Options> = nodemailer.createTransport({
 	host: "smtpout.secureserver.net",
@@ -49,7 +50,7 @@ async function sendExamResultEmail(
 			.replace("{{totalQuestions}}", totalQuestions.toString());
 
 		if (isWinner && rewardAmount) {
-			htmlBody = htmlBody.replace("{{rewardAmount}}", rewardAmount.toString());
+			htmlBody = htmlBody.replace("{{rewardAmount}}", formatMina(rewardAmount).toString());
 		}
 
 		const subject = isWinner ? "🎉 Congratulations! You're a Choz Quiz Winner! 🏆" : "Your Quiz Results from Choz!";

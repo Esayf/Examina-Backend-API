@@ -53,6 +53,7 @@ async function distributeRewardsToWinners() {
 					},
 					{
 						$match: {
+							"exam._id": exam._id,
 							"exam.isCompleted": true,
 						},
 					},

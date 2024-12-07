@@ -43,11 +43,15 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 				then: Joi.string().required(),
 				otherwise: Joi.optional(),
 			}),
-			contractAddress: Joi.string().required(),
+			contractAddress: Joi.string().optional(),
 		});
-
-		const { error } = schema.validate(examData);
-
+		const { error } = schema.validate({
+			isRewarded: examData.isRewarded,
+			rewardPerWinner: examData.rewardPerWinner,
+			passingScore: examData.passingScore,
+			deployJobId: examData.deployJobId,
+			contractAddress: examData.contractAddress,
+		});
 		if (error) {
 			throw new Error(error.details[0].message);
 		}

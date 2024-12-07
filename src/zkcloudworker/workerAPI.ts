@@ -116,11 +116,7 @@ export async function addWinner(params: string): Promise<{
 
 export async function payoutOneWinner(params: string): Promise<{
 	isPrepared: boolean;
-	transaction?: string;
-	fee?: number;
-	memo?: string;
-	serializedTransaction?: string;
-	payoutParams?: string;
+	isSent: boolean;
 }> {
 	const response = await execute({
 		task: "payoutOneWinner",
@@ -132,10 +128,13 @@ export async function payoutOneWinner(params: string): Promise<{
 		printLogs: true,
 	});
 	if (jobResult.result.result === undefined) {
-		console.error(jobResult.error);
 		throw new Error("Error when payout one winner:" + jobResult.error);
 	}
-	return { isPrepared: true, ...JSON.parse(jobResult.result.result) };
+	const { success, tx, error } = JSON.parse(jobResult.result.result);
+	if (error) {
+		console.error("Error when payout one winner:" + error);
+	}
+	return { isPrepared: true, isSent: success };
 }
 
 export async function payoutWinners(params: string): Promise<{
@@ -161,7 +160,14 @@ export async function payoutWinners(params: string): Promise<{
 		console.error(jobResult.error);
 		throw new Error("No result from payoutWinners:" + jobResult.error);
 	}
-	return { isPrepared: true, isSent: JSON.parse(jobResult.result.result) == "Sended tx" };
+	const { success, tx, error } = JSON.parse(jobResult.result.result);
+	if (error) {
+		console.error("Error when payout winners:" + error);
+	}
+	return {
+		isPrepared: true,
+		isSent: success,
+	};
 }
 
 export async function addWinnersAndPayout(params: AddWinnersAndPayoutParams) {
@@ -246,7 +252,7 @@ export async function addOneWinnerAndPayout(params: AddOneWinnerAndPayoutParams)
 		JSON.stringify({
 			contractAddress: params.contractAddress,
 			winner: params.winner.publicKey,
-			winnerProof: addWinnerResult.proof,
+			proof: addWinnerResult.proof,
 		})
 	);
 	return payoutOneWinnerResult;
