@@ -5,6 +5,9 @@ import User from "../models/user.model";
 import { CustomRequest, DraftDocument } from "../types";
 import draftController from "../controllers/draft.controller";
 import { mockSession, createMockResponse, expectStatus, expectJson } from "./setup";
+import { validateRequest } from "../middleware/validators";
+import { draftSchemas } from "../schemas/draft.schema";
+import { Request } from "express";
 
 describe("Draft Controller Tests", () => {
 	let mockUser: any;
@@ -125,15 +128,49 @@ describe("Draft Controller Tests", () => {
 					},
 				],
 			};
+
+			// Actually create and test the drafts
+			const mockResponse1 = createMockResponse();
+			const mockResponse2 = createMockResponse();
+
+			await draftController.createDraft(createMockRequest(draftData1), mockResponse1);
+			await draftController.createDraft(createMockRequest(draftData2), mockResponse2);
+
+			expectStatus(mockResponse1, 201);
+			expectStatus(mockResponse2, 201);
+		});
+
+		test("should fail validation before reaching controller", async () => {
+			const invalidRequest = createMockRequest({}); // Empty body
+			const mockResponse = createMockResponse();
+			const nextFunction = () => {};
+
+			// Test the validation middleware directly
+			const validator = validateRequest({
+				body: draftSchemas.createDraft,
+			});
+
+			await validator(invalidRequest as Request<any, any, any, any>, mockResponse, nextFunction);
+
+			expectStatus(mockResponse, 400);
+			expect(mockResponse.body.error).toBe("ValidationException");
 		});
 
 		test("should fail without title", async () => {
 			const mockRequest = createMockRequest({});
 			const mockResponse = createMockResponse();
 
-			await draftController.createDraft(mockRequest, mockResponse);
+			// First run the validator
+			const validator = validateRequest({
+				body: draftSchemas.createDraft,
+			});
 
-			expectStatus(mockResponse, 500);
+			await validator(mockRequest as Request<any, any, any, any>, mockResponse, () => {
+				// Only call controller if validation passes
+				return draftController.createDraft(mockRequest as Request<any, any, any, any>, mockResponse);
+			});
+
+			expectStatus(mockResponse, 400);
 		});
 	});
 
