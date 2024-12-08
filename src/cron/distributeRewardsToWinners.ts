@@ -69,7 +69,7 @@ async function distributeRewardsToWinners() {
 
 				// Reward distribution
 				const results = await distributeRewardsWithWorker(
-					exam.contractAddress,
+					exam.contractAddress!,
 					exam.rewardPerWinner,
 					participatedWinners
 				);

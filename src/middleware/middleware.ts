@@ -1,7 +1,8 @@
-import { Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import { CustomRequest } from "../types";
 import { finishExamSchema } from "../validators/examValidators";
 import verifySignature from "../helpers/helperFunctions";
+import { Schema } from "joi";
 
 export function ensureAuthenticated(req: CustomRequest, res: Response, next: NextFunction): Response | void {
 	if (req.session && req.session.user) {
@@ -51,13 +52,29 @@ export function validateRequestedEmail(req: CustomRequest, res: Response, next: 
 	return next();
 }
 
-export function validateBody(req: CustomRequest, res: Response, next: NextFunction): Response | void {
+export function validateFinishExamBody(req: CustomRequest, res: Response, next: NextFunction): Response | void {
 	const { error } = finishExamSchema.validate(req.body);
 	if (error) {
 		return res.status(400).json({ message: error.details[0].message });
 	}
 	return next();
 }
+
+export const validateSchema = (schema: Schema): RequestHandler => {
+	return (req: Request, res: Response, next: NextFunction): void => {
+		const { error } = schema.validate(req.body, { abortEarly: false });
+
+		if (error) {
+			res.status(400).json({
+				message: "Validation error",
+				errors: error.details.map((detail) => detail.message),
+			});
+			return;
+		}
+
+		next();
+	};
+};
 
 export function errorHandler(err: Error, req: CustomRequest, res: Response, next: NextFunction): Response {
 	console.error("Error:", err);

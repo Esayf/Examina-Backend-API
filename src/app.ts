@@ -17,6 +17,7 @@ import answerRoutes from "./routes/answer.route";
 import questionRoutes from "./routes/question.route";
 import scoreRoutes from "./routes/score.route";
 import workerRoutes from "./routes/worker.route";
+import draftRoutes from "./routes/draft.route";
 
 // Import cron jobs
 import checkCompletedExams from "./cron/checkCompletedExams";
@@ -168,6 +169,7 @@ const initializeApp = async () => {
 		app.use("/questions", questionRoutes);
 		app.use("/scores", scoreRoutes);
 		app.use("/worker", workerRoutes);
+		app.use("/drafts", draftRoutes);
 
 		// Global error handler
 		app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

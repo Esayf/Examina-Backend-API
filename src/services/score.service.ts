@@ -58,7 +58,7 @@ async function calculateScore(userAnswers: Answer[], answerKey: AnswerKey[]) {
 			answerKey.findIndex((key) => key.questionId.toString() === b.questionId.toString())
 	);
 	// Get exam correct answers as an array
-	const examCorrectAnswers = answerKey.map((answer) => answer.correctAnswer.toString());
+	//const examCorrectAnswers = answerKey.map((answer) => answer.correctAnswer.toString());
 	/* 	const zkProgramScoreCalculationProof = await workerAPI.calculateScore({
 			userAnswers: { answers: sortedUserAnswers.map((answer) => answer.answer.toString()) },
 			correctAnswers: { answers: examCorrectAnswers },
