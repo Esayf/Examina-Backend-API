@@ -42,11 +42,17 @@ export interface ExamDocument extends Document {
 	rewardPerWinner: number;
 	isCompleted?: boolean;
 	isDistributed?: boolean;
-	contractAddress: string;
-	deployJobId: string;
-	passingScore: number;
+	contractAddress?: string;
+	deployJobId?: string;
+	passingScore?: number;
 	isPrivate?: boolean;
 }
+
+export interface CreateExamDto
+	extends Omit<
+		ExamDocument,
+		"contractAddress" | "deployJobId" | "secretKey" | "isDistributed" | "isFinished" | "isCompleted"
+	> {}
 
 export interface QuestionDocument extends Document {
 	exam: string;
@@ -108,7 +114,6 @@ export interface ProcessedAnswer {
 
 export interface AnswerKey {
 	questionId: string;
-	questionNumber: number;
 	correctAnswer: number;
 }
 

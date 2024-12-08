@@ -21,12 +21,6 @@ const DraftSchema = new Schema(
 		duration: {
 			type: Number,
 		},
-		rootHash: {
-			type: String,
-		},
-		secretKey: {
-			type: String,
-		},
 		questionCount: {
 			type: Number,
 		},
@@ -38,6 +32,10 @@ const DraftSchema = new Schema(
 		},
 		passingScore: {
 			type: Number,
+		},
+		isPrivate: {
+			type: Boolean,
+			default: false,
 		},
 		questions: [
 			{

@@ -187,7 +187,6 @@ async function getAnswerKey(examId: string): Promise<AnswerKey[]> {
 	// Create the answer key array
 	const answerKey: AnswerKey[] = questions.map((question) => ({
 		questionId: question.id,
-		questionNumber: question.number,
 		correctAnswer: question.correctAnswer,
 	}));
 
@@ -232,7 +231,7 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 		});
 
 		// WINNER DETERMINATION
-		const isWinner = parseInt(score) > exam.passingScore ? true : false;
+		const isWinner = exam.isRewarded ? parseInt(score) > (exam.passingScore || 0) : false;
 
 		await participatedUserService.updateParticipationStatus(userId, examId, isWinner);
 
