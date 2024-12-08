@@ -119,7 +119,7 @@ async function generateAndSendLinks(examId: string, emailList: string[]): Promis
 
 async function getAllByUser(userId: string): Promise<ExamDocument[]> {
 	try {
-		return await Exam.find({ creator: userId });
+		return await Exam.find({ creator: userId }).sort({ createdAt: "desc" });
 	} catch (error) {
 		console.error("Error fetching exams:", error);
 		throw new Error("Error fetching exams");
