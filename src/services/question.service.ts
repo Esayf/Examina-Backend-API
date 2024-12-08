@@ -1,4 +1,4 @@
-import { QuestionDocument } from "../types";
+import { QuestionDocument, QuestionResponseDocument } from "../types";
 import Question from "../models/question.model";
 import { checkExamTimes } from "../helpers/helperFunctions";
 import participatedUserService from "./participatedUser.service";
@@ -6,7 +6,7 @@ import examService from "./exam.service";
 
 interface QuestionResponse {
 	status: number;
-	data?: QuestionDocument[];
+	data?: QuestionResponseDocument[];
 	message?: string;
 }
 
@@ -42,9 +42,17 @@ async function getAllByExam(examId: string, userId: string): Promise<QuestionRes
 			};
 		}
 
-		const questions = await Question.find({ exam: examId }).select("-correctAnswer").sort({ number: 1 });
+		const questions = await Question.find({ exam: examId }).select("-correctAnswer -number").lean();
 
-		return { status: 200, data: questions };
+		const shuffledQuestions = questions
+			.map((value) => ({ value, sort: Math.random() }))
+			.sort((a, b) => a.sort - b.sort)
+			.map(({ value }, index) => ({
+				...value,
+				number: index + 1,
+			})) as QuestionDocument[];
+
+		return { status: 200, data: shuffledQuestions };
 	} catch (err) {
 		console.error("Error fetching exam questions:", err);
 		throw new Error("Error fetching exam questions");

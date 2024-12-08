@@ -3,6 +3,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { Session, SessionData } from "express-session";
 import { expect } from "bun:test";
+import { CustomRequest } from "@/types";
 
 let mongoServer: MongoMemoryServer;
 
@@ -26,6 +27,19 @@ export const mockSession = {
 	destroy: (cb: (err: any) => void) => cb(null),
 } as unknown as Session & Partial<CustomSessionData>;
 
+export const createMockRequest = (body: any = {}, params: any = {}, user: any): CustomRequest =>
+	({
+		session: {
+			...mockSession,
+			user: {
+				userId: user._id.toString(),
+				walletAddress: user.walletAddress,
+				isAdmin: false,
+			},
+		},
+		body,
+		params,
+	}) as CustomRequest;
 // Mock response creator
 export const createMockResponse = () => {
 	const res: any = {};
@@ -41,34 +55,47 @@ export const createMockResponse = () => {
 };
 
 beforeAll(async () => {
-	// Setup MongoDB Memory Server
 	mongoServer = await MongoMemoryServer.create();
 	const mongoUri = mongoServer.getUri();
-	await mongoose.connect(mongoUri);
 
-	// Mock environment variables
-	process.env.NODE_ENV = "test";
-	process.env.SESSION_SECRET = "test-secret";
+	try {
+		await mongoose.connect(mongoUri, {
+			connectTimeoutMS: 10000,
+		});
+
+		// Wait for connection to be ready
+		await new Promise((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				reject(new Error("MongoDB connection timeout"));
+			}, 15000);
+
+			if (mongoose.connection.readyState === 1) {
+				clearTimeout(timeout);
+				resolve(true);
+			} else {
+				mongoose.connection.once("connected", () => {
+					clearTimeout(timeout);
+					resolve(true);
+				});
+
+				mongoose.connection.once("error", (err) => {
+					clearTimeout(timeout);
+					reject(err);
+				});
+			}
+		});
+	} catch (error) {
+		console.error("MongoDB connection error:", error);
+		throw error;
+	}
 });
 
 afterEach(async () => {
-	// Clear all collections
-	const collections = mongoose.connection.collections;
-	for (const key in collections) {
-		await collections[key].deleteMany({});
+	// Ensure connection is active before clearing
+	if (mongoose.connection.readyState === 1) {
+		const collections = mongoose.connection.collections;
+		await Promise.all(Object.values(collections).map((collection) => collection.deleteMany({})));
 	}
-
-	// Reset session mock with proper typing
-	if (mockSession) {
-		mockSession.user = undefined;
-		mockSession.token = undefined;
-		mockSession.message = undefined;
-	}
-});
-
-afterAll(async () => {
-	await mongoose.disconnect();
-	await mongoServer.stop();
 });
 
 // Custom assertions
