@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 import { Session } from "express-session";
 import { ParamsDictionary } from "express-serve-static-core";
 
@@ -42,11 +42,17 @@ export interface ExamDocument extends Document {
 	rewardPerWinner: number;
 	isCompleted?: boolean;
 	isDistributed?: boolean;
-	contractAddress: string;
-	deployJobId: string;
-	passingScore: number;
+	contractAddress?: string;
+	deployJobId?: string;
+	passingScore?: number;
 	isPrivate?: boolean;
 }
+
+export interface CreateExamDto
+	extends Omit<
+		ExamDocument,
+		"contractAddress" | "deployJobId" | "secretKey" | "isDistributed" | "isFinished" | "isCompleted"
+	> {}
 
 export interface QuestionDocument extends Document {
 	exam: string;
@@ -108,7 +114,6 @@ export interface ProcessedAnswer {
 
 export interface AnswerKey {
 	questionId: string;
-	questionNumber: number;
 	correctAnswer: number;
 }
 
@@ -130,4 +135,29 @@ export interface PopulatedScoreDocument extends Omit<ScoreDocument, "user" | "ex
 	exam: {
 		title: string;
 	};
+}
+
+export interface DraftDocument extends Document {
+	creator: Types.ObjectId;
+	title: string;
+	description?: string;
+	startDate?: Date;
+	duration?: number;
+	rootHash?: string;
+	secretKey?: string;
+	questionCount?: number;
+	isRewarded?: boolean;
+	rewardPerWinner?: number;
+	passingScore?: number;
+	questions?: Array<{
+		text: string;
+		options: Array<{
+			number: number;
+			text: string;
+		}>;
+		correctAnswer: number;
+		number: number;
+	}>;
+	createdAt: Date;
+	updatedAt: Date;
 }

@@ -1,6 +1,6 @@
 import express from "express";
 import examController from "../controllers/exam.controller";
-import { ensureAuthenticated, validateBody } from "../middleware/middleware";
+import { ensureAuthenticated, validateFinishExamBody } from "../middleware/middleware";
 
 const router = express.Router();
 
@@ -42,6 +42,6 @@ router.get("/myExams", ensureAuthenticated, examController.getAllExams);
 
 router.get("/:id", examController.getExamById);
 router.post("/startExam", ensureAuthenticated, examController.startExam);
-router.post("/finishExam", ensureAuthenticated, validateBody, examController.finishExam);
+router.post("/finishExam", ensureAuthenticated, validateFinishExamBody, examController.finishExam);
 
 export default router;
