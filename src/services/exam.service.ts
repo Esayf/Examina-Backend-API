@@ -97,7 +97,7 @@ async function generateAndSendLinks(examId: string, emailList: string[]): Promis
 		// Passcode ve link üretimi
 		const links = await Promise.all(
 			emailList.map(async (email, index) => {
-				const link = `https://example.com/join-quiz/${examId}/${passcodes[index]}`;
+				const link = `https://choz.io/app/exams/get-started/${examId}/${passcodes[index]}`;
 
 				await passcodeService.create(examId, passcodes[index]);
 

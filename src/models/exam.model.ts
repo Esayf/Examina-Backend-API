@@ -1,6 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 import { ExamDocument } from "../types";
-import Counter from "./counter.model";
 
 /**
  * @typedef {object} Exam

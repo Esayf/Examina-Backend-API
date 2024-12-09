@@ -117,7 +117,11 @@
 		"rootHash": "0x0",
 		"secretKey": "SIOSDajksa",
 		"questionCount": "4",
-		"isRewarded": true,
+		"isPrivate": false,
+		"contractAddress": "0x0",
+		"passingScore": 80,
+		"deployJobId": "zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw",
+		"isRewarded": false,
 		"rewardPerWinner": 1
 	},
 	"sampleAnswer": {

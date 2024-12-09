@@ -48,6 +48,10 @@ export interface ExamDocument extends Document {
 	isPrivate?: boolean;
 }
 
+export interface ExtendedExamDocument extends ExamDocument {
+	_id: string;
+}
+
 export interface QuestionDocument extends Document {
 	exam: string;
 	text: string;

@@ -1,5 +1,6 @@
 import Exam from "../models/exam.model";
-import { ExamDocument } from "../types";
+import { ExamDocument, ExtendedExamDocument } from "../types";
+import sendWinnerlistToCreator from "./sendWinnerListToCreator";
 
 async function checkCompletedExams() {
 	try {
@@ -31,6 +32,8 @@ async function checkCompletedExams() {
 				await exam.save();
 			}
 		}
+
+		await sendWinnerlistToCreator(completedExams as ExtendedExamDocument[]);
 	} catch (error) {
 		console.error("Error publishing exam answers: ", error);
 	}
