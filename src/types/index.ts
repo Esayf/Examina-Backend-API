@@ -65,6 +65,8 @@ export interface QuestionDocument extends Document {
 	number: number;
 }
 
+export interface QuestionResponseDocument extends Omit<QuestionDocument, "correctAnswer"> {}
+
 export interface QuestionInput {
 	number: number;
 	text: string;
