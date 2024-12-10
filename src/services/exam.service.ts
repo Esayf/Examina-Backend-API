@@ -44,11 +44,15 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 				then: Joi.string().required(),
 				otherwise: Joi.optional(),
 			}),
-			contractAddress: Joi.string().required(),
+			contractAddress: Joi.string().optional(),
 		});
-
-		const { error } = schema.validate(examData);
-
+		const { error } = schema.validate({
+			isRewarded: examData.isRewarded,
+			rewardPerWinner: examData.rewardPerWinner,
+			passingScore: examData.passingScore,
+			deployJobId: examData.deployJobId,
+			contractAddress: examData.contractAddress,
+		});
 		if (error) {
 			throw new Error(error.details[0].message);
 		}
@@ -116,7 +120,7 @@ async function generateAndSendLinks(examId: string, emailList: string[]): Promis
 
 async function getAllByUser(userId: string): Promise<ExamDocument[]> {
 	try {
-		return await Exam.find({ creator: userId });
+		return await Exam.find({ creator: userId }).sort({ createdAt: "desc" });
 	} catch (error) {
 		console.error("Error fetching exams:", error);
 		throw new Error("Error fetching exams");
@@ -191,7 +195,6 @@ async function getAnswerKey(examId: string): Promise<AnswerKey[]> {
 	// Create the answer key array
 	const answerKey: AnswerKey[] = questions.map((question) => ({
 		questionId: question.id,
-		questionNumber: question.number,
 		correctAnswer: question.correctAnswer,
 	}));
 
@@ -236,7 +239,7 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 		});
 
 		// WINNER DETERMINATION
-		const isWinner = parseInt(score) > exam.passingScore ? true : false;
+		const isWinner = exam.isRewarded ? parseInt(score) > (exam.passingScore || 0) : false;
 
 		await participatedUserService.updateParticipationStatus(userId, examId, isWinner);
 

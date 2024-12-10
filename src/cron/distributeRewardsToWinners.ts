@@ -51,6 +51,7 @@ async function distributeRewardsToWinners() {
 					},
 					{
 						$match: {
+							"exam._id": exam._id,
 							"exam.isCompleted": true,
 						},
 					},
@@ -66,7 +67,7 @@ async function distributeRewardsToWinners() {
 
 				// Reward distribution
 				const results = await distributeRewardsWithWorker(
-					exam.contractAddress,
+					exam.contractAddress!,
 					exam.rewardPerWinner,
 					participatedWinners
 				);
