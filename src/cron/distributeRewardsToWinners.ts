@@ -61,9 +61,9 @@ async function distributeRewardsToWinners() {
 				console.log("Participated Winners: ", participatedWinners);
 				if (!participatedWinners) {
 					console.log(`Winner(s) not found for ${exam.id}`);
-					return;
+					continue;
 				}
-				if (participatedWinners.length == 0) return;
+				if (participatedWinners.length == 0) continue;
 				exam.isDistributed = true;
 				await exam.save();
 
