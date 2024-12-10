@@ -1,9 +1,9 @@
-import { ExamDocument, QuestionInput, QuestionDocument, Answer, AnswerKey } from "../types";
+import { ExamDocument, QuestionInput, QuestionDocument, Answer, AnswerKey, ExtendedExamDocument } from "../types";
 import Exam from "../models/exam.model";
 import Question from "../models/question.model";
 import participatedUserService from "./participatedUser.service";
 import answerService from "./answer.service";
-import { checkExamTimes, processQuestion, generatePasscodes } from "../helpers/helperFunctions";
+import { checkExamTimes, processQuestion, generatePasscodes, getWinnerlist } from "../helpers/helperFunctions";
 import scoreService from "./score.service";
 import Joi from "joi";
 import { sendGeneratedExamLink } from "@/mailer";
@@ -28,6 +28,7 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 			questionCount: Joi.number().required(),
 			isRewarded: Joi.boolean(),
 			isPrivate: Joi.boolean(),
+			isWinnerlistRequested: Joi.boolean(),
 			rewardPerWinner: Joi.when("isRewarded", {
 				is: true,
 				then: Joi.number().positive().required(),
@@ -122,9 +123,16 @@ async function getAllByUser(userId: string): Promise<ExamDocument[]> {
 	}
 }
 
-async function getById(examId: string): Promise<ExamDocument | null> {
+async function getById(examId: string): Promise<ExtendedExamDocument | null> {
 	try {
-		return await Exam.findById(examId);
+		let exam: ExtendedExamDocument | null = await Exam.findById(examId);
+		const isExamActive = checkExamTimes(exam as ExamDocument);
+		if (exam && !isExamActive.valid) {
+			exam.winnerlist = await getWinnerlist(examId);
+		}
+
+		console.log("EXAM EXAM EXAM: ", exam);
+		return exam as ExtendedExamDocument;
 	} catch (error) {
 		console.error("Error fetching exam:", error);
 		throw new Error("Error fetching exam");
@@ -146,11 +154,11 @@ async function start(examId: string, userId: string, passcode: string): Promise<
 			}
 		}
 
-		const examTimeCheck = checkExamTimes(exam);
-		if (!examTimeCheck.valid) {
+		const isExamActive = checkExamTimes(exam);
+		if (!isExamActive.valid) {
 			return {
 				status: 400,
-				message: examTimeCheck.message || "Invalid exam time",
+				message: isExamActive.message || "Invalid exam time",
 			};
 		}
 

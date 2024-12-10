@@ -46,10 +46,12 @@ export interface ExamDocument extends Document {
 	deployJobId: string;
 	passingScore: number;
 	isPrivate?: boolean;
+	isWinnerlistRequested?: boolean;
 }
 
 export interface ExtendedExamDocument extends ExamDocument {
 	_id: string;
+	winnerlist?: string[];
 }
 
 export interface QuestionDocument extends Document {

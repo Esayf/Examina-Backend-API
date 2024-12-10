@@ -118,6 +118,7 @@
 		"secretKey": "SIOSDajksa",
 		"questionCount": "4",
 		"isPrivate": false,
+		"isWinnerlistRequested": false,
 		"contractAddress": "0x0",
 		"passingScore": 80,
 		"deployJobId": "zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw",

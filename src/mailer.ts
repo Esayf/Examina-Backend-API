@@ -9,7 +9,7 @@ const regularHtmlContent = fs.readFileSync(regularResultsHtmlPath, "utf-8");
 const winnerHtmlContent = fs.readFileSync(winnerResultsHtmlPath, "utf-8");
 
 import SMTPTransport from "nodemailer/lib/smtp-transport"; // SMTP transport tipini içe aktar
-import { Winnerlist } from "./cron/sendWinnerListToCreator";
+import { Winnerlist } from "./cron/sendWinnerlistToCreator";
 
 const transporter: Transporter<SMTPTransport.Options> = nodemailer.createTransport({
 	host: "smtpout.secureserver.net",
@@ -24,6 +24,8 @@ const transporter: Transporter<SMTPTransport.Options> = nodemailer.createTranspo
 	},
 	requireTLS: true,
 	secureConnection: false,
+	connectionTimeout: 5000, // Bağlantı için 10 saniye bekle
+	SocketTimeout: 5000,
 } as SMTPTransport.Options);
 
 async function sendExamResultEmail(

@@ -4,7 +4,10 @@ import axios from "axios";
 import Client from "mina-signer";
 import { v4 as uuidv4 } from "uuid";
 
-const signerClient = new Client({ network: "mainnet" });
+import ParticipatedUser from "@/models/participatedUser.model";
+import User from "@/models/user.model";
+
+const signerClient = new Client({ network: "testnet" });
 
 export function generateAnswerArray(answers: Answer[], walletAddress: string): ProcessedAnswer[] {
 	return answers.map((answer) => {
@@ -165,4 +168,31 @@ export function generatePasscodes(count: number): string[] {
 	}
 
 	return passcodes;
+}
+
+export async function getWinnerlist(examId: string): Promise<string[]> {
+	const winnerParticipations = await ParticipatedUser.find({
+		exam: examId,
+		isFinished: true,
+		isWinner: true,
+	})
+		.select("user")
+		.lean();
+
+	const userIds = winnerParticipations.map((winner) => winner.user);
+
+	if (userIds.length === 0) {
+		console.log(`No winners found for exam ${examId}`);
+		return [];
+	}
+
+	const users = await User.find({
+		_id: { $in: userIds },
+		walletAddress: { $ne: null },
+	})
+		.select("walletAddress")
+		.lean();
+
+	const walletAddresses = users.map((user) => user.walletAddress);
+	return walletAddresses;
 }

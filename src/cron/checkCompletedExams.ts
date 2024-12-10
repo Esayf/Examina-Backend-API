@@ -1,6 +1,6 @@
 import Exam from "../models/exam.model";
 import { ExamDocument, ExtendedExamDocument } from "../types";
-import sendWinnerlistToCreator from "./sendWinnerListToCreator";
+import sendWinnerlistToCreator from "./sendWinnerlistToCreator";
 
 async function checkCompletedExams() {
 	try {
@@ -12,7 +12,7 @@ async function checkCompletedExams() {
 			return;
 		}
 
-		const completedExams = exams.filter((exam: ExamDocument) => {
+		let completedExams = exams.filter((exam: ExamDocument) => {
 			const startDate = new Date(exam.startDate);
 			const endDate = new Date(startDate.getTime() + exam.duration * 60 * 1000);
 			console.log(`Exam: ${exam.title}, EndDate: ${endDate}, Now: ${now}`);
@@ -32,6 +32,10 @@ async function checkCompletedExams() {
 				await exam.save();
 			}
 		}
+
+		completedExams = completedExams.filter((exam: ExamDocument) => {
+			return exam.isWinnerlistRequested;
+		});
 
 		await sendWinnerlistToCreator(completedExams as ExtendedExamDocument[]);
 	} catch (error) {

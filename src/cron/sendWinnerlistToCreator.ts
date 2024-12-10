@@ -1,5 +1,5 @@
+import { getWinnerlist } from "@/helpers/helperFunctions";
 import { sendWinnerlist } from "@/mailer";
-import ParticipatedUser from "@/models/participatedUser.model";
 import User from "@/models/user.model";
 import { ExtendedExamDocument } from "@/types";
 
@@ -21,29 +21,7 @@ async function sendWinnerlistToCreator(completedExams: ExtendedExamDocument[]) {
 				return;
 			}
 
-			const winnerParticipations = await ParticipatedUser.find({
-				exam: examId,
-				isFinished: true,
-				isWinner: true,
-			})
-				.select("user")
-				.lean();
-
-			const userIds = winnerParticipations.map((winner) => winner.user);
-
-			if (userIds.length === 0) {
-				console.log(`No winners found for exam ${examId}`);
-				continue;
-			}
-
-			const users = await User.find({
-				_id: { $in: userIds },
-				walletAddress: { $ne: null },
-			})
-				.select("walletAddress")
-				.lean();
-
-			const walletAddresses = users.map((user) => user.walletAddress);
+			const walletAddresses = await getWinnerlist(examId);
 
 			console.log(`Exam ID: ${examId}, Winner Wallets:`, walletAddresses);
 

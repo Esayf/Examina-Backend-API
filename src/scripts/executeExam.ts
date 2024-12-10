@@ -3,7 +3,7 @@ import * as fs from "fs";
 
 // Mina Signer Client (Örnek için kullanılıyor)
 var Client = require("mina-signer");
-const signerClient = new Client({ network: "mainnet" });
+const signerClient = new Client({ network: "testnet" });
 
 const baseURL = "http://localhost:3000";
 
@@ -196,7 +196,7 @@ const runProcess = async () => {
 		await putEmail(email);
 
 		const createExamRes = await createExam(examData);
-		// console.log("Exam created: ", createExamRes);
+		console.log("Exam created: ", createExamRes);
 
 		const examId = createExamRes._id;
 
@@ -226,7 +226,7 @@ const runProcess = async () => {
 		// const putEmailRes = await putEmail(email);
 		// console.log("Emailimi de koydum: ", putEmailRes);
 
-		for (const wallet of wallets.slice(1)) {
+		for (const wallet of wallets.slice(1, 3)) {
 			console.log("Processing wallet:", wallet.publicKey);
 
 			const message = await getMessage(wallet.publicKey);
