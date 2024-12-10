@@ -1,6 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 import { ExamDocument } from "../types";
-import Counter from "./counter.model";
 
 /**
  * @typedef {object} Exam
@@ -77,6 +76,11 @@ const ExamSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
+		isWinnerlistRequested: {
+			type: Boolean,
+			default: false,
+		},
+		winnerlist: { type: Array, default: [] },
 	},
 	{
 		timestamps: true,

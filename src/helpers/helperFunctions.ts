@@ -1,9 +1,11 @@
 import crypto from "crypto";
-import { ExamDocument, Answer, ProcessedAnswer, AnswerKey } from "../types";
+import { ExamDocument, Answer, ProcessedAnswer } from "../types";
 import axios from "axios";
 import Client from "mina-signer";
-import * as workerAPI from "../zkcloudworker/workerAPI";
 import { v4 as uuidv4 } from "uuid";
+
+import ParticipatedUser from "@/models/participatedUser.model";
+import User from "@/models/user.model";
 
 const signerClient = new Client({ network: "testnet" });
 
@@ -42,6 +44,7 @@ export default function verifySignature(
 		signature: parsedSignature,
 	};
 
+	// console.log("wallet address: ", verifyBody.publicKey);
 	console.log("Data: ", verifyBody.data);
 	console.log("Parsed Signature: ", verifyBody.signature);
 
@@ -176,4 +179,31 @@ export function generatePasscodes(count: number): string[] {
 	}
 
 	return passcodes;
+}
+
+export async function getWinnerlist(examId: string): Promise<string[]> {
+	const winnerParticipations = await ParticipatedUser.find({
+		exam: examId,
+		isFinished: true,
+		isWinner: true,
+	})
+		.select("user")
+		.lean();
+
+	const userIds = winnerParticipations.map((winner) => winner.user);
+
+	if (userIds.length === 0) {
+		console.log(`No winners found for exam ${examId}`);
+		return [];
+	}
+
+	const users = await User.find({
+		_id: { $in: userIds },
+		walletAddress: { $ne: null },
+	})
+		.select("walletAddress")
+		.lean();
+
+	const walletAddresses = users.map((user) => user.walletAddress);
+	return walletAddresses;
 }
