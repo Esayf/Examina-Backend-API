@@ -14,8 +14,6 @@ const UserSchema = new Schema(
 		},
 		email: {
 			type: String,
-			unique: true,
-			sparse: true,
 		},
 		isAdmin: {
 			type: Boolean,
