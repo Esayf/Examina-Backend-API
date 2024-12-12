@@ -98,14 +98,18 @@ async function getExamById(req: CustomRequest, res: Response) {
 
 async function startExam(req: CustomRequest, res: Response) {
 	try {
-		const { examId, passcode } = req.body as { examId: string; passcode: string };
+		const { examId, passcode, nickname } = req.body as {
+			examId: string;
+			passcode: string;
+			nickname: string | null;
+		};
 		const userId = req.session.user?.userId;
 
 		if (!userId) {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
 
-		const { status, message } = await examService.start(examId, userId, passcode);
+		const { status, message } = await examService.start(examId, userId, passcode, nickname);
 		return res.status(status).json({ message });
 	} catch (err) {
 		console.error("Error starting exam:", err);
