@@ -13,6 +13,10 @@ const ParticipatedUserSchema = new Schema(
 			ref: "Exam",
 			required: true,
 		},
+		nickname: {
+			type: String,
+			required: true,
+		},
 		isFinished: {
 			type: Boolean,
 			default: false,

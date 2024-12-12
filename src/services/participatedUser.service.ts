@@ -2,6 +2,7 @@ import { ParticipatedUserDocument } from "../types";
 import ParticipatedUser from "../models/participatedUser.model";
 import User from "../models/user.model";
 import Exam from "../models/exam.model";
+import { uniqueNamesGenerator, Config, adjectives, colors, animals } from "unique-names-generator";
 
 interface ParticipationResult {
 	success: boolean;
@@ -142,10 +143,40 @@ async function updateParticipatedUserRewardStatusByWalletAndContractAddress(
 	}
 }
 
+async function generateRandomNickname(examId: string): Promise<string> {
+	const nameConfig: Config = {
+		dictionaries: [adjectives, colors, animals],
+		separator: "_",
+		style: "lowerCase",
+		length: 2,
+	};
+
+	let isUnique = false;
+	let nickname = "";
+
+	while (!isUnique) {
+		// Generate a nickname like "BlueHawk" or "SillyPenguin"
+		nickname = uniqueNamesGenerator(nameConfig);
+
+		// Check if this nickname is already used in this exam
+		const existingParticipant = await ParticipatedUser.findOne({
+			exam: examId,
+			nickname: nickname,
+		});
+
+		if (!existingParticipant) {
+			isUnique = true;
+		}
+	}
+
+	return nickname;
+}
+
 export default {
 	get,
 	create,
 	checkParticipation,
 	updateParticipationStatus,
 	updateParticipatedUserRewardStatusByWalletAndContractAddress,
+	generateRandomNickname,
 };

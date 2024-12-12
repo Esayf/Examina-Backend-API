@@ -135,13 +135,13 @@ async function getById(examId: string): Promise<ExamDocument | null> {
 	}
 }
 
-async function start(examId: string, userId: string, passcode: string): Promise<ExamResult> {
+async function start(examId: string, userId: string, passcode: string, nickname: string | null): Promise<ExamResult> {
 	try {
+		let randomNickname = nickname || (await participatedUserService.generateRandomNickname(examId));
 		const exam = await getById(examId);
 		if (!exam) {
 			return { status: 404, message: "Exam not found" };
 		}
-
 		console.log("Exam: ", exam);
 		if (exam.isPrivate) {
 			const isPasscodeValid = await passcodeService.validate(passcode);
@@ -180,10 +180,7 @@ async function getAnswerKey(examId: string): Promise<AnswerKey[]> {
 	}
 
 	// Fetch questions related to the exam, selecting question number and correct answer, and sort by question number
-	const questions = await Question.find({ exam: examId })
-		.select("number correctAnswer") // Select question number and correct answer
-		.sort({ number: 1 }); // Sort by question number in ascending order
-
+	const questions = await Question.find({ exam: examId });
 	// Create the answer key array
 	const answerKey: AnswerKey[] = questions.map((question) => ({
 		questionId: question.id,
