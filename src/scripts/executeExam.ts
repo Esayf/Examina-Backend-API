@@ -247,10 +247,15 @@ const runProcess = async () => {
 			let finishExamData = sampleData.sampleAnswer;
 			finishExamData.examId = examId;
 
-			finishExamData.answers.forEach((answer: any, index: any) => {
-				if (index < getQuestionsRes.length) {
-					answer.questionId = getQuestionsRes[index]._id;
+			finishExamData.answers.forEach((answer: any) => {
+				// `getQuestionsRes` içinde eşleşen soruyu bul
+				const matchedQuestion = getQuestionsRes.find((question: any) => question.text === answer.name);
+
+				// Eşleşen bir soru bulunduysa `questionId` olarak `_id` değerini ata
+				if (matchedQuestion) {
+					answer.questionId = matchedQuestion._id;
 				}
+				delete answer.name;
 			});
 
 			// console.log("ExamId: ", examId);

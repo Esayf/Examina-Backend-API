@@ -41,6 +41,7 @@ router.post("/generateExamLinks", ensureAuthenticated, examController.generateLi
 router.get("/myExams", ensureAuthenticated, examController.getAllExams);
 
 router.get("/:id", examController.getExamById);
+router.get("/:id/details", examController.getExamDetails);
 router.post("/startExam", ensureAuthenticated, examController.startExam);
 router.post("/finishExam", ensureAuthenticated, validateFinishExamBody, examController.finishExam);
 

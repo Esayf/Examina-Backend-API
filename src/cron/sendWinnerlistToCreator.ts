@@ -1,4 +1,4 @@
-import { getWinnerlist } from "@/helpers/helperFunctions";
+import examService from "@/services/exam.service";
 import { sendWinnerlist } from "@/mailer";
 import User from "@/models/user.model";
 import { ExtendedExamDocument } from "@/types";
@@ -21,7 +21,7 @@ async function sendWinnerlistToCreator(completedExams: ExtendedExamDocument[]) {
 				return;
 			}
 
-			const walletAddresses = await getWinnerlist(examId);
+			const walletAddresses = await examService.getWinnerlist(examId);
 
 			console.log(`Exam ID: ${examId}, Winner Wallets:`, walletAddresses);
 

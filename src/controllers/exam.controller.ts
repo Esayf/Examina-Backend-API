@@ -51,7 +51,7 @@ async function generateLinks(req: CustomRequest, res: Response) {
 		}
 		const exam = await examService.getById(examId);
 		if (exam?.creator != req.session.user?.userId) {
-			return res.status(401).json({ message: "Only creator can access!" });
+			return res.status(403).json({ message: "Only creator can access!" });
 		}
 		const generatedLinks = await examService.generateAndSendLinks(examId, emailList);
 		return res.status(201).json({ success: true, result: generatedLinks });
@@ -93,6 +93,26 @@ async function getExamById(req: CustomRequest, res: Response) {
 		return res.status(200).json(response);
 	} catch (err) {
 		console.error("Error fetching exam:", err);
+		return res.status(500).json({ message: "Internal server error" });
+	}
+}
+
+async function getExamDetails(req: CustomRequest, res: Response) {
+	try {
+		const { id } = req.params;
+		const exam = await examService.getDetails(id);
+
+		if (!exam) {
+			return res.status(404).json({ message: "Exam not found" });
+		}
+
+		if (exam?.creator != req.session.user?.userId) {
+			return res.status(403).json({ message: "Only creator can access!" });
+		}
+
+		return res.status(200).json(exam);
+	} catch (err) {
+		console.error("Error fetching exam details:", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -145,6 +165,7 @@ export default {
 	generateLinks,
 	getAllExams,
 	getExamById,
+	getExamDetails,
 	startExam,
 	finishExam,
 };

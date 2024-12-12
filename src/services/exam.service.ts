@@ -1,9 +1,11 @@
 import { ExamDocument, QuestionInput, QuestionDocument, Answer, AnswerKey, ExtendedExamDocument } from "../types";
 import Exam from "../models/exam.model";
 import Question from "../models/question.model";
+import ParticipatedUser from "@/models/participatedUser.model";
+import User from "@/models/user.model";
 import participatedUserService from "./participatedUser.service";
 import answerService from "./answer.service";
-import { checkExamTimes, processQuestion, generatePasscodes, getWinnerlist } from "../helpers/helperFunctions";
+import { checkExamTimes, processQuestion, generatePasscodes } from "../helpers/helperFunctions";
 import scoreService from "./score.service";
 import Joi from "joi";
 import { sendGeneratedExamLink } from "@/mailer";
@@ -17,18 +19,7 @@ interface ExamResult {
 async function create(examData: Partial<ExamDocument>, questions: Array<QuestionInput>): Promise<ExamDocument> {
 	try {
 		const schema = Joi.object({
-			title: Joi.string().required(),
-			creator: Joi.string().required(),
-			description: Joi.string().required(),
-			startDate: Joi.date().required(),
-			questions: Joi.array().required(),
-			duration: Joi.number().required(),
-			rootHash: Joi.string().optional(),
-			secretKey: Joi.string().optional(),
-			questionCount: Joi.number().required(),
 			isRewarded: Joi.boolean(),
-			isPrivate: Joi.boolean(),
-			isWinnerlistRequested: Joi.boolean(),
 			rewardPerWinner: Joi.when("isRewarded", {
 				is: true,
 				then: Joi.number().positive().required(),
@@ -127,19 +118,33 @@ async function getAllByUser(userId: string): Promise<ExamDocument[]> {
 	}
 }
 
-async function getById(examId: string): Promise<ExtendedExamDocument | null> {
+async function getById(examId: string): Promise<ExamDocument | null> {
 	try {
-		let exam: ExtendedExamDocument | null = await Exam.findById(examId);
-		const isExamActive = checkExamTimes(exam as ExamDocument);
-		if (exam && !isExamActive.valid) {
-			exam.winnerlist = await getWinnerlist(examId);
-		}
-
-		console.log("EXAM EXAM EXAM: ", exam);
-		return exam as ExtendedExamDocument;
+		const exam = await Exam.findById(examId);
+		return exam;
 	} catch (error) {
 		console.error("Error fetching exam:", error);
 		throw new Error("Error fetching exam");
+	}
+}
+
+async function getDetails(examId: string): Promise<ExtendedExamDocument | null> {
+	try {
+		let exam: ExtendedExamDocument | null = await Exam.findById(examId);
+		const isExamActive = checkExamTimes(exam as ExamDocument);
+
+		if (exam && !isExamActive.valid) {
+			const winnerlist: string[] = await getWinnerlist(exam._id);
+			let examObject = exam.toObject();
+			examObject.winnerlist = winnerlist;
+			console.log("EXAM EXAM EXAM: ", examObject);
+			return examObject as ExtendedExamDocument;
+		}
+
+		return exam as ExtendedExamDocument;
+	} catch (error) {
+		console.error("Error fetching exam details:", error);
+		throw new Error("Error fetching exam details");
 	}
 }
 
@@ -250,11 +255,40 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 	}
 }
 
+async function getWinnerlist(examId: string): Promise<string[]> {
+	const winnerParticipations = await ParticipatedUser.find({
+		exam: examId,
+		isFinished: true,
+		isWinner: true,
+	})
+		.select("user")
+		.lean();
+
+	const userIds = winnerParticipations.map((winner) => winner.user);
+
+	if (userIds.length === 0) {
+		console.log(`No winners found for exam ${examId}`);
+		return [];
+	}
+
+	const users = await User.find({
+		_id: { $in: userIds },
+		walletAddress: { $ne: null },
+	})
+		.select("walletAddress")
+		.lean();
+
+	const walletAddresses = users.map((user) => user.walletAddress);
+	return walletAddresses;
+}
+
 export default {
 	create,
 	generateAndSendLinks,
 	getAllByUser,
 	getById,
+	getDetails,
 	start,
 	finish,
+	getWinnerlist,
 };

@@ -80,7 +80,6 @@ const ExamSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
-		winnerlist: { type: Array, default: [] },
 	},
 	{
 		timestamps: true,
