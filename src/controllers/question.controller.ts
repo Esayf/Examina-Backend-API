@@ -18,7 +18,7 @@ async function getQuestionById(req: CustomRequest, res: Response) {
 	}
 }
 
-async function getExamQuestions(req: CustomRequest, res: Response) {
+async function getQuestionsByExam(req: CustomRequest, res: Response) {
 	const userId = req.session.user?.userId;
 	const { examId } = req.params;
 
@@ -30,14 +30,12 @@ async function getExamQuestions(req: CustomRequest, res: Response) {
 		const response = await questionService.getAllByExam(examId, userId);
 		return res.status(response.status).json(response.data || { message: response.message });
 	} catch (err) {
-		console.error(err);
-		return res.status(500).json({
-			message: "Internal Server Error",
-		});
+		console.error("Error fetching questions: ", err);
+		return res.status(500).json({ message: "Internal server error" });
 	}
 }
 
 export default {
 	getQuestionById,
-	getExamQuestions,
+	getQuestionsByExam,
 };

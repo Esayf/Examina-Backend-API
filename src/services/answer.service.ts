@@ -33,7 +33,7 @@ async function getById(answerId: string): Promise<AnswerDocument | null> {
 			.populate("exam", "title");
 		return answer;
 	} catch (error) {
-		console.error("Error fetching answer:", error);
+		console.error("Error fetching answer: ", error);
 		throw new Error("Error fetching answer");
 	}
 }

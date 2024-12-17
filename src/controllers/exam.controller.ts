@@ -37,7 +37,7 @@ async function createExam(req: CustomRequest, res: Response) {
 
 		return res.status(201).json(exam);
 	} catch (err) {
-		console.error("Error creating exam:", err);
+		console.error("Error creating exam: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -51,17 +51,17 @@ async function generateLinks(req: CustomRequest, res: Response) {
 		}
 		const exam = await examService.getById(examId);
 		if (exam?.creator != req.session.user?.userId) {
-			return res.status(403).json({ message: "Only creator can access!" });
+			return res.status(403).json({ message: "Only creator can access" });
 		}
 		const generatedLinks = await examService.generateAndSendLinks(examId, emailList);
 		return res.status(201).json({ success: true, result: generatedLinks });
 	} catch (err) {
-		console.error("Error generating links:", err);
+		console.error("Error generating links: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
 
-async function getAllExams(req: CustomRequest, res: Response) {
+async function getAllExamsByUser(req: CustomRequest, res: Response) {
 	try {
 		const userId = req.session.user?.userId;
 		if (!userId) {
@@ -70,7 +70,7 @@ async function getAllExams(req: CustomRequest, res: Response) {
 		const exams = await examService.getAllByUser(userId);
 		return res.status(200).json(exams);
 	} catch (err) {
-		console.error("Error fetching exams:", err);
+		console.error("Error fetching exams: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -81,7 +81,7 @@ async function getExamById(req: CustomRequest, res: Response) {
 		const exam = await examService.getById(id);
 		const userId = req.session.user?.userId;
 		if (!userId) {
-			return res.status(404).json({ message: "User not found" });
+			return res.status(401).json({ message: "Unauthorized" });
 		}
 		if (!exam) {
 			return res.status(404).json({ message: "Exam not found" });
@@ -92,7 +92,7 @@ async function getExamById(req: CustomRequest, res: Response) {
 		const response = { exam: exam, participatedUser: participatedUser };
 		return res.status(200).json(response);
 	} catch (err) {
-		console.error("Error fetching exam:", err);
+		console.error("Error fetching exam: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -100,19 +100,19 @@ async function getExamById(req: CustomRequest, res: Response) {
 async function getExamDetails(req: CustomRequest, res: Response) {
 	try {
 		const { id } = req.params;
-		const exam = await examService.getDetails(id);
+		const examDetails = await examService.getDetails(id);
 
-		if (!exam) {
+		if (!examDetails) {
 			return res.status(404).json({ message: "Exam not found" });
 		}
 
-		if (exam?.creator != req.session.user?.userId) {
-			return res.status(403).json({ message: "Only creator can access!" });
+		if (examDetails?.creator != req.session.user?.userId) {
+			return res.status(403).json({ message: "Only creator can access" });
 		}
 
-		return res.status(200).json(exam);
+		return res.status(200).json(examDetails);
 	} catch (err) {
-		console.error("Error fetching exam details:", err);
+		console.error("Error fetching exam details: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -129,7 +129,7 @@ async function startExam(req: CustomRequest, res: Response) {
 		const { status, message } = await examService.start(examId, userId, passcode);
 		return res.status(status).json({ message });
 	} catch (err) {
-		console.error("Error starting exam:", err);
+		console.error("Error starting exam: ", err);
 		return res.status(500).json({ message: "Internal Server Error" });
 	}
 }
@@ -155,7 +155,7 @@ async function finishExam(req: CustomRequest, res: Response) {
 		const result = await examService.finish(userId, examId, answers, walletAddress);
 		return res.status(result.status).json({ message: result.message });
 	} catch (err) {
-		console.error(err);
+		console.error("Error finishing exam and submitting answers: ", err);
 		return res.status(500).json({ message: "Error finishing exam and submitting answers" });
 	}
 }
@@ -163,7 +163,7 @@ async function finishExam(req: CustomRequest, res: Response) {
 export default {
 	createExam,
 	generateLinks,
-	getAllExams,
+	getAllExamsByUser,
 	getExamById,
 	getExamDetails,
 	startExam,

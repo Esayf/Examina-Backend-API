@@ -56,28 +56,8 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 
 		return savedExam;
 	} catch (error) {
-		console.error("Error creating exam:", error);
+		console.error("Error creating exam: ", error);
 		throw new Error("Error creating exam");
-	}
-}
-
-async function saveQuestions(questions: QuestionInput[], examId: string): Promise<QuestionDocument[]> {
-	try {
-		// Process each question before saving
-		const processedQuestions = await Promise.all(questions.map((question) => processQuestion(question)));
-
-		// Save each processed question with a reference to the exam
-		const savedQuestions = await Promise.all(
-			processedQuestions.map((question) => {
-				question.exam = examId;
-				return new Question(question).save();
-			})
-		);
-
-		return savedQuestions;
-	} catch (error) {
-		console.error("Error saving questions:", error);
-		throw new Error("Error saving questions");
 	}
 }
 
@@ -90,7 +70,6 @@ async function generateAndSendLinks(examId: string, emailList: string[]): Promis
 	try {
 		const passcodes = generatePasscodes(emailList.length);
 
-		// Passcode ve link üretimi
 		const links = await Promise.all(
 			emailList.map(async (email, index) => {
 				const link = `https://choz.io/app/exams/get-started/${examId}/${passcodes[index]}`;
@@ -104,7 +83,7 @@ async function generateAndSendLinks(examId: string, emailList: string[]): Promis
 		);
 		return links;
 	} catch (error) {
-		console.error("Error generating or sending exam links:", error);
+		console.error("Error generating or sending exam links: ", error);
 		throw new Error("Error generating or sending exam links");
 	}
 }
@@ -113,7 +92,7 @@ async function getAllByUser(userId: string): Promise<ExamDocument[]> {
 	try {
 		return await Exam.find({ creator: userId }).sort({ createdAt: "desc" });
 	} catch (error) {
-		console.error("Error fetching exams:", error);
+		console.error("Error fetching exams: ", error);
 		throw new Error("Error fetching exams");
 	}
 }
@@ -123,7 +102,7 @@ async function getById(examId: string): Promise<ExamDocument | null> {
 		const exam = await Exam.findById(examId);
 		return exam;
 	} catch (error) {
-		console.error("Error fetching exam:", error);
+		console.error("Error fetching exam: ", error);
 		throw new Error("Error fetching exam");
 	}
 }
@@ -131,19 +110,19 @@ async function getById(examId: string): Promise<ExamDocument | null> {
 async function getDetails(examId: string): Promise<ExtendedExamDocument | null> {
 	try {
 		let exam: ExtendedExamDocument | null = await Exam.findById(examId);
-		const isExamActive = checkExamTimes(exam as ExamDocument);
-
-		if (exam && !isExamActive.valid) {
-			const winnerlist: string[] = await getWinnerlist(exam._id);
+		if (exam && exam.isCompleted) {
 			let examObject = exam.toObject();
-			examObject.winnerlist = winnerlist;
+			if (exam.isRewarded) {
+				const winnerlist: string[] = await getWinnerlist(exam._id);
+				examObject.winnerlist = winnerlist;
+			}
+			// TODO: Leaderboard Feature
 			console.log("EXAM EXAM EXAM: ", examObject);
 			return examObject as ExtendedExamDocument;
 		}
-
 		return exam as ExtendedExamDocument;
 	} catch (error) {
-		console.error("Error fetching exam details:", error);
+		console.error("Error fetching exam details: ", error);
 		throw new Error("Error fetching exam details");
 	}
 }
@@ -155,7 +134,6 @@ async function start(examId: string, userId: string, passcode: string): Promise<
 			return { status: 404, message: "Exam not found" };
 		}
 
-		console.log("Exam: ", exam);
 		if (exam.isPrivate) {
 			const isPasscodeValid = await passcodeService.validate(passcode);
 			if (!isPasscodeValid) {
@@ -180,30 +158,9 @@ async function start(examId: string, userId: string, passcode: string): Promise<
 			message: participationResult.message,
 		};
 	} catch (error) {
-		console.error("Error starting exam:", error);
+		console.error("Error starting exam: ", error);
 		throw new Error("Error starting exam");
 	}
-}
-
-async function getAnswerKey(examId: string): Promise<AnswerKey[]> {
-	// Verify the exam exists
-	const exam = await Exam.findById(examId);
-	if (!exam) {
-		throw new Error("Exam not found");
-	}
-
-	// Fetch questions related to the exam, selecting question number and correct answer, and sort by question number
-	const questions = await Question.find({ exam: examId })
-		.select("number correctAnswer") // Select question number and correct answer
-		.sort({ number: 1 }); // Sort by question number in ascending order
-
-	// Create the answer key array
-	const answerKey: AnswerKey[] = questions.map((question) => ({
-		questionId: question.id,
-		correctAnswer: question.correctAnswer,
-	}));
-
-	return answerKey;
 }
 
 async function finish(userId: string, examId: string, answers: Answer[], walletAddress: string): Promise<ExamResult> {
@@ -228,13 +185,11 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 
 		const answerKey = await getAnswerKey(examId);
 
-		// Calculate score
 		const { score, correctAnswers } = await scoreService.calculateScore(answers, answerKey);
 
 		console.log("Score: ", score);
 		console.log("Correct Answers: ", correctAnswers);
 
-		// Save the score
 		await scoreService.createScore({
 			user: userId,
 			exam: examId,
@@ -250,36 +205,87 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 
 		return { status: 200, message: "Exam completed successfully" };
 	} catch (error) {
-		console.error("Error finishing exam:", error);
+		console.error("Error finishing exam: ", error);
 		throw new Error("Error finishing exam");
 	}
 }
 
-async function getWinnerlist(examId: string): Promise<string[]> {
-	const winnerParticipations = await ParticipatedUser.find({
-		exam: examId,
-		isFinished: true,
-		isWinner: true,
-	})
-		.select("user")
-		.lean();
+//////////////////////////////////////
+// 		 Auxiliary Functions		//
+//////////////////////////////////////
 
-	const userIds = winnerParticipations.map((winner) => winner.user);
+async function saveQuestions(questions: QuestionInput[], examId: string): Promise<QuestionDocument[]> {
+	try {
+		const processedQuestions = await Promise.all(questions.map((question) => processQuestion(question)));
 
-	if (userIds.length === 0) {
-		console.log(`No winners found for exam ${examId}`);
-		return [];
+		const savedQuestions = await Promise.all(
+			processedQuestions.map((question) => {
+				question.exam = examId;
+				return new Question(question).save();
+			})
+		);
+
+		return savedQuestions;
+	} catch (error) {
+		console.error("Error saving questions: ", error);
+		throw new Error("Error saving questions");
+	}
+}
+
+async function getAnswerKey(examId: string): Promise<AnswerKey[]> {
+	const exam = await Exam.findById(examId);
+	if (!exam) {
+		throw new Error("Exam not found");
 	}
 
-	const users = await User.find({
-		_id: { $in: userIds },
-		walletAddress: { $ne: null },
-	})
-		.select("walletAddress")
-		.lean();
+	const questions = await Question.find({ exam: examId }).select("number correctAnswer").sort({ number: 1 });
 
-	const walletAddresses = users.map((user) => user.walletAddress);
-	return walletAddresses;
+	const answerKey: AnswerKey[] = questions.map((question) => ({
+		questionId: question.id,
+		correctAnswer: question.correctAnswer,
+	}));
+
+	return answerKey;
+}
+
+type WinnerlistResult = {
+	walletAddress: string;
+};
+
+async function getWinnerlist(examId: string): Promise<string[]> {
+	const pipeline = [
+		{
+			$match: {
+				exam: examId,
+				isFinished: true,
+				isWinner: true,
+			},
+		},
+		{
+			$lookup: {
+				from: "users", // İlişkilendirilecek koleksiyonun adı (User koleksiyonu)
+				localField: "user", // `ParticipatedUser` koleksiyonundaki referans alanı
+				foreignField: "_id", // `User` koleksiyonundaki referanslanan alan
+				as: "userDetails", // Yeni oluşturulacak alan
+			},
+		},
+		{
+			$unwind: "$userDetails", // userDetails dizisini düzleştir
+		},
+		{
+			$match: {
+				"userDetails.walletAddress": { $ne: null }, // Cüzdan adresi olmayanları hariç tut
+			},
+		},
+		{
+			$project: {
+				walletAddress: "$userDetails.walletAddress", // Sadece walletAddress'i seç
+			},
+		},
+	];
+
+	const result = await ParticipatedUser.aggregate(pipeline);
+	return result.map((doc: WinnerlistResult) => doc.walletAddress);
 }
 
 export default {

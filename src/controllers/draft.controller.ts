@@ -17,7 +17,7 @@ async function createDraft(req: CustomRequest, res: Response) {
 		const draft = await draftService.create(draftData);
 		return res.status(201).json(draft);
 	} catch (err) {
-		console.error("Error creating draft:", err);
+		console.error("Error creating draft: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -32,7 +32,7 @@ async function getAllDrafts(req: CustomRequest, res: Response) {
 		const drafts = await draftService.getAllByUser(userId);
 		return res.status(200).json(drafts);
 	} catch (err) {
-		console.error("Error fetching drafts:", err);
+		console.error("Error fetching drafts: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -58,7 +58,7 @@ async function getDraftById(req: CustomRequest, res: Response) {
 
 		return res.status(200).json(draft);
 	} catch (err) {
-		console.error("Error fetching draft:", err);
+		console.error("Error fetching draft: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -85,7 +85,7 @@ async function updateDraft(req: CustomRequest, res: Response) {
 		const updatedDraft = await draftService.update(id, req.body);
 		return res.status(200).json(updatedDraft);
 	} catch (err) {
-		console.error("Error updating draft:", err);
+		console.error("Error updating draft: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -112,7 +112,7 @@ async function deleteDraft(req: CustomRequest, res: Response) {
 		await draftService.remove(id);
 		return res.status(200).json({ message: "Draft deleted successfully" });
 	} catch (err) {
-		console.error("Error deleting draft:", err);
+		console.error("Error deleting draft: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }

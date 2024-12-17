@@ -23,7 +23,7 @@ async function sendWinnerlistToCreator(completedExams: ExtendedExamDocument[]) {
 
 			const walletAddresses = await examService.getWinnerlist(examId);
 
-			console.log(`Exam ID: ${examId}, Winner Wallets:`, walletAddresses);
+			console.log(`Exam ID: ${examId}, Winner Wallets: `, walletAddresses);
 
 			const winnerlistData: Winnerlist = {
 				examId: examId.toString(),

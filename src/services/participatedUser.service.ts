@@ -21,7 +21,7 @@ async function get(userId: string, examId: string): Promise<ParticipatedUserDocu
 		});
 		return userParticipation;
 	} catch (err) {
-		console.error("Error fetching participation:", err);
+		console.error("Error fetching participation: ", err);
 		throw new Error("Error fetching participation");
 	}
 }
@@ -44,7 +44,7 @@ async function getByWalletAddressAndQuizContractAddress(
 		});
 		return userParticipation;
 	} catch (err) {
-		console.error("Error fetching participation:", err);
+		console.error("Error fetching participation: ", err);
 		throw new Error("Error fetching participation");
 	}
 }
@@ -58,7 +58,7 @@ async function create(userId: string, examId: string): Promise<void> {
 		});
 		await newParticipatedUser.save();
 	} catch (err) {
-		console.error("Error creating participation:", err);
+		console.error("Error creating participation: ", err);
 		throw new Error("Error creating participation");
 	}
 }
@@ -83,7 +83,7 @@ async function checkParticipation(
 			return {
 				success: false,
 				status: 404,
-				message: "User has not participated in the exam",
+				message: "User does not have participated in the exam",
 			};
 		}
 
@@ -137,7 +137,7 @@ async function updateParticipatedUserRewardStatusByWalletAndContractAddress(
 		participatedUser.rewardSentDate = rewardSentDate;
 		await participatedUser.save();
 	} catch (err) {
-		console.error("Error updating participation reward status:", err);
+		console.error("Error updating participation reward status: ", err);
 		throw new Error("Error updating participation reward status");
 	}
 }

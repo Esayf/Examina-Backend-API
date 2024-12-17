@@ -14,7 +14,7 @@ async function getById(questionId: string): Promise<QuestionDocument | null> {
 	try {
 		return await Question.findById(questionId);
 	} catch (error) {
-		console.error("Error fetching question:", error);
+		console.error("Error fetching question: ", error);
 		throw new Error("Error fetching question");
 	}
 }
@@ -54,7 +54,7 @@ async function getAllByExam(examId: string, userId: string): Promise<QuestionRes
 
 		return { status: 200, data: shuffledQuestions };
 	} catch (err) {
-		console.error("Error fetching exam questions:", err);
+		console.error("Error fetching exam questions: ", err);
 		throw new Error("Error fetching exam questions");
 	}
 }
