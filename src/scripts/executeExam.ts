@@ -226,7 +226,7 @@ const runProcess = async () => {
 		// const putEmailRes = await putEmail(email);
 		// console.log("Emailimi de koydum: ", putEmailRes);
 
-		for (const wallet of wallets.slice(1, 3)) {
+		for (const wallet of wallets.slice(1, 6)) {
 			console.log("Processing wallet:", wallet.publicKey);
 
 			const message = await getMessage(wallet.publicKey);
@@ -244,7 +244,9 @@ const runProcess = async () => {
 
 			const getQuestionsRes = await getQuestions(examId);
 
-			let finishExamData = sampleData.sampleAnswer;
+			const randomIndex = Math.floor(Math.random() * sampleData.sampleAnswers.length);
+
+			let finishExamData = sampleData.sampleAnswers[randomIndex];
 			finishExamData.examId = examId;
 
 			finishExamData.answers.forEach((answer: any) => {

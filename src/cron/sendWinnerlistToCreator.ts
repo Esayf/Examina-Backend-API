@@ -1,12 +1,12 @@
-import examService from "@/services/exam.service";
+import examService, { Winner } from "@/services/exam.service";
 import { sendWinnerlist } from "@/mailer";
 import User from "@/models/user.model";
 import { ExtendedExamDocument } from "@/types";
 
-export type Winnerlist = {
+export type WinnerlistMailData = {
 	examId: string | undefined;
 	creatorMail: string | undefined;
-	winnerlist: string[];
+	winnerlist: Winner[];
 };
 
 async function sendWinnerlistToCreator(completedExams: ExtendedExamDocument[]) {
@@ -21,14 +21,14 @@ async function sendWinnerlistToCreator(completedExams: ExtendedExamDocument[]) {
 				return;
 			}
 
-			const walletAddresses = await examService.getWinnerlist(examId);
+			const winners = await examService.getWinnerlist(examId);
 
-			console.log(`Exam ID: ${examId}, Winner Wallets: `, walletAddresses);
+			console.log(`Exam ID: ${examId}, Winner Wallets: `, winners);
 
-			const winnerlistData: Winnerlist = {
+			const winnerlistData: WinnerlistMailData = {
 				examId: examId.toString(),
 				creatorMail: creator.email,
-				winnerlist: walletAddresses,
+				winnerlist: winners,
 			};
 
 			console.log("Winnerlist Data: ", winnerlistData);

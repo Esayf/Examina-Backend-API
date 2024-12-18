@@ -172,22 +172,46 @@
 		"secretKey": "SIOSDajksa",
 		"questionCount": "4",
 		"isPrivate": false,
-		"isWinnerlistRequested": true,
+		"isWinnerlistRequested": false,
 		"contractAddress": "0x0",
 		"passingScore": 80,
 		"deployJobId": "zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw",
 		"isRewarded": true,
 		"rewardPerWinner": 1
 	},
-	"sampleAnswer": {
-		"examId": "",
-		"answers": [
-			{ "name": "Nord", "questionId": "", "answer": 1 },
-			{ "name": "Vaegir", "questionId": "", "answer": 2 },
-			{ "name": "Swadia", "questionId": "", "answer": 3 },
-			{ "name": "Rhodok", "questionId": "", "answer": 4 },
-			{ "name": "Sarranid", "questionId": "", "answer": 5 },
-			{ "name": "Khergit", "questionId": "", "answer": 1 }
-		]
-	}
+	"sampleAnswers": [
+		{
+			"examId": "",
+			"answers": [
+				{ "name": "Nord", "questionId": "", "answer": 1 },
+				{ "name": "Vaegir", "questionId": "", "answer": 2 },
+				{ "name": "Swadia", "questionId": "", "answer": 3 },
+				{ "name": "Rhodok", "questionId": "", "answer": 4 },
+				{ "name": "Sarranid", "questionId": "", "answer": 5 },
+				{ "name": "Khergit", "questionId": "", "answer": 1 }
+			]
+		},
+		{
+			"examId": "",
+			"answers": [
+				{ "name": "Nord", "questionId": "", "answer": 1 },
+				{ "name": "Vaegir", "questionId": "", "answer": 2 },
+				{ "name": "Swadia", "questionId": "", "answer": 2 },
+				{ "name": "Rhodok", "questionId": "", "answer": 4 },
+				{ "name": "Sarranid", "questionId": "", "answer": 5 },
+				{ "name": "Khergit", "questionId": "", "answer": 1 }
+			]
+		},
+		{
+			"examId": "",
+			"answers": [
+				{ "name": "Nord", "questionId": "", "answer": 5 },
+				{ "name": "Vaegir", "questionId": "", "answer": 5 },
+				{ "name": "Swadia", "questionId": "", "answer": 3 },
+				{ "name": "Rhodok", "questionId": "", "answer": 4 },
+				{ "name": "Sarranid", "questionId": "", "answer": 5 },
+				{ "name": "Khergit", "questionId": "", "answer": 1 }
+			]
+		}
+	]
 }

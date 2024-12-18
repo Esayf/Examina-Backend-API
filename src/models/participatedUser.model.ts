@@ -17,6 +17,10 @@ const ParticipatedUserSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
+		finishTime: {
+			type: Date,
+			required: false,
+		},
 		isWinner: {
 			type: Boolean,
 			default: false,

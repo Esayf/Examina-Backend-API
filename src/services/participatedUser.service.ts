@@ -110,6 +110,7 @@ async function updateParticipationStatus(userId: string, examId: string, isWinne
 			throw new Error(`Participation not found for userId: ${userId} and examId: ${examId}`);
 		}
 		participatedUser.isFinished = true;
+		participatedUser.finishTime = new Date();
 		participatedUser.isWinner = isWinner;
 		await participatedUser.save();
 	} catch (err) {
