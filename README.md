@@ -1,4 +1,3 @@
-```markdown
 # Choz API Setup Guide
 
 Welcome to the Choz API project! This guide will assist you in setting up the application on your local machine using Docker. Follow the steps below to create the necessary Docker network, run the application with Docker Compose, and start the Protokit service.
@@ -66,7 +65,6 @@ http://localhost:3005
 ## Conclusion
 
 You have now successfully set up and started the Choz API project. If you encounter any issues or have questions, please refer to the project's documentation or seek support from the development team. Happy coding!
-```
 
 
 
