@@ -44,4 +44,6 @@ router.get("/:id", examController.getExamById);
 router.post("/startExam", ensureAuthenticated, examController.startExam);
 router.post("/finishExam", ensureAuthenticated, validateFinishExamBody, examController.finishExam);
 
+router.get("/isEligibleToJoin/:examId", ensureAuthenticated, examController.checkEligibility);
+
 export default router;

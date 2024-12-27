@@ -46,6 +46,7 @@ export interface ExamDocument extends Document {
 	deployJobId?: string;
 	passingScore?: number;
 	isPrivate?: boolean;
+	nftCollection?: string;
 }
 
 export interface CreateExamDto

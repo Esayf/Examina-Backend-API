@@ -2,6 +2,7 @@ import { Response } from "express";
 import { CustomRequest, QuestionInput } from "../types";
 import examService from "../services/exam.service";
 import participatedUserService from "@/services/participatedUser.service";
+import { verifyNFTOwnership } from "../services/algolia.service";
 
 interface ExamInput {
 	title: string;
@@ -143,6 +144,40 @@ async function finishExam(req: CustomRequest, res: Response) {
 	}
 }
 
+async function checkEligibility(req: CustomRequest, res: Response) {
+	try {
+		const { examId } = req.params;
+		const userId = req.session.user?.userId;
+		const walletAddress = req.session.user?.walletAddress;
+
+		if (!userId || !walletAddress) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+
+		const exam = await examService.getById(examId);
+		if (!exam) {
+			return res.status(404).json({ message: "Exam not found" });
+		}
+
+		// If exam is not private, user is eligible
+		if (!exam.isPrivate) {
+			return res.status(200).json({ isEligible: true });
+		}
+
+		// Check NFT ownership
+		// Note: You'll need to add collection address to your exam model if not already present
+		const isOwner = await verifyNFTOwnership(walletAddress, exam.nftCollection || "");
+
+		return res.status(200).json({
+			isEligible: isOwner,
+			message: isOwner ? "Eligible to join" : "Must own required NFT to join",
+		});
+	} catch (err) {
+		console.error("Error checking eligibility:", err);
+		return res.status(500).json({ message: "Internal server error" });
+	}
+}
+
 export default {
 	createExam,
 	generateLinks,
@@ -150,4 +185,5 @@ export default {
 	getExamById,
 	startExam,
 	finishExam,
+	checkEligibility,
 };

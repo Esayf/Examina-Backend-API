@@ -77,6 +77,9 @@ const ExamSchema = new Schema(
 			type: Boolean,
 			default: false,
 		},
+		nftCollection: {
+			type: String,
+		},
 	},
 	{
 		timestamps: true,

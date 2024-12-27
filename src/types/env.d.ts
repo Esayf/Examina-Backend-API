@@ -14,6 +14,8 @@ declare module "bun" {
 		SMTP_PASS: string;
 		SMTP_FROM: string;
 		ADMIN_PUBLIC_KEY: string;
+		ALGOLIA_PROJECT_ID: string;
+		ALGOLIA_KEY: string;
 	}
 }
 
