@@ -5,7 +5,7 @@ import Client from "mina-signer";
 import * as workerAPI from "../zkcloudworker/workerAPI";
 
 const signerClient = new Client({ network: "testnet" });
-
+const mainnetSignerClient = new Client({ network: "mainnet" });
 export function generateAnswerArray(answers: Answer[], walletAddress: string): ProcessedAnswer[] {
 	return answers.map((answer) => {
 		const hashInput = walletAddress + JSON.stringify(answer.answer);
@@ -45,9 +45,11 @@ export default function verifySignature(
 	console.log("Parsed Signature: ", verifyBody.signature);
 
 	const verifyResult = signerClient.verifyMessage(verifyBody);
+	const mainnetVerifyResult = mainnetSignerClient.verifyMessage(verifyBody);
 	console.log("Result: ", verifyResult);
+	console.log("Mainnet Result: ", mainnetVerifyResult);
 
-	return verifyResult;
+	return verifyResult || mainnetVerifyResult;
 }
 
 async function pinToIPFS(hash: string): Promise<string> {
