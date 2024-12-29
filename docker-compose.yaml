@@ -24,13 +24,11 @@ services:
       - redis
     networks:
       - examina_network
-    command: ["bun", "dev"]
+    command: ["bun", "start"]
 
   db:
     container_name: mongodb
     image: mongo:latest
-    ports:
-      - "27017:27017"
     volumes:
       - mongodb_data:/data/db
     networks:
@@ -39,8 +37,6 @@ services:
   redis:
     container_name: redis
     image: redis:latest
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
