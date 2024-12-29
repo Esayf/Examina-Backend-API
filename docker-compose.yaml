@@ -15,6 +15,7 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - ADMIN_PRIVATE_KEY=${ADMIN_PRIVATE_KEY}
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
