@@ -153,13 +153,14 @@ async function getDetails(examId: string): Promise<ExtendedExamDocument | null> 
 	}
 }
 
-async function start(examId: string, userId: string, passcode: string): Promise<ExamResult> {
+async function start(examId: string, userId: string, passcode: string, nickname: string | null): Promise<ExamResult> {
 	try {
+		let randomNickname = nickname || (await participatedUserService.generateRandomNickname(examId));
 		const exam = await getById(examId);
 		if (!exam) {
 			return { status: 404, message: "Exam not found" };
 		}
-
+		console.log("Exam: ", exam);
 		if (exam.isPrivate) {
 			const isPasscodeValid = await passcodeService.validate(passcode);
 			if (!isPasscodeValid) {
@@ -175,7 +176,7 @@ async function start(examId: string, userId: string, passcode: string): Promise<
 			};
 		}
 
-		const participationResult = await participatedUserService.checkParticipation(userId, examId, {
+		const participationResult = await participatedUserService.checkParticipation(userId, examId, randomNickname, {
 			createIfNotExist: true,
 		});
 
@@ -196,7 +197,7 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 			return { status: 404, message: "Exam not found" };
 		}
 
-		const participationResult = await participatedUserService.checkParticipation(userId, examId, {
+		const participationResult = await participatedUserService.checkParticipation(userId, examId, "", {
 			createIfNotExist: false,
 		});
 
