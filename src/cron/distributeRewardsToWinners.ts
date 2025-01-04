@@ -1,8 +1,6 @@
 import { distributeRewardsWithWorker } from "../wallet";
 import Exam from "../models/exam.model";
 import ParticipatedUser from "../models/participatedUser.model";
-import User from "../models/user.model";
-import { Winner } from "@/zkcloudworker/workerAPI";
 import { ParticipatedUserWithPopulatedUser } from "@/types/participatedUser";
 
 async function distributeRewardsToWinners() {

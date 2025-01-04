@@ -5,6 +5,6 @@ import { ensureAuthenticated, ensureAdmin } from "../middleware/middleware";
 const router = express.Router();
 
 router.get("/question/:questionId", ensureAuthenticated, ensureAdmin, questionController.getQuestionById);
-router.get("/:examId", ensureAuthenticated, questionController.getExamQuestions);
+router.get("/:examId", ensureAuthenticated, questionController.getQuestionsByExam);
 
 export default router;

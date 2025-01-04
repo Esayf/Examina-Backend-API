@@ -2,6 +2,7 @@ import { Request } from "express";
 import { Document, Types } from "mongoose";
 import { Session } from "express-session";
 import { ParamsDictionary } from "express-serve-static-core";
+import { Participant, Winner } from "@/services/exam.service";
 
 export interface UserDocument extends Document {
 	username: string;
@@ -46,6 +47,13 @@ export interface ExamDocument extends Document {
 	deployJobId?: string;
 	passingScore?: number;
 	isPrivate?: boolean;
+	isWinnerlistRequested?: boolean;
+}
+
+export interface ExtendedExamDocument extends ExamDocument {
+	_id: string;
+	winnerlist?: Winner[];
+	participants?: Participant[];
 }
 
 export interface CreateExamDto
@@ -78,6 +86,7 @@ export interface ParticipatedUserDocument extends Document {
 	user: string;
 	exam: string;
 	isFinished: boolean;
+	finishTime?: Date;
 	isWinner: boolean;
 	isMailSent: boolean;
 	jobAdded: boolean;

@@ -1,26 +1,8 @@
 [
-	{
-		"publicKey": "B62qn4YH7SJGDhiqQVDFAPZn8gi4YuF13cjeTMvPGnjhFbAVv75viCZ",
-		"privateKey": ""
-	},
-	{
-		"publicKey": "B62qjrxvAU6snUPwCTBjgLDrZPEodrWi4sd7bdY6mZwt7CY1bkajvEo",
-		"privateKey": ""
-	},
-	{
-		"publicKey": "B62qianWPTzg1Tg3RDZoXFxo9Zy2ct9ijf9G2V7AGkUA8CUYY9oar4B",
-		"privateKey": ""
-	},
-	{
-		"publicKey": "B62qom8yvQkeErXtvuJVia8jQ2eUBgZRXvQchVYNdqS3Xgg67hCZoem",
-		"privateKey": ""
-	},
-	{
-		"publicKey": "B62qmoxMhWD3rYafA1DJ1eqxY3LiRDihaeSz7xKKDvuYZzc4E7DGu5X",
-		"privateKey": ""
-	},
-	{
-		"publicKey": "B62qpJFuKnXSPGJ39R4178BimCG3VCt7suFiUGqGwVjjXjoFu1FVGtE",
-		"privateKey": ""
-	}
+	"B62qn4YH7SJGDhiqQVDFAPZn8gi4YuF13cjeTMvPGnjhFbAVv75viCZ",
+	"B62qjrxvAU6snUPwCTBjgLDrZPEodrWi4sd7bdY6mZwt7CY1bkajvEo",
+	"B62qianWPTzg1Tg3RDZoXFxo9Zy2ct9ijf9G2V7AGkUA8CUYY9oar4B",
+	"B62qom8yvQkeErXtvuJVia8jQ2eUBgZRXvQchVYNdqS3Xgg67hCZoem",
+	"B62qmoxMhWD3rYafA1DJ1eqxY3LiRDihaeSz7xKKDvuYZzc4E7DGu5X",
+	"B62qpJFuKnXSPGJ39R4178BimCG3VCt7suFiUGqGwVjjXjoFu1FVGtE"
 ]

@@ -20,7 +20,7 @@ async function getAnswers(req: CustomRequest, res: Response) {
 		return res.status(200).json(answers);
 	} catch (err) {
 		console.error("Error fetching answers: ", err);
-		return res.status(500).json({ message: "Internal Server Error" });
+		return res.status(500).json({ message: "Internal server error" });
 	}
 }
 
