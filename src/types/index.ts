@@ -29,6 +29,15 @@ export interface CustomRequest extends Request<ParamsDictionary, any, any, any> 
 	session: Session;
 }
 
+export interface ExamRequirement extends Document {
+	type: "twitterFollow" | "discordRole";
+	data: {
+		twitterHandle?: string;
+		discordServerId?: string;
+		discordRoleId?: string;
+	};
+}
+
 export interface ExamDocument extends Document {
 	creator: string;
 	title: string;
@@ -45,6 +54,7 @@ export interface ExamDocument extends Document {
 	contractAddress: string;
 	deployJobId: string;
 	passingScore: number;
+	requirements?: ExamRequirement[];
 }
 
 export interface QuestionDocument extends Document {
@@ -122,4 +132,16 @@ export interface PopulatedScoreDocument extends Omit<ScoreDocument, "user" | "ex
 	exam: {
 		title: string;
 	};
+}
+
+export interface SocialConnectionDocument extends Document {
+	user: string;
+	platform: "twitter" | "discord";
+	accountId: string;
+	displayName?: string;
+	accessToken: string;
+	refreshToken?: string;
+	expiresAt?: Date;
+	createdAt: Date;
+	updatedAt: Date;
 }

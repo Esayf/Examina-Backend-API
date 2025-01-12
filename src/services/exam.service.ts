@@ -1,11 +1,12 @@
-import { ExamDocument, QuestionInput, QuestionDocument, Answer, AnswerKey } from "../types";
-import Exam from "../models/exam.model";
-import Question from "../models/question.model";
-import participatedUserService from "./participatedUser.service";
-import answerService from "./answer.service";
-import { checkExamTimes, processQuestion } from "../helpers/helperFunctions";
-import scoreService from "./score.service";
+import { ExamDocument, QuestionInput, QuestionDocument, Answer, AnswerKey } from "@/types";
+import Exam from "@/models/exam.model";
+import Question from "@/models/question.model";
+import participatedUserService from "@/services/participatedUser.service";
+import answerService from "@/services/answer.service";
+import { checkExamTimes, processQuestion } from "@/helpers/helperFunctions";
+import scoreService from "@/services/score.service";
 import Joi from "joi";
+import { verifyExamRequirements } from "@/services/requirement.service";
 
 interface ExamResult {
 	status: number;
@@ -108,6 +109,15 @@ async function start(examId: string, userId: string): Promise<ExamResult> {
 			return {
 				status: 400,
 				message: examTimeCheck.message || "Invalid exam time",
+			};
+		}
+
+		// Add requirement check before participation check
+		const reqCheck = await verifyExamRequirements(exam, userId);
+		if (!reqCheck.success) {
+			return {
+				status: 403,
+				message: reqCheck.message || "Requirements not met",
 			};
 		}
 
