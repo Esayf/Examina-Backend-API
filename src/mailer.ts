@@ -41,7 +41,7 @@ async function sendExamResultEmail(
 		}
 
 		const score = ((correctAnswers / totalQuestions) * 100).toFixed(2);
-		const templateContent = isWinner ? winnerHtmlContent : regularHtmlContent;
+		const templateContent = isWinner && rewardAmount ? winnerHtmlContent : regularHtmlContent;
 
 		let htmlBody = templateContent
 			.replace("{{examName}}", examName)
