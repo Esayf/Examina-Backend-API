@@ -59,8 +59,7 @@ app.use(
 			"https://choz.io",
 			"https://choz.io/",
 			"https://examina-mono-git-pallad-support-choz-75393376.vercel.app/",
-			"https://examina-mono-git-pallad-support-choz-75393376.vercel.app"
-
+			"https://examina-mono-git-pallad-support-choz-75393376.vercel.app",
 		],
 		credentials: true,
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -117,6 +116,8 @@ if (process.env.NODE_ENV === "development") {
 // Apply session middleware
 app.use(session(sessionConfig));
 
+// Serve static files from the public directory
+app.use(express.static("public"));
 // Add session debug middleware
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
 	const oldEnd = res.end;
