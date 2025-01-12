@@ -53,7 +53,10 @@ async function sendExamResultEmail(
 			htmlBody = htmlBody.replace("{{rewardAmount}}", formatMina(rewardAmount).toString());
 		}
 
-		const subject = isWinner ? "🎉 Congratulations! You're a Choz Quiz Winner! 🏆" : "Your Quiz Results from Choz!";
+		const subject =
+			isWinner && rewardAmount
+				? "🎉 Congratulations! You're a Choz Quiz Winner! 🏆"
+				: "Your Quiz Results from Choz!";
 
 		const info = await transporter.sendMail({
 			from: '"Choz Support" <info@choz.io>',
