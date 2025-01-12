@@ -58,6 +58,9 @@ app.use(
 			"http://localhost:8080",
 			"https://choz.io",
 			"https://choz.io/",
+			"https://examina-mono-git-pallad-support-choz-75393376.vercel.app/",
+			"https://examina-mono-git-pallad-support-choz-75393376.vercel.app"
+
 		],
 		credentials: true,
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
