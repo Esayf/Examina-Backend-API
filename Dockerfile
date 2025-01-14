@@ -5,13 +5,16 @@ FROM oven/bun:1
 WORKDIR /usr/src/app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json bun.lockb ./
+
+# install build-essential required for some packages (redis-memory-server)
+RUN apt-get update && apt-get install -y build-essential
 
 # Install dependencies
-RUN bun install
+RUN bun install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY . .
 
 # Expose the application port
-EXPOSE 3000
+EXPOSE 8000
