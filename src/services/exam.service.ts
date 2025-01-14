@@ -46,6 +46,15 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 			contractAddress: Joi.string().optional(),
 		});
 		const { error } = schema.validate({
+			title: examData.title,
+			creator: examData.creator,
+			description: examData.description,
+			startDate: examData.startDate,
+			questions: questions,
+			duration: examData.duration,
+			rootHash: examData.rootHash,
+			secretKey: examData.secretKey,
+			questionCount: examData.questionCount,
 			isRewarded: examData.isRewarded,
 			rewardPerWinner: examData.rewardPerWinner,
 			passingScore: examData.passingScore,
