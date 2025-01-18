@@ -1,12 +1,12 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import mongoose from "mongoose";
-import Question from "../models/question.model";
-import Exam from "../models/exam.model";
-import User from "../models/user.model";
-import { CustomRequest } from "../types";
-import questionController from "../controllers/question.controller";
+import Question from "@/models/question.model";
+import Exam from "@/models/exam.model";
+import User from "@/models/user.model";
+import { CustomRequest } from "@/typings";
+import questionController from "@/controllers/question.controller";
 import { mockSession, createMockResponse, createMockRequest } from "./setup";
-import ParticipatedUser from "../models/participatedUser.model";
+import ParticipatedUser from "@/models/participatedUser.model";
 
 describe("Question Controller Tests", () => {
 	let mockUser: any;
@@ -77,49 +77,45 @@ describe("Question Controller Tests", () => {
 	});
 
 	test("should return shuffled questions with sequential numbers", async () => {
-		try {
-			// Create participated user record
-			await ParticipatedUser.create({
-				user: mockUser._id,
-				exam: mockExam._id,
-				isFinished: false,
-			});
+		// Create participated user record
+		await ParticipatedUser.create({
+			user: mockUser.id,
+			nickname: `testuser_${Date.now()}`,
+			exam: mockExam.id,
+			isFinished: false,
+		});
 
-			const mockRequest = createMockRequest(
-				{}, // body
-				{ examId: mockExam._id.toString() }, // params
-				mockUser // user
-			) as CustomRequest;
+		const mockRequest = createMockRequest(
+			{}, // body
+			{ examId: mockExam._id.toString() }, // params
+			mockUser // user
+		) as CustomRequest;
 
-			const mockResponse = createMockResponse();
-			await questionController.getExamQuestions(mockRequest, mockResponse);
+		const mockResponse = createMockResponse();
+		await questionController.getQuestionsByExam(mockRequest, mockResponse);
 
-			const questions = mockResponse.body;
+		const questions = mockResponse.body;
 
-			// Verify response structure
-			expect(questions).toHaveLength(3);
+		// Verify response structure
+		expect(questions).toHaveLength(3);
 
-			// Verify sequential numbers
-			const numbers = questions.map((q: any) => q.number);
-			expect(numbers).toEqual([1, 2, 3]);
+		// Verify sequential numbers
+		const numbers = questions.map((q: any) => q.number);
+		expect(numbers).toEqual([1, 2, 3]);
 
-			// Verify shuffle
-			let foundDifferentOrder = false;
-			for (let i = 0; i < 5; i++) {
-				await questionController.getExamQuestions(mockRequest, mockResponse);
-				const newTexts = mockResponse.body.map((q: any) => q.text);
-				const originalTexts = mockQuestions.map((q) => q.text);
+		// Verify shuffle
+		let foundDifferentOrder = false;
+		for (let i = 0; i < 5; i++) {
+			await questionController.getQuestionsByExam(mockRequest, mockResponse);
+			const newTexts = mockResponse.body.map((q: any) => q.text);
+			const originalTexts = mockQuestions.map((q) => q.text);
 
-				if (JSON.stringify(originalTexts) !== JSON.stringify(newTexts)) {
-					foundDifferentOrder = true;
-					break;
-				}
+			if (JSON.stringify(originalTexts) !== JSON.stringify(newTexts)) {
+				foundDifferentOrder = true;
+				break;
 			}
-
-			expect(foundDifferentOrder).toBe(true);
-		} catch (error) {
-			console.error("Error in question test:", error);
-			throw error;
 		}
+
+		expect(foundDifferentOrder).toBe(true);
 	});
 });

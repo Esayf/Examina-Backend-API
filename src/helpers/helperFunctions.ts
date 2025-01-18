@@ -1,8 +1,7 @@
 import crypto from "crypto";
-import { ExamDocument, Answer, ProcessedAnswer, AnswerKey } from "../types";
+import { ExamDocument, Answer, ProcessedAnswer } from "@/typings";
 import axios from "axios";
 import Client from "mina-signer";
-import * as workerAPI from "../zkcloudworker/workerAPI";
 import { v4 as uuidv4 } from "uuid";
 
 const signerClient = new Client({ network: "testnet" });
@@ -42,6 +41,7 @@ export default function verifySignature(
 		signature: parsedSignature,
 	};
 
+	// console.log("wallet address: ", verifyBody.publicKey);
 	console.log("Data: ", verifyBody.data);
 	console.log("Parsed Signature: ", verifyBody.signature);
 

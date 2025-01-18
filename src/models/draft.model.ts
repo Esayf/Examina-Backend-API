@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { DraftDocument } from "../types";
+import { DraftDocument } from "@/typings";
 
 const DraftSchema = new Schema(
 	{

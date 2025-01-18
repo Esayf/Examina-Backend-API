@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach } from "bun:test";
 import mongoose from "mongoose";
 import Draft from "../models/draft.model";
 import User from "../models/user.model";
-import { CustomRequest, DraftDocument } from "../types";
+import { CustomRequest, DraftDocument } from "@/typings";
 import draftController from "../controllers/draft.controller";
 import { mockSession, createMockResponse, expectStatus, expectJson } from "./setup";
 import { validateRequest } from "../middleware/validators";

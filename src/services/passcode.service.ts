@@ -1,6 +1,5 @@
-import { PasscodeDocument } from "../types";
+import { PasscodeDocument } from "@/typings";
 import Passcode from "@/models/passcode.model";
-import * as workerAPI from "../zkcloudworker/workerAPI";
 
 async function create(examId: string, passcode: string): Promise<PasscodeDocument> {
 	try {
@@ -9,8 +8,8 @@ async function create(examId: string, passcode: string): Promise<PasscodeDocumen
 			passcode: passcode,
 		});
 		return await newPasscode.save();
-	} catch (error) {
-		console.error("Error saving passcode:", error);
+	} catch (err) {
+		console.error("Error saving passcode: ", err);
 		throw new Error("Error saving passcode");
 	}
 }
@@ -19,8 +18,8 @@ async function get(passcode: string): Promise<PasscodeDocument | null> {
 	try {
 		const passcodeObject = await Passcode.findOne({ passcode: passcode });
 		return passcodeObject;
-	} catch (error) {
-		console.error("Error getting passcode:", error);
+	} catch (err) {
+		console.error("Error getting passcode: ", err);
 		throw new Error("Error getting passcode");
 	}
 }
@@ -36,8 +35,8 @@ async function validate(passcode: string): Promise<boolean> {
 		passcodeObject.isUsed = true;
 		await passcodeObject.save();
 		return true;
-	} catch (error) {
-		console.error("Error during passcode validation:", error);
+	} catch (err) {
+		console.error("Error during passcode validation: ", err);
 		throw new Error("Error during passcode validation");
 	}
 }

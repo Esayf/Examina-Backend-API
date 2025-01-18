@@ -38,9 +38,10 @@ router.post("/generateExamLinks", ensureAuthenticated, examController.generateLi
  * @return {object} 401 - Unauthorized
  * @return {object} 500 - Server error
  */
-router.get("/myExams", ensureAuthenticated, examController.getAllExams);
+router.get("/myExams", ensureAuthenticated, examController.getAllExamsByUser);
 
-router.get("/:id", examController.getExamById);
+router.get("/:id", ensureAuthenticated, examController.getExamById);
+router.get("/:id/details", ensureAuthenticated, examController.getExamDetails);
 router.post("/startExam", ensureAuthenticated, examController.startExam);
 router.post("/finishExam", ensureAuthenticated, validateFinishExamBody, examController.finishExam);
 

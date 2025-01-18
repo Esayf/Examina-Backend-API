@@ -3,7 +3,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { Session, SessionData } from "express-session";
 import { expect } from "bun:test";
-import { CustomRequest } from "@/types";
+import { CustomRequest } from "@/typings";
 
 let mongoServer: MongoMemoryServer;
 

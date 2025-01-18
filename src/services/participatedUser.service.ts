@@ -1,7 +1,7 @@
-import { ParticipatedUserDocument } from "../types";
-import ParticipatedUser from "../models/participatedUser.model";
-import User from "../models/user.model";
-import Exam from "../models/exam.model";
+import { ParticipatedUserDocument } from "@/typings";
+import ParticipatedUser from "@/models/participatedUser.model";
+import User from "@/models/user.model";
+import Exam from "@/models/exam.model";
 import { uniqueNamesGenerator, Config, adjectives, colors, animals } from "unique-names-generator";
 
 interface ParticipationResult {
@@ -22,7 +22,7 @@ async function get(userId: string, examId: string): Promise<ParticipatedUserDocu
 		});
 		return userParticipation;
 	} catch (err) {
-		console.error("Error fetching participation:", err);
+		console.error("Error fetching participation: ", err);
 		throw new Error("Error fetching participation");
 	}
 }
@@ -45,21 +45,23 @@ async function getByWalletAddressAndQuizContractAddress(
 		});
 		return userParticipation;
 	} catch (err) {
-		console.error("Error fetching participation:", err);
+		console.error("Error fetching participation: ", err);
 		throw new Error("Error fetching participation");
 	}
 }
 
-async function create(userId: string, examId: string): Promise<void> {
+async function create(userId: string, examId: string, nickname: string): Promise<void> {
 	try {
 		const newParticipatedUser = new ParticipatedUser({
 			user: userId,
 			exam: examId,
 			isFinished: false,
+			nickname: nickname,
 		});
-		await newParticipatedUser.save();
+		const participated = await newParticipatedUser.save();
+		// console.log("PARTICIPATED: ", participated);
 	} catch (err) {
-		console.error("Error creating participation:", err);
+		console.error("Error creating participation: ", err);
 		throw new Error("Error creating participation");
 	}
 }
@@ -67,6 +69,7 @@ async function create(userId: string, examId: string): Promise<void> {
 async function checkParticipation(
 	userId: string,
 	examId: string,
+	nickname: string,
 	options: ParticipationOptions
 ): Promise<ParticipationResult> {
 	try {
@@ -74,7 +77,7 @@ async function checkParticipation(
 
 		if (!participatedUser) {
 			if (options.createIfNotExist) {
-				await create(userId, examId);
+				await create(userId, examId, nickname);
 				return {
 					success: true,
 					status: 201,
@@ -84,7 +87,7 @@ async function checkParticipation(
 			return {
 				success: false,
 				status: 404,
-				message: "User has not participated in the exam",
+				message: "User have not participated in the exam",
 			};
 		}
 
@@ -111,6 +114,7 @@ async function updateParticipationStatus(userId: string, examId: string, isWinne
 			throw new Error(`Participation not found for userId: ${userId} and examId: ${examId}`);
 		}
 		participatedUser.isFinished = true;
+		participatedUser.finishTime = new Date();
 		participatedUser.isWinner = isWinner;
 		await participatedUser.save();
 	} catch (err) {
@@ -138,7 +142,7 @@ async function updateParticipatedUserRewardStatusByWalletAndContractAddress(
 		participatedUser.rewardSentDate = rewardSentDate;
 		await participatedUser.save();
 	} catch (err) {
-		console.error("Error updating participation reward status:", err);
+		console.error("Error updating participation reward status: ", err);
 		throw new Error("Error updating participation reward status");
 	}
 }

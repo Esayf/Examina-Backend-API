@@ -1,6 +1,6 @@
-import { QuestionDocument, QuestionResponseDocument } from "../types";
-import Question from "../models/question.model";
-import { checkExamTimes } from "../helpers/helperFunctions";
+import { QuestionDocument, QuestionResponseDocument } from "@/typings";
+import Question from "@/models/question.model";
+import { checkExamTimes } from "@/helpers/helperFunctions";
 import participatedUserService from "./participatedUser.service";
 import examService from "./exam.service";
 
@@ -14,7 +14,7 @@ async function getById(questionId: string): Promise<QuestionDocument | null> {
 	try {
 		return await Question.findById(questionId);
 	} catch (error) {
-		console.error("Error fetching question:", error);
+		console.error("Error fetching question: ", error);
 		throw new Error("Error fetching question");
 	}
 }
@@ -31,7 +31,7 @@ async function getAllByExam(examId: string, userId: string): Promise<QuestionRes
 			return { status: 400, message: examTimeCheck.message };
 		}
 
-		const participationResult = await participatedUserService.checkParticipation(userId, examId, {
+		const participationResult = await participatedUserService.checkParticipation(userId, examId, "", {
 			createIfNotExist: false,
 		});
 
@@ -54,7 +54,7 @@ async function getAllByExam(examId: string, userId: string): Promise<QuestionRes
 
 		return { status: 200, data: shuffledQuestions };
 	} catch (err) {
-		console.error("Error fetching exam questions:", err);
+		console.error("Error fetching exam questions: ", err);
 		throw new Error("Error fetching exam questions");
 	}
 }
