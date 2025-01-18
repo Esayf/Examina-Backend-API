@@ -1,4 +1,4 @@
-import { Answer, AnswerKey, ScoreDocument } from "../types";
+import { Answer, AnswerKey, ScoreDocument } from "@/typings";
 import Score from "../models/score.model";
 import * as workerAPI from "../zkcloudworker/workerAPI";
 

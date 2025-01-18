@@ -1,4 +1,4 @@
-import { PasscodeDocument } from "../types";
+import { PasscodeDocument } from "@/typings";
 import Passcode from "@/models/passcode.model";
 
 async function create(examId: string, passcode: string): Promise<PasscodeDocument> {

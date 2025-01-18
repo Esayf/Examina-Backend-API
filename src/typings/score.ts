@@ -7,6 +7,7 @@ export interface ScoreDocument extends Document {
 	totalQuestions: number;
 	correctAnswers: number;
 	createdAt: Date;
+	isWinner: boolean;
 }
 
 export interface PopulatedScoreDocument extends Omit<ScoreDocument, "user" | "exam"> {

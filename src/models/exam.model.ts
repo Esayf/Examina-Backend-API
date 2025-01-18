@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { ExamDocument } from "../types";
+import { ExamDocument } from "@/typings";
 
 /**
  * @typedef {object} Exam

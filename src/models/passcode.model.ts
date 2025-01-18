@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { PasscodeDocument } from "../types";
+import { PasscodeDocument } from "@/typings";
 
 const PasscodeSchema = new Schema(
 	{

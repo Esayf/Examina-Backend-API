@@ -1,4 +1,4 @@
-import { AnswerDocument, Answer } from "../types";
+import { AnswerDocument, Answer } from "@/typings";
 import AnswerModel from "../models/answer.model";
 import { generateAnswerArray } from "../helpers/helperFunctions";
 

@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { CustomRequest } from "../types";
+import { CustomRequest } from "@/typings";
 import draftService from "../services/draft.service";
 
 async function createDraft(req: CustomRequest, res: Response) {

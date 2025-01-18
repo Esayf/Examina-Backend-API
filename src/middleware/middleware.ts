@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
-import { CustomRequest } from "../types";
+import { CustomRequest } from "@/typings";
 import { finishExamSchema } from "../validators/examValidators";
 import verifySignature from "../helpers/helperFunctions";
 import { Schema } from "joi";

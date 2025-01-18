@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { CustomRequest } from "../types";
+import { CustomRequest } from "@/typings";
 import scoreService from "../services/score.service";
 
 async function getAllScores(req: CustomRequest, res: Response) {

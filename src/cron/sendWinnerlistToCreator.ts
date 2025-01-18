@@ -1,7 +1,7 @@
-import examService, { Winner } from "@/services/exam.service";
+import examService from "@/services/exam.service";
 import { sendWinnerlist } from "@/mailer";
 import User from "@/models/user.model";
-import { ExtendedExamDocument } from "@/types";
+import { ExtendedExamDocument, Winner } from "@/typings";
 
 export type WinnerlistMailData = {
 	examId: string | undefined;

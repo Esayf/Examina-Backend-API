@@ -16,5 +16,3 @@ declare module "bun" {
 		ADMIN_PUBLIC_KEY: string;
 	}
 }
-
-export {};

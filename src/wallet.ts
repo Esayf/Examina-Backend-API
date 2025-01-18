@@ -9,9 +9,9 @@ import {
 	initWinnerMapAddOneWinnerAndPayout,
 	initWinnerMapAddTwoWinnersAndPayout,
 } from "./zkcloudworker/workerAPI";
-import { ParticipatedUserDocument } from "./types";
-import User from "./models/user.model";
-import participatedUserService from "./services/participatedUser.service";
+import { ParticipatedUserDocument } from "@/typings";
+import User from "@/models/user.model";
+import participatedUserService from "@/services/participatedUser.service";
 dotenv.config();
 
 const devnetTestnet = Mina.Network("https://api.minascan.io/node/devnet/v1/graphql");

@@ -1,5 +1,5 @@
 import Draft from "../models/draft.model";
-import { DraftDocument } from "../types";
+import { DraftDocument } from "@/typings";
 
 async function create(draftData: Partial<DraftDocument>): Promise<DraftDocument> {
 	try {

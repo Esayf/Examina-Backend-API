@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { ExamDocument, Answer, ProcessedAnswer } from "../types";
+import { ExamDocument, Answer, ProcessedAnswer } from "@/typings";
 import axios from "axios";
 import Client from "mina-signer";
 import { v4 as uuidv4 } from "uuid";

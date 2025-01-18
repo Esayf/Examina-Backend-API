@@ -1,4 +1,14 @@
-import { ExamDocument, QuestionInput, QuestionDocument, Answer, AnswerKey, ExtendedExamDocument } from "../types";
+import {
+	ExamDocument,
+	QuestionInput,
+	QuestionDocument,
+	Answer,
+	AnswerKey,
+	ExtendedExamDocument,
+	Winner,
+	Participant,
+	Leaderboard,
+} from "@/typings";
 import Exam from "../models/exam.model";
 import Question from "../models/question.model";
 import ParticipatedUser from "@/models/participatedUser.model";
@@ -9,6 +19,7 @@ import scoreService from "./score.service";
 import Joi from "joi";
 import { sendGeneratedExamLink } from "@/mailer";
 import passcodeService from "./passcode.service";
+import mongoose from "mongoose";
 
 interface ExamResult {
 	status: number;
@@ -106,33 +117,14 @@ async function getById(examId: string): Promise<ExamDocument | null> {
 	}
 }
 
-export type Winner = {
-	walletAddress: string;
-	score: number;
-	finishTime: Date;
-};
-
-export type Participant = {
-	userId: string;
-	nickname: string; // TODO: Will be nicknames after random nickname implementation. For now username it is.
-	walletAddress: string;
-	score?: string;
-	finishTime: Date;
-};
-
-type Leaderboard = {
-	nickname: string;
-	score: string | any;
-	finishTime: Date;
-}[];
-
 async function getDetails(examId: string): Promise<ExtendedExamDocument | null> {
 	try {
 		let exam: ExtendedExamDocument | null = await Exam.findById(examId);
 		if (exam && exam.isCompleted) {
 			let examObject = exam.toObject();
+			console.log("EXAM OBJECT: ", examObject);
 			if (exam.isRewarded) {
-				const winnerlist: Winner[] = await getWinnerlist(exam._id);
+				const winnerlist: Winner[] = await getWinnerlist(exam.id);
 				console.log("WINNERLIST: ", winnerlist);
 				examObject.winnerlist = winnerlist;
 			}
@@ -283,81 +275,81 @@ async function getWinnerlist(examId: string): Promise<
 	}[]
 > {
 	const pipeline: any[] = [
-		// 1. Sınav ve kazananları filtrele
+		// 1. Convert examId string to ObjectId and filter winners
 		{
 			$match: {
-				exam: examId,
+				exam: new mongoose.Types.ObjectId(examId),
 				isFinished: true,
 				isWinner: true,
 			},
 		},
-		// 2. Kullanıcı bilgilerini eklemek için users koleksiyonunu ilişkilendir
+		// 2. Lookup users with proper ObjectId handling
 		{
 			$lookup: {
-				from: "users", // User koleksiyonu
-				localField: "user", // ParticipatedUser'daki user alanı
-				foreignField: "_id", // User'daki _id alanı
-				as: "userDetails", // Sonuç alanı
+				from: "users",
+				let: { userId: "$user" },
+				pipeline: [
+					{
+						$match: {
+							$expr: { $eq: ["$_id", "$$userId"] },
+						},
+					},
+				],
+				as: "userDetails",
 			},
 		},
 		{
-			$unwind: "$userDetails", // userDetails dizisini düzleştir
+			$unwind: "$userDetails",
 		},
-		// 3. Score koleksiyonundan ilgili skoru ekle
+		// 3. Lookup scores with proper ObjectId handling
 		{
 			$lookup: {
 				from: "scores",
-				let: { userId: "$user", examId: "$exam" }, // Kullanıcı ve sınav referansı
+				let: { userId: "$user", examId: "$exam" },
 				pipeline: [
 					{
 						$match: {
 							$expr: {
-								$and: [
-									{ $eq: ["$user", "$$userId"] }, // Score.user == ParticipatedUser.user
-									{ $eq: ["$exam", "$$examId"] }, // Score.exam == ParticipatedUser.exam
-								],
+								$and: [{ $eq: ["$user", "$$userId"] }, { $eq: ["$exam", "$$examId"] }],
 							},
 						},
 					},
-					{ $project: { _id: 0, score: 1 } }, // Sadece score alanını seç
 				],
 				as: "scoreDetails",
 			},
 		},
 		{
-			$unwind: { path: "$scoreDetails", preserveNullAndEmptyArrays: true }, // scoreDetails boş olabilir
+			$unwind: {
+				path: "$scoreDetails",
+				preserveNullAndEmptyArrays: true,
+			},
 		},
-		// 4. Gereksiz kullanıcı detaylarını filtrele
+		// 4. Filter for users with wallet addresses
 		{
 			$match: {
-				"userDetails.walletAddress": { $ne: null }, // Cüzdan adresi olmayanları hariç tut
+				"userDetails.walletAddress": { $exists: true, $ne: null },
 			},
 		},
-		// 5. Sonuçları seç
+		// 5. Project final results
 		{
 			$project: {
-				walletAddress: "$userDetails.walletAddress",
-				score: { $ifNull: ["$scoreDetails.score", 0] }, // Skor yoksa 0
-				finishTime: 1, // FinishTime ParticipatedUser'dan gelir
 				_id: 0,
+				walletAddress: "$userDetails.walletAddress",
+				score: { $ifNull: ["$scoreDetails.score", 0] },
+				finishTime: 1,
 			},
 		},
-		// 6. Skora göre azalan, finishTime'a göre artan sırala
+		// 6. Sort by score and finish time
 		{
 			$sort: {
-				score: -1, // Skor büyükten küçüğe
-				finishTime: 1, // Aynı skorlar için finishTime küçükten büyüğe
+				score: -1,
+				finishTime: 1,
 			},
 		},
 	];
 
-	// 7. Pipeline'ı çalıştır ve sonuçları döndür
 	const result = await ParticipatedUser.aggregate(pipeline);
-	return result.map((doc: Winner) => ({
-		walletAddress: doc.walletAddress,
-		score: doc.score,
-		finishTime: doc.finishTime,
-	}));
+	return result;
 }
 
 async function getParticipants(examId: string): Promise<Participant[]> {
@@ -437,12 +429,11 @@ async function getParticipants(examId: string): Promise<Participant[]> {
 }
 
 function getLeaderboard(participants: Participant[]): Leaderboard {
-	const leaderboard: Leaderboard = participants.map((participant) => ({
-		nickname: participant.nickname,
-		score: participant.score,
-		finishTime: participant.finishTime,
+	return participants.slice(0, 10).map(({ nickname, score, finishTime }) => ({
+		nickname,
+		score,
+		finishTime,
 	}));
-	return leaderboard.slice(0, 10);
 }
 
 export default {

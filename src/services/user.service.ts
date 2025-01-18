@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { UserDocument, SessionUser } from "../types";
+import { UserDocument, SessionUser } from "@/typings";
 import User from "../models/user.model";
 import sessionHelper from "../helpers/sessionHelper";
 

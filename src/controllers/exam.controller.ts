@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { CustomRequest, QuestionInput } from "../types";
+import { CustomRequest, QuestionInput } from "@/typings";
 import examService from "../services/exam.service";
 import participatedUserService from "@/services/participatedUser.service";
 

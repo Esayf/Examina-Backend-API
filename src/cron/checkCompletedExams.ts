@@ -1,5 +1,5 @@
 import Exam from "../models/exam.model";
-import { ExamDocument, ExtendedExamDocument } from "../types";
+import { ExamDocument, ExtendedExamDocument } from "@/typings";
 import sendWinnerlistToCreator from "./sendWinnerlistToCreator";
 
 async function checkCompletedExams() {
@@ -12,7 +12,7 @@ async function checkCompletedExams() {
 			return;
 		}
 
-		let completedExams = exams.filter((exam: ExamDocument) => {
+		const completedExams: ExamDocument[] = exams.filter((exam: ExamDocument) => {
 			const startDate = new Date(exam.startDate);
 			const endDate = new Date(startDate.getTime() + exam.duration * 60 * 1000);
 			console.log(`Exam: ${exam.title}, EndDate: ${endDate}, Now: ${now}`);
@@ -24,20 +24,17 @@ async function checkCompletedExams() {
 		if (completedExams.length === 0) {
 			console.log("No completed exams found.");
 		} else {
-			for (const exam of completedExams) {
-				await new Promise((resolve) => setTimeout(resolve, 500));
-				console.log("Delayed for 1/2 second.");
-
-				exam.isCompleted = true;
-				await exam.save();
-			}
+			await Exam.updateMany(
+				{ _id: { $in: completedExams.map((exam) => exam._id) } },
+				{ $set: { isCompleted: true } }
+			);
 		}
 
-		completedExams = completedExams.filter((exam: ExamDocument) => {
+		const winnerlistRequestedExams: ExamDocument[] = completedExams.filter((exam: ExamDocument) => {
 			return exam.isWinnerlistRequested;
 		});
 
-		await sendWinnerlistToCreator(completedExams as ExtendedExamDocument[]);
+		await sendWinnerlistToCreator(winnerlistRequestedExams as ExtendedExamDocument[]);
 	} catch (error) {
 		console.error("Error publishing exam answers: ", error);
 	}

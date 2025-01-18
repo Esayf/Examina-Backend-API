@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { CustomRequest } from "../types";
+import { CustomRequest } from "@/typings";
 import questionService from "../services/question.service";
 
 async function getQuestionById(req: CustomRequest, res: Response) {

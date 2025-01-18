@@ -1,7 +1,7 @@
-import { ParticipatedUserDocument } from "../types";
-import ParticipatedUser from "../models/participatedUser.model";
-import User from "../models/user.model";
-import Exam from "../models/exam.model";
+import { ParticipatedUserDocument } from "@/typings";
+import ParticipatedUser from "@/models/participatedUser.model";
+import User from "@/models/user.model";
+import Exam from "@/models/exam.model";
 import { uniqueNamesGenerator, Config, adjectives, colors, animals } from "unique-names-generator";
 
 interface ParticipationResult {
@@ -87,7 +87,7 @@ async function checkParticipation(
 			return {
 				success: false,
 				status: 404,
-				message: "User does not have participated in the exam",
+				message: "User have not participated in the exam",
 			};
 		}
 

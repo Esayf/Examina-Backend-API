@@ -1,6 +1,6 @@
-import { QuestionDocument, QuestionResponseDocument } from "../types";
-import Question from "../models/question.model";
-import { checkExamTimes } from "../helpers/helperFunctions";
+import { QuestionDocument, QuestionResponseDocument } from "@/typings";
+import Question from "@/models/question.model";
+import { checkExamTimes } from "@/helpers/helperFunctions";
 import participatedUserService from "./participatedUser.service";
 import examService from "./exam.service";
 
@@ -31,7 +31,7 @@ async function getAllByExam(examId: string, userId: string): Promise<QuestionRes
 			return { status: 400, message: examTimeCheck.message };
 		}
 
-		const participationResult = await participatedUserService.checkParticipation(userId, examId, {
+		const participationResult = await participatedUserService.checkParticipation(userId, examId, "", {
 			createIfNotExist: false,
 		});
 
