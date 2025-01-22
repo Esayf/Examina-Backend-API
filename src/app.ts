@@ -57,13 +57,20 @@ app.use(
 			"http://localhost:3000",
 			"http://localhost:3001",
 			"http://localhost:8080",
+			"http://localhost:8000",
 			"https://choz.io",
 			"https://choz.io/",
 		],
 		credentials: true,
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-		exposedHeaders: ["set-cookie"],
+		allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Set-Cookie", "Access-Control-Allow-Credentials"],
+		exposedHeaders: [
+			"Set-Cookie",
+			"Authorization",
+			"*",
+			"Access-Control-Allow-Origin",
+			"Access-Control-Allow-Credentials",
+		],
 	})
 );
 

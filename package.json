@@ -41,7 +41,7 @@
 		"unique-names-generator": "^4.7.1",
 		"uuid": "^11.0.3",
 		"zkcloudworker": "^0.18.29",
-		"zod": "^3.23.8"
+		"zod": "^3.24.1"
 	},
 	"devDependencies": {
 		"@types/bull": "^4.10.0",

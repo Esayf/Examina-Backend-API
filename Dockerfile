@@ -11,7 +11,7 @@ COPY package.json bun.lockb ./
 RUN apt-get update && apt-get install -y build-essential
 
 # Install dependencies
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Copy the rest of the application code
 COPY . .

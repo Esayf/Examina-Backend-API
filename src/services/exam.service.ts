@@ -29,6 +29,15 @@ interface ExamResult {
 async function create(examData: Partial<ExamDocument>, questions: Array<QuestionInput>): Promise<ExamDocument> {
 	try {
 		const schema = Joi.object({
+			title: Joi.string().required(),
+			creator: Joi.string().required(),
+			description: Joi.string().required(),
+			startDate: Joi.date().required(),
+			duration: Joi.number().positive().required(),
+			rootHash: Joi.string().required(),
+			secretKey: Joi.string().required(),
+			questions: Joi.array().required(),
+			questionCount: Joi.number().positive().required(),
 			isRewarded: Joi.boolean(),
 			rewardPerWinner: Joi.when("isRewarded", {
 				is: true,
