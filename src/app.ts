@@ -57,6 +57,7 @@ const allowedOrigins = [
 	"http://localhost:8000",
 	"https://choz.io",
 	"https://choz.io/", // You can often omit trailing slash, but included here if needed
+	"https://www.choz.io",
 ];
 
 // 2. Regex to match any subdomain ending in .vercel.app
@@ -67,6 +68,7 @@ app.use(
 	cors({
 		origin: (origin, callback) => {
 			// a) If there's no origin (e.g. server-to-server request or local dev tool), allow it
+			console.log("Origin:", origin);
 			if (!origin) {
 				return callback(null, true);
 			}
