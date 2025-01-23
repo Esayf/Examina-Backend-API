@@ -53,17 +53,23 @@ if (process.env.NODE_ENV === "development") {
 // CORS setup - must come BEFORE session middleware
 app.use(
 	cors({
-		origin: [
-			"http://localhost:3000",
-			"http://localhost:3001",
-			"http://localhost:8080",
-			"http://localhost:8000",
-			"https://choz.io",
-			"https://choz.io/",
-		],
+		origin: "*",
 		credentials: true,
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Set-Cookie", "Access-Control-Allow-Credentials"],
+		allowedHeaders: [
+			"Content-Type",
+			"Authorization",
+			"Cookie",
+			"Set-Cookie",
+			"Access-Control-Allow-Credentials",
+			"Origin",
+			"X-Requested-With",
+			"Accept",
+			"X-PINGOTHER",
+			"Content-Range",
+			"Range",
+			"*",
+		],
 		exposedHeaders: [
 			"Set-Cookie",
 			"Authorization",
