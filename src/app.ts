@@ -49,27 +49,49 @@ app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV === "development") {
 	app.use(morgan("dev"));
 }
+// Explicitly allowed origins (local dev, production)
+const allowedOrigins = [
+	"http://localhost:3000",
+	"http://localhost:3001",
+	"http://localhost:8080",
+	"http://localhost:8000",
+	"https://choz.io",
+	"https://choz.io/", // If you really need the slash version
+];
 
-// CORS setup - must come BEFORE session middleware
+// Allow anything ending in ".vercel.app"
+const vercelRegex = /\.vercel\.app$/;
+
+// CORS middleware
 app.use(
 	cors({
-		origin: "*",
+		origin: (origin, callback) => {
+			if (!origin) {
+				// If no Origin header (e.g., server-to-server request), allow or block as needed
+				return callback(null, true);
+			}
+
+			if (allowedOrigins.includes(origin)) {
+				// If it's in your allowedOrigins array
+				return callback(null, true);
+			}
+
+			try {
+				// Otherwise, check if hostname ends with .vercel.app
+				const hostname = new URL(origin).hostname;
+				if (vercelRegex.test(hostname)) {
+					return callback(null, true);
+				}
+			} catch (err) {
+				return callback(new Error("Not allowed by CORS"), false);
+			}
+
+			// If no match, block the request
+			return callback(new Error("Not allowed by CORS"), false);
+		},
 		credentials: true,
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-		allowedHeaders: [
-			"Content-Type",
-			"Authorization",
-			"Cookie",
-			"Set-Cookie",
-			"Access-Control-Allow-Credentials",
-			"Origin",
-			"X-Requested-With",
-			"Accept",
-			"X-PINGOTHER",
-			"Content-Range",
-			"Range",
-			"*",
-		],
+		allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Set-Cookie", "Access-Control-Allow-Credentials"],
 		exposedHeaders: [
 			"Set-Cookie",
 			"Authorization",
