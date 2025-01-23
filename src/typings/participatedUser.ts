@@ -1,5 +1,5 @@
 import { Document } from "mongoose";
-import { ExamDocument, UserDocument } from "./index";
+import { ExamDocument, UserDocument } from "./sharedTypes";
 
 export interface ParticipatedUserWithPopulatedUser extends Document {
 	user: UserDocument;

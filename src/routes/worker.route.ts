@@ -6,14 +6,14 @@ import {
 	calculateScore,
 	initWinnerMapAddTwoWinnersAndPayout,
 } from "../controllers/worker.controller";
-import { ensureAuthenticated } from "../middleware/middleware";
+import { ensureAdmin, ensureAuthenticated } from "../middleware/middleware";
 
 const router = express.Router();
 
-router.post("/initWinnerMap", initWinnerMap);
-router.post("/addWinner", addWinner);
-router.post("/payoutWinners", payoutWinners);
-router.post("/calculateScore", calculateScore);
-router.post("/initWinnerMapAddTwoWinnersAndPayout", initWinnerMapAddTwoWinnersAndPayout);
+router.post("/initWinnerMap", ensureAdmin, initWinnerMap);
+router.post("/addWinner", ensureAdmin, addWinner);
+router.post("/payoutWinners", ensureAdmin, payoutWinners);
+router.post("/calculateScore", ensureAdmin, calculateScore);
+router.post("/initWinnerMapAddTwoWinnersAndPayout", ensureAdmin, initWinnerMapAddTwoWinnersAndPayout);
 
 export default router;

@@ -1,6 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { ExamDocument } from "../types";
-import Counter from "./counter.model";
+import { ExamDocument } from "@/typings";
 
 /**
  * @typedef {object} Exam
@@ -72,6 +71,14 @@ const ExamSchema = new Schema(
 		},
 		deployJobId: {
 			type: String,
+		},
+		isPrivate: {
+			type: Boolean,
+			default: false,
+		},
+		isWinnerlistRequested: {
+			type: Boolean,
+			default: false,
 		},
 	},
 	{

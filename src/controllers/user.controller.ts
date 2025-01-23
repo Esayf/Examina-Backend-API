@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { CustomRequest } from "../types";
+import { CustomRequest } from "@/typings";
 import userService from "../services/user.service";
 import sessionHelper from "../helpers/sessionHelper";
 
@@ -24,18 +24,18 @@ async function registerUser(req: CustomRequest, res: Response) {
 			return res.status(400).json({ message: "Wallet address is required" });
 		}
 		const user = await userService.registerOrLogin(req, walletAddress);
-		console.log("The return value of registerOrLogin: ", {
-			success: true,
-			session: req.session.user,
-			user,
-		});
+		// console.log("The return value of registerOrLogin: ", {
+		// 	success: true,
+		// 	session: req.session.user,
+		// 	user,
+		// });
 		return res.json({
 			success: true,
 			session: req.session.user,
 			user,
 		});
 	} catch (error) {
-		console.error("Error registering user:", error);
+		console.error("Error registering user: ", error);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -47,7 +47,7 @@ async function getSession(req: CustomRequest, res: Response) {
 		}
 		return res.status(200).json({ success: true, session: req.session.user });
 	} catch (error) {
-		console.error("Error getting session:", error);
+		console.error("Error getting session: ", error);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -56,13 +56,13 @@ async function logout(req: CustomRequest, res: Response) {
 	try {
 		sessionHelper.destroySession(req, (err) => {
 			if (err) {
-				console.error("Error destroying session:", err);
+				console.error("Error destroying session: ", err);
 				return res.status(500).json({ message: "Failed to logout" });
 			}
 			return res.json({ success: true, message: "Logged out" });
 		});
 	} catch (error) {
-		console.error("Error logging out:", error);
+		console.error("Error logging out: ", error);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -75,7 +75,7 @@ async function getAllUsers(req: CustomRequest, res: Response) {
 		}
 		return res.status(200).json(users);
 	} catch (error) {
-		console.error("Error getting users:", error);
+		console.error("Error getting users: ", error);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -95,7 +95,7 @@ async function putEmail(req: CustomRequest, res: Response) {
 		await userService.updateEmail(userId, email);
 		return res.status(200).json({ message: "Email updated successfully" });
 	} catch (error) {
-		console.error("Error updating email:", error);
+		console.error("Error updating email: ", error);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }

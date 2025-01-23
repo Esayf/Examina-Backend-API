@@ -1,11 +1,11 @@
 import { Request } from "express";
-import { UserDocument, SessionUser } from "../types";
+import { UserDocument, SessionUser } from "@/typings";
 import User from "../models/user.model";
 import sessionHelper from "../helpers/sessionHelper";
 
-async function getByWalletAddress(walletAddress: string): Promise<UserDocument[]> {
+async function getByWalletAddress(walletAddress: string): Promise<UserDocument | null> {
 	try {
-		return await User.find({ walletAddress });
+		return await User.findOne({ walletAddress: walletAddress });
 	} catch (error) {
 		console.error("Error finding user by wallet address: ", error);
 		throw new Error("Error finding user by wallet address");
@@ -46,24 +46,22 @@ async function create(walletAddress: string): Promise<UserDocument> {
 }
 
 async function createAndRegister(req: Request, walletAddress: string): Promise<UserDocument> {
-	try {
-		let newUser = await create(walletAddress);
-		const sessionUser: SessionUser = {
-			userId: newUser.id,
-			walletAddress: newUser.walletAddress,
-			isAdmin: newUser.isAdmin,
-		};
-		await sessionHelper.setSessionUser(req, sessionUser);
-		return newUser;
-	} catch (error) {
-		console.error("Error creating and registering new user: ", error);
-		throw new Error("Error creating and registering new user");
-	}
+	let newUser = await create(walletAddress);
+	const sessionUser: SessionUser = {
+		userId: newUser.id,
+		walletAddress: newUser.walletAddress,
+		isAdmin: newUser.isAdmin,
+	};
+	await sessionHelper.setSessionUser(req, sessionUser);
+	return newUser;
 }
 
 async function findAndLogin(req: Request, walletAddress: string): Promise<UserDocument> {
 	try {
-		let user = (await getByWalletAddress(walletAddress))[0];
+		let user = await getByWalletAddress(walletAddress);
+		if (!user) {
+			throw new Error("User not found");
+		}
 		if (walletAddress === process.env.ADMIN_PUBLIC_KEY && !user.isAdmin) {
 			user.isAdmin = true;
 			await user.save();
@@ -82,17 +80,12 @@ async function findAndLogin(req: Request, walletAddress: string): Promise<UserDo
 }
 
 async function registerOrLogin(req: Request, walletAddress: string): Promise<UserDocument> {
-	try {
-		let users = await getByWalletAddress(walletAddress);
+	let user = await getByWalletAddress(walletAddress);
 
-		if (!users || users.length === 0) {
-			return await createAndRegister(req, walletAddress);
-		} else {
-			return await findAndLogin(req, walletAddress);
-		}
-	} catch (error) {
-		console.error("Error registering/logging in user: ", error);
-		throw new Error("Error registering/logging in user");
+	if (!user) {
+		return await createAndRegister(req, walletAddress);
+	} else {
+		return await findAndLogin(req, walletAddress);
 	}
 }
 

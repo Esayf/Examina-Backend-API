@@ -1,4 +1,4 @@
-import { Answer, AnswerKey, ScoreDocument } from "../types";
+import { Answer, AnswerKey, ScoreDocument } from "@/typings";
 import Score from "../models/score.model";
 import * as workerAPI from "../zkcloudworker/workerAPI";
 
@@ -6,7 +6,7 @@ async function getAll(): Promise<ScoreDocument[]> {
 	try {
 		return await Score.find().populate("user", "username walletAddress").populate("exam", "title");
 	} catch (error) {
-		console.error("Error finding scores:", error);
+		console.error("Error finding scores: ", error);
 		throw new Error("Error finding scores");
 	}
 }
@@ -15,29 +15,25 @@ async function getScoresByExamId(examId: string): Promise<ScoreDocument[]> {
 	try {
 		return await Score.find({ exam: examId }).populate("user", "username walletAddress").populate("exam", "title");
 	} catch (error) {
-		console.error("Error fetching scores for exam:", error);
+		console.error("Error fetching scores for exam: ", error);
 		throw new Error("Error fetching scores for exam");
 	}
 }
 
-async function createScore(scoreData: {
+interface ScoreData {
 	user: string;
 	exam: string;
 	score: number;
 	totalQuestions: number;
 	correctAnswers: number;
-}): Promise<ScoreDocument> {
+}
+
+async function createScore(scoreData: ScoreData): Promise<ScoreDocument> {
 	try {
-		const score = new Score({
-			user: scoreData.user,
-			exam: scoreData.exam,
-			score: scoreData.score,
-			totalQuestions: scoreData.totalQuestions,
-			correctAnswers: scoreData.correctAnswers,
-		});
+		const score = new Score(scoreData);
 		return await score.save();
 	} catch (error) {
-		console.error("Error creating score:", error);
+		console.error("Error creating score: ", error);
 		throw new Error("Error creating score");
 	}
 }
@@ -58,12 +54,14 @@ async function calculateScore(userAnswers: Answer[], answerKey: AnswerKey[]) {
 			answerKey.findIndex((key) => key.questionId.toString() === b.questionId.toString())
 	);
 	// Get exam correct answers as an array
-	const examCorrectAnswers = answerKey.map((answer) => answer.correctAnswer.toString());
+	//const examCorrectAnswers = answerKey.map((answer) => answer.correctAnswer.toString());
 	/* 	const zkProgramScoreCalculationProof = await workerAPI.calculateScore({
 			userAnswers: { answers: sortedUserAnswers.map((answer) => answer.answer.toString()) },
 			correctAnswers: { answers: examCorrectAnswers },
 		}); */
 	//console.log("ZK Program Score Calculation score: ", zkProgramScoreCalculationProof.score);
+
+	// TODO: Changing Score Calculation System
 	const score = ((correctAnswers / answerKey.length) * 100).toFixed(2).toString();
 
 	return { score, correctAnswers };

@@ -1,13 +1,13 @@
 services:
   app:
-    container_name: choz-app
+    container_name: choz-app-dev
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - MONGO_URI=mongodb://db:27017
       - PORT=8000
       - PINATA_API_KEY=${PINATA_API_KEY}
@@ -15,7 +15,6 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - ADMIN_PRIVATE_KEY=${ADMIN_PRIVATE_KEY}
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
@@ -23,29 +22,33 @@ services:
       - db
       - redis
     networks:
-      - examina_network
-    command: ["bun", "start"]
+      - examina_network_dev
+    command: ["bun", "dev"]
 
   db:
-    container_name: choz-mongodb
+    container_name: choz-mongodb-dev
     image: mongo:latest
+    ports:
+      - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
+      - mongodb_data_dev:/data/db
     networks:
-      - examina_network
+      - examina_network_dev
 
   redis:
-    container_name: choz-redis
+    container_name: choz-redis-dev
     image: redis:latest
+    ports:
+      - "6379:6379"
     volumes:
-      - redis_data:/data
+      - redis_data_dev:/data
     networks:
-      - examina_network
+      - examina_network_dev
 
 volumes:
-  mongodb_data:
-  redis_data:
+  mongodb_data_dev:
+  redis_data_dev:
 
 networks:
-  examina_network:
-    driver: bridge
+  examina_network_dev:
+    driver: bridge 

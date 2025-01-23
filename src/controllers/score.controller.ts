@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { CustomRequest } from "../types";
+import { CustomRequest } from "@/typings";
 import scoreService from "../services/score.service";
 
 async function getAllScores(req: CustomRequest, res: Response) {
@@ -10,7 +10,7 @@ async function getAllScores(req: CustomRequest, res: Response) {
 		}
 		return res.status(200).json(scores);
 	} catch (err) {
-		console.error(err);
+		console.error("Error fetching scores: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }
@@ -24,7 +24,7 @@ async function getScoresByExamId(req: CustomRequest, res: Response) {
 		}
 		return res.status(200).json(scores);
 	} catch (err) {
-		console.error(err);
+		console.error("Error fetching scores of the exam: ", err);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }

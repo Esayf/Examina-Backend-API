@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { CustomRequest } from "../types";
+import { CustomRequest } from "@/typings";
 import * as workerAPI from "../zkcloudworker/workerAPI";
 
 export async function initWinnerMap(req: CustomRequest, res: Response) {

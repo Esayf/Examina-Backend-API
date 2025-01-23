@@ -1,6 +1,6 @@
 import ParticipatedUser from "../models/participatedUser.model";
 import examResultsQueue from "../queues/examResultsQueue";
-import { ParticipatedUserWithPopulatedUser } from "../types/participatedUser";
+import { ParticipatedUserWithPopulatedUser } from "../typings/participatedUser";
 
 async function checkParticipantScoreAndMail() {
 	try {

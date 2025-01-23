@@ -1,4 +1,3 @@
-```markdown
 # Choz API Setup Guide
 
 Welcome to the Choz API project! This guide will assist you in setting up the application on your local machine using Docker. Follow the steps below to create the necessary Docker network, run the application with Docker Compose, and start the Protokit service.
@@ -11,62 +10,34 @@ Ensure you have the following installed on your system:
 - Node
 
 ## Steps to Start
-
-### 1. Create Docker Network
-
-First, create a Docker network for the Choz API project. Open your terminal and execute the following command:
-
-sudo docker create network examina_network
-
-### 2. Install Libraries
-
-npm i
-
-
-### 3. Run Docker Compose
+### 1. Run Docker Compose
 
 Next, run Docker Compose to set up the application containers. Depending on your operating system, use the appropriate command:
 
-**For macOS and Linux:**
+**For Linux:**
 
-sudo docker compose up -d
+`sudo docker compose up -d`
 
+**For Mac:**
+
+`docker compose up -d`
 
 **For Windows:**
 
-docker-compose up -d
-
-
-### 3. Run Protokit
-
-To run the Protokit service, navigate to the `Examina-Protokit` repository in your terminal and execute the following command:
-
-npm i
-
-
-**For  Linux:**
-
-sudo docker compose up -d
-
-
-**For Windows and MacOS:**
-
-docker-compose up -d
-
+`docker-compose up -d`
 
 ## Access the Application
 
 Once the setup is complete, the API will be running and accessible at:
 
 
-http://localhost:3005
+`http://localhost:3005`
 
 
 
 ## Conclusion
 
 You have now successfully set up and started the Choz API project. If you encounter any issues or have questions, please refer to the project's documentation or seek support from the development team. Happy coding!
-```
 
 
 

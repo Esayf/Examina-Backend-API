@@ -1,10 +1,10 @@
 import Queue from "bull";
-import { ParticipatedUserWithPopulatedUser } from "../types/participatedUser";
+import { ParticipatedUserWithPopulatedUser } from "../typings/participatedUser";
 import { sendExamResultEmail } from "../mailer";
 import redisClient from "../config/redis";
 import ParticipatedUser from "../models/participatedUser.model";
 import Score from "../models/score.model";
-import { ScoreDocument } from "@/types";
+import { ScoreDocument } from "@/typings";
 
 const examResultsQueue = new Queue("examResults", {
 	redis: {

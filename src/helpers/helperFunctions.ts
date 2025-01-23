@@ -1,8 +1,8 @@
 import crypto from "crypto";
-import { ExamDocument, Answer, ProcessedAnswer, AnswerKey } from "../types";
+import { ExamDocument, Answer, ProcessedAnswer } from "@/typings";
 import axios from "axios";
 import Client from "mina-signer";
-import * as workerAPI from "../zkcloudworker/workerAPI";
+import { v4 as uuidv4 } from "uuid";
 
 const signerClient = new Client({ network: "testnet" });
 const mainnetSignerClient = new Client({ network: "mainnet" });
@@ -41,6 +41,7 @@ export default function verifySignature(
 		signature: parsedSignature,
 	};
 
+	// console.log("wallet address: ", verifyBody.publicKey);
 	console.log("Data: ", verifyBody.data);
 	console.log("Parsed Signature: ", verifyBody.signature);
 
@@ -166,4 +167,15 @@ export function formatMina(amount: string | number): string {
 	const limitedDecimals = trimmedDecimals.slice(0, 5);
 
 	return limitedDecimals ? `${quotient}.${limitedDecimals}` : quotient.toString();
+}
+
+export function generatePasscodes(count: number): string[] {
+	const passcodes: string[] = [];
+
+	for (let i = 0; i < count; i++) {
+		const passcode = uuidv4();
+		passcodes.push(passcode);
+	}
+
+	return passcodes;
 }

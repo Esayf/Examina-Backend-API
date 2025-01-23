@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { CustomRequest, SessionUser } from "../types";
+import { CustomRequest, SessionUser } from "@/typings";
 
 async function createTokenAndMessage(req: CustomRequest, walletAddress: string): Promise<string> {
 	const token = Math.random().toString(36).substring(7);

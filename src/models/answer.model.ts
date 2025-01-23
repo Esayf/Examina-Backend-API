@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { AnswerDocument } from "../types";
+import { AnswerDocument } from "@/typings";
 
 const AnswerSchema = new Schema(
 	{
