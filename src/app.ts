@@ -50,17 +50,46 @@ if (process.env.NODE_ENV === "development") {
 	app.use(morgan("dev"));
 }
 
+const allowedOrigins = [
+	"http://localhost:3000",
+	"http://localhost:3001",
+	"http://localhost:8080",
+	"http://localhost:8000",
+	"https://choz.io",
+	"https://choz.io/", // You can often omit trailing slash, but included here if needed
+];
+
+// 2. Regex to match any subdomain ending in .vercel.app
+const vercelRegex = /\.vercel\.app$/;
+
 // CORS setup - must come BEFORE session middleware
 app.use(
 	cors({
-		origin: [
-			"http://localhost:3000",
-			"http://localhost:3001",
-			"http://localhost:8080",
-			"http://localhost:8000",
-			"https://choz.io",
-			"https://choz.io/",
-		],
+		origin: (origin, callback) => {
+			// a) If there's no origin (e.g. server-to-server request or local dev tool), allow it
+			if (!origin) {
+				return callback(null, true);
+			}
+
+			// b) If the origin is in your static list, allow
+			if (allowedOrigins.includes(origin)) {
+				return callback(null, true);
+			}
+
+			// c) Otherwise, check if origin matches *.vercel.app
+			try {
+				const hostname = new URL(origin).hostname;
+				if (vercelRegex.test(hostname)) {
+					return callback(null, true);
+				}
+			} catch (error) {
+				// Malformed origin string; reject
+				return callback(new Error("Not allowed by CORS"), false);
+			}
+
+			// d) If none match, reject
+			return callback(new Error("Not allowed by CORS"), false);
+		},
 		credentials: true,
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Set-Cookie", "Access-Control-Allow-Credentials"],

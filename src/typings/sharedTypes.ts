@@ -161,12 +161,12 @@ interface DraftDocument extends Document {
 	rewardPerWinner?: number;
 	passingScore?: number;
 	questions?: Array<{
-		text: string;
-		options: Array<{
+		text?: string;
+		options?: Array<{
 			number: number;
-			text: string;
+			text?: string;
 		}>;
-		correctAnswer: number;
+		correctAnswer?: number;
 		number: number;
 	}>;
 	createdAt: Date;

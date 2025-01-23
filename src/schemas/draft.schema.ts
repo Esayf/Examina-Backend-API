@@ -7,19 +7,15 @@ const objectIdSchema = z.string().refine((val) => Types.ObjectId.isValid(val), {
 // Base schemas for reusable components
 const optionSchema = z.object({
 	number: z.number().int().min(1),
-	text: z.string().min(1, "Option text cannot be empty"),
+	text: z.string().optional(),
 });
 
-const questionSchema = z
-	.object({
-		text: z.string().min(1, "Question text cannot be empty"),
-		options: z.array(optionSchema).min(2, "At least 2 options are required").max(6, "Maximum 6 options allowed"),
-		correctAnswer: z.number().int().min(1),
-		number: z.number().int().min(1),
-	})
-	.refine((data) => data.correctAnswer <= data.options.length, {
-		message: "Correct answer must be within the range of available options",
-	});
+const questionSchema = z.object({
+	text: z.string().optional(),
+	options: z.array(optionSchema).optional(),
+	correctAnswer: z.number().int().optional(),
+	number: z.number().int().min(1),
+});
 
 // Common fields that appear in multiple schemas
 const commonDraftFields = {
