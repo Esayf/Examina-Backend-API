@@ -48,6 +48,7 @@ const DraftSchema = new Schema(
 				],
 				correctAnswer: Number,
 				number: Number,
+				questionType: String,
 			},
 		],
 	},

@@ -161,6 +161,7 @@ interface DraftDocument extends Document {
 	rewardPerWinner?: number;
 	passingScore?: number;
 	questions?: Array<{
+		questionType?: string;
 		text?: string;
 		options?: Array<{
 			number: number;
