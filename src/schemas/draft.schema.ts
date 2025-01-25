@@ -15,6 +15,7 @@ const questionSchema = z.object({
 	options: z.array(optionSchema).optional(),
 	correctAnswer: z.number().int().optional(),
 	number: z.number().int().min(1),
+	questionType: z.enum(["mc", "tf"]).optional(),
 });
 
 // Common fields that appear in multiple schemas
