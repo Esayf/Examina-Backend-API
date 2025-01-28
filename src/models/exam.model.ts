@@ -12,6 +12,7 @@ import { ExamDocument } from "@/typings";
  * @property {string} secretKey.required - Secret key
  * @property {number} questionCount.required - Number of questions
  * @property {boolean} isCompleted - Completion status
+ * @property {string} backgroundImage - Background image
  */
 const ExamSchema = new Schema(
 	{
@@ -79,6 +80,10 @@ const ExamSchema = new Schema(
 		isWinnerlistRequested: {
 			type: Boolean,
 			default: false,
+		},
+		backgroundImage: {
+			type: String,
+			required: false,
 		},
 	},
 	{

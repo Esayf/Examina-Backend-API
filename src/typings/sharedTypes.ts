@@ -47,6 +47,7 @@ interface ExamDocument extends Document {
 	passingScore?: number;
 	isPrivate?: boolean;
 	isWinnerlistRequested?: boolean;
+	backgroundImage?: string;
 }
 
 type Winner = {
