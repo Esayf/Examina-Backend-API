@@ -4,8 +4,6 @@ import { ensureAuthenticated } from "../middleware/middleware";
 import { validateRequest } from "../middleware/validators";
 import { draftSchemas } from "../schemas/draft.schema";
 
-// TODO: TECH DEBT ZOD IMPLEMENTATION FOR ALL ROUTES
-
 const router = express.Router();
 
 router.use(ensureAuthenticated);

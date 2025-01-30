@@ -25,7 +25,6 @@ const ScoreSchema = new Schema(
 			type: Number,
 			required: true,
 		},
-		// Is this necessary?
 		isWinner: {
 			type: Boolean,
 			default: false,

@@ -54,6 +54,19 @@ const ExamSchema = new Schema(
 		},
 		rewardPerWinner: {
 			type: Number,
+			default: 0,
+		},
+		passingScore: {
+			type: Number,
+			default: 0,
+		},
+		contractAddress: {
+			type: String,
+			default: "0x0",
+		},
+		deployJobId: {
+			type: String,
+			default: "",
 		},
 		isCompleted: {
 			type: Boolean,
@@ -62,15 +75,6 @@ const ExamSchema = new Schema(
 		isDistributed: {
 			type: Boolean,
 			default: false,
-		},
-		passingScore: {
-			type: Number,
-		},
-		contractAddress: {
-			type: String,
-		},
-		deployJobId: {
-			type: String,
 		},
 		isPrivate: {
 			type: Boolean,

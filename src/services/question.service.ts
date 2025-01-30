@@ -31,7 +31,7 @@ async function getAllByExam(examId: string, userId: string): Promise<QuestionRes
 			return { status: 400, message: examTimeCheck.message };
 		}
 
-		const participationResult = await participatedUserService.checkParticipation(userId, examId, {
+		const participationResult = await participatedUserService.checkParticipation(userId, examId, "", {
 			createIfNotExist: false,
 		});
 
