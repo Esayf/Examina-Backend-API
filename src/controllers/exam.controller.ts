@@ -2,6 +2,7 @@ import { Response } from "express";
 import { CustomRequest, QuestionInput } from "@/typings";
 import examService from "../services/exam.service";
 import participatedUserService from "@/services/participatedUser.service";
+import User from "@/models/user.model";
 
 interface ExamInput {
 	title: string;
@@ -110,7 +111,11 @@ async function getExamDetails(req: CustomRequest, res: Response) {
 			return res.status(403).json({ message: "Only creator can access" });
 		}
 
-		return res.status(200).json(examDetails);
+		const creatorWallet = (await User.findById(examDetails.creator))?.walletAddress;
+		return res.status(200).json({
+			...examDetails,
+			creator: creatorWallet,
+		});
 	} catch (err) {
 		console.error("Error fetching exam details: ", err);
 		return res.status(500).json({ message: "Internal server error" });

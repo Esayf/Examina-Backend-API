@@ -138,25 +138,29 @@ async function getById(examId: string): Promise<ExamDocument | null> {
 async function getDetails(examId: string): Promise<ExtendedExamDocument | null> {
 	try {
 		let exam: ExtendedExamDocument | null = await Exam.findById(examId);
-		if (exam && exam.isCompleted) {
-			let examObject = exam.toObject();
-			console.log("EXAM OBJECT: ", examObject);
+		if (!exam) return null;
+
+		let examObject = exam.toObject();
+		console.log("EXAM OBJECT: ", examObject);
+		const participants: Participant[] = await getParticipants(exam._id);
+		examObject.participants = participants;
+		console.log("PARTICIPANTS: ", participants);
+
+		if (exam.isCompleted) {
+			// TODO: Leaderboard Feature
+			const leaderboard = getLeaderboard(participants);
+			console.log("LEADERBOARD: ", leaderboard);
+			examObject.leaderboard = leaderboard;
+
 			if (exam.isRewarded) {
 				const winnerlist: Winner[] = await getWinnerlist(exam.id);
 				console.log("WINNERLIST: ", winnerlist);
 				examObject.winnerlist = winnerlist;
 			}
-			// TODO: Leaderboard Feature
-			const participants: Participant[] = await getParticipants(exam._id);
-			examObject.participants = participants;
-			console.log("PARTICIPANTS: ", participants);
-			const leaderboard = getLeaderboard(participants);
-			console.log("LEADERBOARD: ", leaderboard);
-			examObject.leaderboard = leaderboard;
-			console.log("EXAM EXAM EXAM: ", examObject);
-			return examObject as ExtendedExamDocument;
 		}
-		return exam as ExtendedExamDocument;
+
+		console.log("EXAM EXAM EXAM: ", examObject);
+		return examObject as ExtendedExamDocument;
 	} catch (error) {
 		console.error("Error fetching exam details: ", error);
 		throw new Error("Error fetching exam details");
@@ -376,7 +380,7 @@ async function getParticipants(examId: string): Promise<Participant[]> {
 		{
 			$match: {
 				exam: examId,
-				isFinished: true,
+				// isFinished: true,
 			},
 		},
 		// 2. User koleksiyonundan kullanıcı detaylarını al
@@ -429,8 +433,9 @@ async function getParticipants(examId: string): Promise<Participant[]> {
 				userId: "$userDetails._id", // User ID
 				nickname: "$userDetails.username", // Şimdilik username'i kullan
 				walletAddress: "$userDetails.walletAddress", // Cüzdan adresi
-				score: { $ifNull: ["$scoreDetails.score", 0] }, // Score'dan gelen skor, yoksa 0
+				score: { $ifNull: ["$scoreDetails.score", null] }, // Score'dan gelen skor, yoksa null
 				finishTime: 1, // ParticipatedUser'dan finishTime
+				startTime: "$createdAt", // Renamed createdAt to startTime
 				_id: 0, // _id'yi dahil etme
 			},
 		},
@@ -447,11 +452,10 @@ async function getParticipants(examId: string): Promise<Participant[]> {
 }
 
 function getLeaderboard(participants: Participant[]): Leaderboard {
-	return participants.slice(0, 10).map(({ nickname, score, finishTime }) => ({
-		nickname,
-		score,
-		finishTime,
-	}));
+	return participants
+		.filter((p): p is Participant & { score: number } => p.score !== null)
+		.sort((a, b) => b.score - a.score)
+		.slice(0, 10) as Leaderboard;
 }
 
 export default {
