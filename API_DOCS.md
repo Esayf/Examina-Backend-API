@@ -1,5 +1,10 @@
 # API Documentation
 
+<!-- 
+TODO: session message/token validation info will be fixed.
+TODO: validateEmail middleware will remove.
+-->
+
 ## User Endpoints `/users`
 
 ### 1. Get Message to Sign
@@ -35,10 +40,19 @@
 
 - **Description**: Registers a new user or logs in an existing user. This process involves verifying the provided signature and associating it with the user's wallet address.
 - **Body**:
+  ```json
+  {
+    "walletAddress": "B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz",
+    "signature": {
+        "field": "12859573947900662149645682361760179861575462838272703039731442082711813003129",
+        "scalar": "375304190722010790954289571569010696976451004955850209127840435539089126739"
+    }
+  }
+  ```
   - `signature` (string, required): The signature of the user for verification.
   - `walletAddress` (string, required): The wallet address of the user.
 - **Headers**:
-  - `Session-Token` (string, required): Token used to validate the session.
+  - `Session-Token` (Bearer Token, required): Token used to validate the session.
 - **Middleware**:
   - `validateSessionToken`: Checks for the presence of a valid session token.
   - `validateRequest`: Ensures the request body contains valid `signature` and `walletAddress` fields.
@@ -46,11 +60,7 @@
 - **Response**:
   - **201 Created**: User successfully registered or logged in.
     ```json
-    {
-      "success": true,
-      "session": { "userId": "12345", "walletAddress": "0x..." },
-      "user": { "id": "12345", "walletAddress": "0x...", "isAdmin": false }
-    }
+    {"success":true,"session":{"userId":"6724c914bd890efb03a9166f","walletAddress":"B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz","isAdmin":false},"user":{"isAdmin":false,"_id":"6724c914bd890efb03a9166f","username":"B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz","walletAddress":"B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz","role":"admin"/*TODO*/,"__v":0,"email":"abc@example.com","updatedAt":"2024-11-21T17:41:02.419Z"}}
     ```
   - **400 Bad Request**: Invalid signature or missing required fields.
     ```json
@@ -154,8 +164,23 @@
   - **200 OK**: Returns a list of users.
     ```json
     [
-      { "id": "12345", "walletAddress": "0x...", "isAdmin": false },
-      { "id": "67890", "walletAddress": "0x...", "isAdmin": true }
+    {
+        "isAdmin": false,
+        "_id": "66cf70cb320d7d2190ce0d68",
+        "username": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
+        "walletAddress": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
+        "__v": 0,
+        "email": "def@example.com"
+    },
+    {
+        "isAdmin": false,
+        "_id": "66fa6bb1c58f93ea0cd0912c",
+        "username": "B62qmCGGG98iPmNEeFLByG3tPdnR6UvVvrXbkDPAC7DYJUvJVHFm1B3",
+        "email": "abc@example.com",
+        "walletAddress": "B62qmCGGG98iPmNEeFLByG3tPdnR6UvVvrXbkDPAC7DYJUvJVHFm1B3",
+        "__v": 0,
+        "updatedAt": "2024-11-21T13:29:29.833Z"
+    }
     ]
     ```
   - **401 Unauthorized**: User is not authenticated.
@@ -192,6 +217,11 @@
 - **Headers**:
   - `Session-Token` (Bearer Token, required): User authentication token.
 - **Body**:
+  ```json
+    {
+      "email": "example@example.com"
+    }
+  ```
   - `email` (string, required): New email address of the user.
 - **Middleware**:
   - `ensureAuthenticated`: Ensures the user is authenticated.
@@ -206,9 +236,7 @@
     ```
   - **400 Bad Request**: Invalid or missing email format.
     ```json
-    {
-      "message": "Invalid email format"
-    }
+    {"error":"ValidationException","message":"Validation failed","errors":[{"field":"email","message":"Invalid email input"}]}
     ```
   - **401 Unauthorized**: User is not authenticated.
     ```json
@@ -234,6 +262,80 @@
 - **Headers**:
   - `Session-Token` (Bearer Token, required): User authentication token.
 - **Body**:
+  ```json
+  {
+    "title": "Testing Exam",
+    "description": "This is a description",
+    "questions": [
+        {
+            "number": 1,
+            "text": "Bqqnt",
+            "options": [
+                {
+                    "number": 1,
+                    "text": "Nsaaikep"
+                },
+                {
+                    "number": 2,
+                    "text": "Alexiod"
+                },
+                {
+                    "number": 3,
+                    "text": "John IIs"
+                },
+                {
+                    "number": 4,
+                    "text": "Manuel Is"
+                },
+                {
+                    "number": 5,
+                    "text": "Manuel IIss"
+                }
+            ],
+            "correctAnswer": 2
+        },
+        {
+            "number": 2,
+            "text": "Ottwqqoman",
+            "options": [
+                {
+                    "number": 1,
+                    "text": "Bayasaaad I"
+                },
+                {
+                    "number": 2,
+                    "text": "Mehdsdsmed I"
+                },
+                {
+                    "number": 3,
+                    "text": "Murad II"
+                },
+                {
+                    "number": 4,
+                    "text": "Mehmed II"
+                },
+                {
+                    "number": 5,
+                    "text": "Mehmed III"
+                }
+            ],
+            "correctAnswer": 2
+        }
+    ],
+    "startDate": "2025-02-19T16:30:50.244Z",
+    "duration": 2,
+    "rootHash": "0x0",
+    "secretKey": "SIOSDajksa",
+    "questionCount": 3,
+    "isPrivate": false,
+    "isWinnerlistRequested": true,
+    "isRewarded": true,
+    "contractAddress": "0x0",
+    "rewardPerWinner": 1,
+    "passingScore": 80,
+    "deployJobId": "zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw"
+  }
+  ```
   - `title` (string, required): Title of the exam.
   - `description` (string, required): Description of the exam.
   - `startDate` (string, required): Starting date and time of the exam (ISO format).
@@ -241,6 +343,16 @@
   - `rootHash` (string, required): Root hash of the exam.
   - `secretKey` (string, required): Secret key for verifying exam participation.
   - `questionCount` (number, required): Number of questions in the exam.
+  - `questions` (array of objects, required): List of questions in the exam.
+    - `number` (number, required): The question number.
+    - `text` (string, required): The question text.
+    - `options` (array of objects, required): List of answer options.
+      - `number` (number, required): The option number.
+      - `text` (string, required): The option text.
+    - `correctAnswer` (number, required): The correct option number.
+  - `isPrivate` (boolean, required): Indicates whether the exam is private.
+  - `isWinnerlistRequested` (boolean, required): Indicates if the list of winners is requested.
+
   - Optional fields for rewarded exams:
     - `isRewarded` (boolean, optional): Indicates whether the exam offers rewards.
     - `rewardPerWinner` (number, optional): Reward amount per winner (required if `isRewarded` is true).
@@ -317,11 +429,20 @@
 - **Headers**:
   - `Session-Token` (Bearer Token, required): User authentication token.
 - **Body**:
+  ```json
+    {
+      "examId": "679ba93a31ae46ad07b67085",
+      "emailList": [
+          "abc@example.com",
+          "xvyz@example.com"
+      ]
+  }
+  ```
   - `examId` (string, required): ID of the exam.
   - `emailList` (array of strings, required): List of participant emails.
 - **Middleware**:
   - `ensureAuthenticated`: Ensures the user is logged in.
-  - `validateRequest`: Validates the request body against `examSchemas.generateLinks`.
+  - `validateRequest`: Validates the request body.
 - **Response**:
   - **201 Created**: Links successfully generated and sent to participants.
     ```json
@@ -355,7 +476,7 @@
 - **Query Parameters**:
   - `role` (string, optional): `creator` or `joined` (default: `creator`).
   - `filter` (string, optional): `all`, `upcoming`, `active`, or `ended` (default: `all`).
-  - `sortBy` (string, optional): Field to sort by (e.g., `createdAt`, default: `createdAt`).
+  - `sortBy` (string, optional): Field to sort by (e.g., `startDate`, `duration`, `title`, default: `createdAt`).
   - `sortOrder` (string, optional): `asc` or `desc` (default: `desc`).
 - **Middleware**:
   - `ensureAuthenticated`: Ensures the user is logged in.
@@ -364,20 +485,54 @@
     ```json
     [
       {
-        "id": "examId",
-        "title": "Exam 1",
-        "status": "upcoming",
-        "creator": "userId",
-        "startDate": "2023-12-01T10:00:00Z"
-        ...
-      },
-      {
-        "id": "examId2",
-        "title": "Exam 2",
-        "status": "active",
-        "creator": "userId",
-        "startDate": "2023-11-30T12:00:00Z"
-        ...
+        "passingScore": 0,
+        "contractAddress": "0x0",
+        "deployJobId": "",
+        "isPrivate": false,
+        "isWinnerlistRequested": false,
+        "_id": "673f369944e8c1ef46638105",
+        "creator": "6724c914bd890efb03a9166f",
+        "title": "Testing Exam",
+        "description": "This is a description",
+        "startDate": "2024-11-21T13:32:57.000Z",
+        "duration": 2,
+        "rootHash": "0x0",
+        "secretKey": "SIOSDajksa",
+        "questionCount": 3,
+        "isRewarded": true,
+        "rewardPerWinner": 1,
+        "isCompleted": true,
+        "isDistributed": true,
+        "createdAt": "2024-11-21T13:33:13.262Z",
+        "updatedAt": "2024-11-21T13:36:01.398Z",
+        "__v": 0,
+        "endDate": "2024-11-21T13:34:57.000Z",
+        "status": "ended"
+    },
+    {
+        "passingScore": 0,
+        "contractAddress": "0x0",
+        "deployJobId": "",
+        "isPrivate": false,
+        "isWinnerlistRequested": false,
+        "_id": "673f3f0403586189e987cfd5",
+        "creator": "6724c914bd890efb03a9166f",
+        "title": "Testing Exam",
+        "description": "This is a description",
+        "startDate": "2024-11-21T14:08:54.000Z",
+        "duration": 2,
+        "rootHash": "0x0",
+        "secretKey": "SIOSDajksa",
+        "questionCount": 3,
+        "isRewarded": true,
+        "rewardPerWinner": 1,
+        "isCompleted": true,
+        "isDistributed": true,
+        "createdAt": "2024-11-21T14:09:08.108Z",
+        "updatedAt": "2024-11-21T14:12:01.877Z",
+        "__v": 0,
+        "endDate": "2024-11-21T14:10:54.000Z",
+        "status": "ended"
       }
     ]
     ```
@@ -446,7 +601,7 @@
 - **Response**:
   - **200 OK**: Returns detailed exam information.
     ```json
-    {"_id":"679b5278feb5dfd7e868e710","creator":"66fa6bb1c58f93ea0cd0912c","title":"Testing Exam","description":"This is a description","startDate":"2025-01-30T10:20:40.881Z","duration":10,"rootHash":"0x0","secretKey":"SIOSDajksa","questionCount":3,"isRewarded":true,"rewardPerWinner":1,"passingScore":80,"contractAddress":"0x0","deployJobId":"zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw","isCompleted":true,"isDistributed":false,"isPrivate":false,"isWinnerlistRequested":true,"createdAt":"2025-01-30T10:20:40.899Z","updatedAt":"2025-01-30T10:30:56.147Z","__v":0,"winnerlist":[],"participants":[{"finishTime":"2025-01-30T10:29:01.651Z","userId":"66fa6bb1c58f93ea0cd0912c","nickname":"Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ","walletAddress":"Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ","score":0}],"leaderboard":[{"nickname":"Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ","score":0,"finishTime":"2025-01-30T10:29:01.651Z"}]}
+    {"_id":"679b5278feb5dfd7e868e710","creator":"66fa6bb1c58f93ea0cd0912c","title":"Testing Exam","description":"This is a description","startDate":"2025-01-30T10:20:40.881Z","duration":10,"rootHash":"0x0","secretKey":"SIOSDajksa","questionCount":3,"isRewarded":true,"rewardPerWinner":1,"passingScore":80,"contractAddress":"0x0","deployJobId":"zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw","isCompleted":true,"isDistributed":false,"isPrivate":false,"isWinnerlistRequested":true,"createdAt":"2025-01-30T10:20:40.899Z","updatedAt":"2025-01-30T10:30:56.147Z","__v":0,"winnerlist":[],"participants":[{"finishTime":"2025-01-30T10:29:01.651Z","userId":"66fa6bb1c58f93ea0cd0912c","nickname":"Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ","walletAddress":"Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ","score":0}],"leaderboard":[{"nickname":"The Night Fury","score":0,"finishTime":"2025-01-30T10:29:01.651Z"}]}
     ```
   - **403 Forbidden**: User is not the creator of the exam.
     ```json
@@ -477,6 +632,13 @@
 - **Headers**:
   - `Session-Token` (Bearer Token, required): User authentication token.
 - **Body**:
+  ```json
+  {
+      "examId": "679ba93a31ae46ad07b67085",
+      "passcode": "ffb3051d-dbf4-4bc7-9978-e6d353143982",
+      "nickname": "The Night Fury"
+  }
+  ```
   - `examId` (string, required): ID of the exam.
   - `passcode` (string, optional): Passcode for private exams.
   - `nickname` (string, optional): Nickname for the exam.
@@ -496,8 +658,7 @@
     ```
     ```json
     {
-      "message": "Exam timing is invalid"
-      ...
+      "message": "Exam has not started yet"
     }
     ```
   - **404 Not Found**: Exam not found.
@@ -522,10 +683,10 @@
 - **Headers**:
   - `Session-Token` (Bearer Token, required): User authentication token.
 - **Body**:
-  - `examId` (string, required): ID of the exam.
-  - `answers` (array, required): User's answers to the exam questions.
-    ```json
-    [
+  ```json
+    {
+    "examId": "679ba93a31ae46ad07b67085",
+    "answers": [
       {
         "questionId": "questionId1",
         "answer": 1
@@ -535,7 +696,10 @@
         "answer": 2
       }
     ]
-    ```
+  }
+  ```
+  - `examId` (string, required): ID of the exam.
+  - `answers` (array, required): User's answers to the exam questions.
 - **Middleware**:
   - `ensureAuthenticated`: Ensures the user is logged in.
   - `validateRequest`: Validates the request body.
@@ -553,7 +717,7 @@
   - **404 Not Found**: Exam or participation not found.
     ```json
     {
-      "message": "Exam or participation not found"
+    "message": "User does not have participated in the exam"
     }
     ```
   - **500 Internal Server Error**: Server encountered an unexpected error.
@@ -624,10 +788,6 @@
 - **Description**: Retrieves all drafts created by the authenticated user, with optional pagination and sorting.
 - **Headers**:
   - `Session-Token` (Bearer Token, required): User authentication token.
-<!-- - **Query Parameters**:
-  - `page` (number, optional): Page number for pagination (default: 1).
-  - `limit` (number, optional): Number of drafts per page (default: 10).
-  - `sort` (string, optional): Sorting order, either `asc` or `desc` (default: `desc`). -->
 - **Middleware**:
   - `ensureAuthenticated`: Ensures the user is logged in.
   - `validateRequest`: Validates the query parameters against `draftSchemas.query`.
@@ -889,8 +1049,7 @@
   - **400 Bad Request**: Exam is not active or timing is invalid.
     ```json
     {
-      "message": "Exam timing is invalid"
-      ...
+      "message": "Exam has not started yet"
     }
     ```
   - **401 Unauthorized**: User is not authenticated.
