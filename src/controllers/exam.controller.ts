@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { CustomRequest, QuestionInput } from "@/typings";
-import examService from "../services/exam.service";
+import examService, { SortFields } from "../services/exam.service";
 import participatedUserService from "@/services/participatedUser.service";
 import User from "@/models/user.model";
 
@@ -68,7 +68,15 @@ async function getAllExamsByUser(req: CustomRequest, res: Response) {
 		if (!userId) {
 			return res.status(401).json({ message: "Unauthorized" });
 		}
-		const exams = await examService.getAllByUser(userId);
+		const { role, filter, sortBy, sortOrder } = req.query;
+		console.log("QUERY PARAMS: ", userId, role, filter, sortBy, sortOrder);
+		const exams = await examService.getAllByUser(
+			userId,
+			role as string,
+			filter as string,
+			sortBy as SortFields,
+			sortOrder as "asc" | "desc"
+		);
 		return res.status(200).json(exams);
 	} catch (err) {
 		console.error("Error fetching exams: ", err);

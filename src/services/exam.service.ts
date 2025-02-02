@@ -12,6 +12,7 @@ import {
 import Exam from "../models/exam.model";
 import Question from "../models/question.model";
 import ParticipatedUser from "@/models/participatedUser.model";
+import Score from "@/models/score.model";
 import participatedUserService from "./participatedUser.service";
 import answerService from "./answer.service";
 import { checkExamTimes, processQuestion, generatePasscodes } from "../helpers/helperFunctions";
@@ -116,12 +117,131 @@ async function generateAndSendLinks(examId: string, emailList: string[]): Promis
 	}
 }
 
-async function getAllByUser(userId: string): Promise<ExamDocument[]> {
+export type SortFields = "title" | "startDate" | "duration" | "createdAt" | "score" | "endDate" | "status";
+
+interface ExamWithScore extends ExamDocument {
+	score?: number;
+	endDate: Date; // Dinamik olarak hesaplanacak endDate
+	status?: string; // Dinamik olarak hesaplanacak durum bilgisi
+}
+
+export async function getAllByUser(
+	userId: string,
+	role: string,
+	filter: string,
+	sortBy?: SortFields,
+	sortOrder?: "asc" | "desc"
+): Promise<ExamWithScore[]> {
 	try {
-		return await Exam.find({ creator: userId }).sort({ createdAt: "desc" });
+		let exams: ExamWithScore[];
+
+		// role filtering
+		if (role === "created") {
+			exams = await Exam.find({ creator: new mongoose.Types.ObjectId(userId) });
+		} else if (role === "joined") {
+			const participated = await ParticipatedUser.find({ user: userId }).select("exam");
+			const examIds = participated.map((p) => new mongoose.Types.ObjectId(p.exam.toString()));
+			exams = await Exam.find({ _id: { $in: examIds } });
+
+			// score sorting
+			if (sortBy === "score") {
+				const scores = await Score.find({
+					user: new mongoose.Types.ObjectId(userId),
+					exam: { $in: examIds },
+				}).select("exam score");
+				const scoreMap = new Map<string, number>();
+
+				scores.forEach((score) => {
+					scoreMap.set(score.exam.toString(), score.score);
+				});
+
+				exams = exams.map((exam) => ({
+					...exam.toObject(),
+					score: scoreMap.get((exam._id as mongoose.Types.ObjectId).toString()) || null,
+				})) as ExamWithScore[];
+			}
+		} else {
+			throw new Error("Invalid role: Role must be 'created' or 'joined'.");
+		}
+
+		const now = new Date();
+
+		// EndDate ve status hesaplama
+		exams = exams.map((exam) => {
+			const endDate = new Date(new Date(exam.startDate).getTime() + exam.duration * 60000); // startDate + duration
+
+			// Durum belirleme (status)
+			let status: string;
+			if (new Date(exam.startDate) > now) {
+				status = "upcoming";
+			} else if (new Date(exam.startDate) <= now && endDate >= now) {
+				status = "active";
+			} else {
+				status = "ended";
+			}
+
+			return {
+				...exam.toObject(),
+				endDate,
+				status,
+			} as ExamWithScore;
+		});
+
+		// Filtreleme işlemi
+		if (filter !== "all") {
+			exams = exams.filter((exam) => {
+				if (filter === "upcoming") {
+					return exam.status === "upcoming";
+				} else if (filter === "active") {
+					return exam.status === "active";
+				} else if (filter === "ended") {
+					return exam.status === "ended";
+				}
+				return true;
+			});
+		}
+
+		// Varsayılan sıralama ayarla
+		const finalSortBy: SortFields = sortBy || "createdAt";
+		const finalSortOrder: "asc" | "desc" = sortOrder || "desc";
+
+		// Sıralama uygulama
+		exams.sort((a, b) => {
+			let fieldA, fieldB;
+
+			if (finalSortBy === "status") {
+				// Status sıralamasını numeric hale getir
+				const statusOrder: { [key in "upcoming" | "active" | "ended"]: number } = {
+					upcoming: 1,
+					active: 2,
+					ended: 3,
+				};
+
+				fieldA = statusOrder[a.status as "upcoming" | "active" | "ended"];
+				fieldB = statusOrder[b.status as "upcoming" | "active" | "ended"];
+			} else if (finalSortBy === "endDate") {
+				fieldA = finalSortBy === "endDate" ? a.endDate : a[finalSortBy as keyof ExamWithScore];
+				fieldB = finalSortBy === "endDate" ? b.endDate : b[finalSortBy as keyof ExamWithScore];
+
+				if (!fieldA) fieldA = finalSortBy === "endDate" ? new Date(0) : "";
+				if (!fieldB) fieldB = finalSortBy === "endDate" ? new Date(0) : "";
+			}
+
+			if (fieldA instanceof Date) fieldA = fieldA.getTime();
+			if (fieldB instanceof Date) fieldB = fieldB.getTime();
+
+			if (typeof fieldA === "string" && typeof fieldB === "string") {
+				const comparison = fieldA.localeCompare(fieldB, "en", { sensitivity: "base" });
+				return finalSortOrder === "asc" ? comparison : -comparison;
+			}
+
+			return finalSortOrder === "asc" ? fieldA - fieldB : fieldB - fieldA;
+		});
+
+		return exams;
 	} catch (error) {
-		console.error("Error fetching exams: ", error);
-		throw new Error("Error fetching exams");
+		console.error("Error fetching exams by user: ", error);
+		throw new Error("Error fetching exams by user");
 	}
 }
 

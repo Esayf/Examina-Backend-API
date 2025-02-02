@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { CustomRequest } from "@/typings";
-import { finishExamSchema } from "../validators/examValidators";
 import verifySignature from "../helpers/helperFunctions";
 import { Schema } from "joi";
 
@@ -31,9 +30,7 @@ export function verifyUserSignature(req: CustomRequest, res: Response, next: Nex
 	if (!message) {
 		return res.status(401).json({ success: false, message: "No session token" });
 	}
-	console.log("Meesage in session: ", message);
 
-	// Signature doğrulama
 	const verifyResult = verifySignature(message, walletAddress, signature);
 
 	if (!verifyResult) {
@@ -48,14 +45,6 @@ export function validateRequestedEmail(req: CustomRequest, res: Response, next: 
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	if (!req.body.email || !emailRegex.test(req.body.email)) {
 		return res.status(400).json({ message: "Invalid email format" });
-	}
-	return next();
-}
-
-export function validateFinishExamBody(req: CustomRequest, res: Response, next: NextFunction): Response | void {
-	const { error } = finishExamSchema.validate(req.body);
-	if (error) {
-		return res.status(400).json({ message: error.details[0].message });
 	}
 	return next();
 }
