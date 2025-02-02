@@ -67,39 +67,33 @@ export const examSchemas = {
 			.array(z.string().email({ message: "Invalid email format" }))
 			.min(1, { message: "Email list must contain at least one email" }),
 	}),
-	// myExamsQueryParams: z.object({
-	// 	role: z
-	// 		.string()
-	// 		.transform((val) => val?.trim() || "") // Eğer `undefined` gelirse boş string yapar
-	// 		.refine((val) => ["created", "joined"].includes(val), { message: "Role must be 'created' or 'joined'" }),
 
-	// 	filter: z
-	// 		.string()
-	// 		.nullish() // `undefined` ve `null` değerleri güvenle ele alınır
-	// 		.transform((val) => (val ? val.trim() : "all")) // Eğer boşsa "all" yap
-	// 		.refine((val) => ["all", "upcoming", "active", "ended"].includes(val), {
-	// 			message: "Invalid filter option",
-	// 		}),
+	myExamsQueryParams: z.object({
+		// role: "created" veya "joined" olmalı
+		role: z.preprocess(
+			(val) => (typeof val === "string" ? val.trim() : val),
+			z.enum(["created", "joined"], { message: "Role must be 'created' or 'joined'" })
+		),
 
-	// 	sortBy: z
-	// 		.string()
-	// 		.nullish() // `undefined` ve `null` değerleri güvenle ele alınır
-	// 		.transform((val) => (val ? val.trim() : undefined))
-	// 		.refine(
-	// 			(val) =>
-	// 				val === undefined ||
-	// 				["title", "startDate", "duration", "createdAt", "score", "endDate", "status"].includes(val),
-	// 			{
-	// 				message: "Invalid sort field",
-	// 			}
-	// 		),
+		// filter: "all", "upcoming", "active" veya "ended" olabilir
+		filter: z.preprocess(
+			(val) => (typeof val === "string" ? val.trim() : "all"),
+			z.enum(["all", "upcoming", "active", "ended"], { message: "Invalid filter option" })
+		),
 
-	// 	sortOrder: z
-	// 		.string()
-	// 		.nullish() // `undefined` ve `null` değerleri güvenle ele alınır
-	// 		.transform((val) => (val ? val.trim() : "desc")) // Default olarak "desc" yap
-	// 		.refine((val) => ["asc", "desc"].includes(val), { message: "Sort order must be 'asc' or 'desc'" }),
-	// }),
+		// sortBy: Sıralama yapılabilecek alanlardan biri olmalı
+		sortBy: z.preprocess(
+			(val) => (typeof val === "string" ? val.trim() : undefined),
+			z.enum(["title", "startDate", "duration", "createdAt", "score", "endDate", "status"]).optional()
+		),
+
+		// sortOrder: "asc" veya "desc" olmalı
+		sortOrder: z.preprocess(
+			(val) => (typeof val === "string" ? val.trim() : "desc"),
+			z.enum(["asc", "desc"], { message: "Sort order must be 'asc' or 'desc'" })
+		),
+	}),
+
 	startExam: z.object({
 		examId: objectIdSchema,
 		passcode: z.string().min(1, "Passcode is required"),

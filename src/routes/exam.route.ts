@@ -42,7 +42,7 @@ router.post("/generateExamLinks", validateRequest({ body: examSchemas.generateLi
  * @return {object} 401 - Unauthorized
  * @return {object} 500 - Server error
  */
-router.get("/myExams", /*validateRequest({ body: examSchemas.myExamsQueryParams }),*/ examController.getAllExamsByUser);
+router.get("/myExams", validateRequest({ query: examSchemas.myExamsQueryParams }), examController.getAllExamsByUser);
 
 router.get("/:id", validateRequest({ params: examSchemas.params }), examController.getExamById);
 router.get("/:id/details", validateRequest({ params: examSchemas.params }), examController.getExamDetails);
