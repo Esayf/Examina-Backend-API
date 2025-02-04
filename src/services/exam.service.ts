@@ -47,7 +47,7 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 			}),
 			passingScore: Joi.when("isRewarded", {
 				is: true,
-				then: Joi.number().min(1).max(100).required(),
+				then: Joi.number().min(0).max(100).required(),
 				otherwise: Joi.optional(),
 			}),
 			deployJobId: Joi.when("isRewarded", {
