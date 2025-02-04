@@ -8,10 +8,18 @@ const router = express.Router();
 
 router.use(ensureAuthenticated);
 
-router.get("/myAnswers", validateRequest({ body: answerSchemas.getAnswers }), answerController.getAnswers);
+// TODO: get all answers of an exam by admin
+// get all answers of a user by user
+// change myAnswers to myAnswer
+
+router.get(
+	"/myAnswers/:examId",
+	validateRequest({ params: answerSchemas.getAnswersParams }),
+	answerController.getAnswers
+);
 router.get(
 	"/answer/:answerId",
-	validateRequest({ params: answerSchemas.params }),
+	validateRequest({ params: answerSchemas.answerParams }),
 	ensureAdmin,
 	answerController.getAnswerById
 );

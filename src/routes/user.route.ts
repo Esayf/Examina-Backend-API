@@ -37,7 +37,6 @@ router.post(
 	"/put/email",
 	ensureAuthenticated,
 	validateRequest({ body: userSchemas.putEmail }),
-	validateRequestedEmail,
 	userController.putEmail
 );
 

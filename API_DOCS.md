@@ -2,7 +2,6 @@
 
 <!-- 
 TODO: session message/token validation info will be fixed.
-TODO: validateEmail middleware will remove.
 -->
 
 ## User Endpoints `/users`
@@ -18,14 +17,18 @@ TODO: validateEmail middleware will remove.
 - **Response**:
   - **200 OK**: Returns the generated message for signing.
     ```json
-    {"message":"0liaatB62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz"}
+    {
+      "message": "0liaatB62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz"
+    }
     ```
+
   - **400 Bad Request**: Wallet address is missing or invalid.
     ```json
     {
       "message": "Wallet address is required"
     }
     ```
+
   - **500 Internal Server Error**: Server encountered an unexpected error.
     ```json
     {
@@ -33,7 +36,6 @@ TODO: validateEmail middleware will remove.
     }
     ```
 
----
 
 ### 2. Register User
 **POST** `/register`
@@ -60,7 +62,23 @@ TODO: validateEmail middleware will remove.
 - **Response**:
   - **201 Created**: User successfully registered or logged in.
     ```json
-    {"success":true,"session":{"userId":"6724c914bd890efb03a9166f","walletAddress":"B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz","isAdmin":false},"user":{"isAdmin":false,"_id":"6724c914bd890efb03a9166f","username":"B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz","walletAddress":"B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz","role":"admin"/*TODO*/,"__v":0,"email":"abc@example.com","updatedAt":"2024-11-21T17:41:02.419Z"}}
+    {
+      "success": true,
+      "session": {
+        "userId": "6724c914bd890efb03a9166f",
+        "walletAddress": "B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz",
+        "isAdmin": false
+      },
+      "user": {
+        "isAdmin": false,
+        "_id": "6724c914bd890efb03a9166f",
+        "username": "B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz",
+        "walletAddress": "B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz",
+        "__v": 0,
+        "email": "abc@example.com",
+        "updatedAt": "2024-11-21T17:41:02.419Z"
+      }
+    }
     ```
   - **400 Bad Request**: Invalid signature or missing required fields.
     ```json
@@ -109,7 +127,14 @@ TODO: validateEmail middleware will remove.
 - **Response**:
   - **200 OK**: Returns the session information.
     ```json
-    {"success":true,"session":{"userId":"66fa6bb1c58f93ea0cd0912c","walletAddress":"Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ","isAdmin":false}}
+    {
+      "success": true,
+      "session": {
+        "userId": "66fa6bb1c58f93ea0cd0912c",
+        "walletAddress": "Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
+        "isAdmin": false
+      }
+    }
     ```
   - **401 Unauthorized**: No active session found.
     ```json
@@ -164,15 +189,15 @@ TODO: validateEmail middleware will remove.
   - **200 OK**: Returns a list of users.
     ```json
     [
-    {
+      {
         "isAdmin": false,
         "_id": "66cf70cb320d7d2190ce0d68",
         "username": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
         "walletAddress": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
         "__v": 0,
         "email": "def@example.com"
-    },
-    {
+      },
+      {
         "isAdmin": false,
         "_id": "66fa6bb1c58f93ea0cd0912c",
         "username": "B62qmCGGG98iPmNEeFLByG3tPdnR6UvVvrXbkDPAC7DYJUvJVHFm1B3",
@@ -180,7 +205,7 @@ TODO: validateEmail middleware will remove.
         "walletAddress": "B62qmCGGG98iPmNEeFLByG3tPdnR6UvVvrXbkDPAC7DYJUvJVHFm1B3",
         "__v": 0,
         "updatedAt": "2024-11-21T13:29:29.833Z"
-    }
+      }
     ]
     ```
   - **401 Unauthorized**: User is not authenticated.
@@ -236,7 +261,16 @@ TODO: validateEmail middleware will remove.
     ```
   - **400 Bad Request**: Invalid or missing email format.
     ```json
-    {"error":"ValidationException","message":"Validation failed","errors":[{"field":"email","message":"Invalid email input"}]}
+    {
+      "error": "ValidationException",
+      "message": "Validation failed",
+      "errors": [
+        {
+          "field": "email",
+          "message": "Invalid email input"
+        }
+      ]
+    }
     ```
   - **401 Unauthorized**: User is not authenticated.
     ```json
@@ -264,78 +298,78 @@ TODO: validateEmail middleware will remove.
 - **Body**:
   ```json
   {
-    "title": "Testing Exam",
-    "description": "This is a description",
-    "questions": [
+      "title": "Testing Exam",
+      "description": "This is a description",
+      "questions": [
         {
-            "number": 1,
-            "text": "Bqqnt",
-            "options": [
-                {
-                    "number": 1,
-                    "text": "Nsaaikep"
-                },
-                {
-                    "number": 2,
-                    "text": "Alexiod"
-                },
-                {
-                    "number": 3,
-                    "text": "John IIs"
-                },
-                {
-                    "number": 4,
-                    "text": "Manuel Is"
-                },
-                {
-                    "number": 5,
-                    "text": "Manuel IIss"
-                }
-            ],
-            "correctAnswer": 2
+          "number": 1,
+          "text": "Bqqnt",
+          "options": [
+            {
+              "number": 1,
+              "text": "Nsaaikep"
+            },
+            {
+              "number": 2,
+              "text": "Alexiod"
+            },
+            {
+              "number": 3,
+              "text": "John IIs"
+            },
+            {
+              "number": 4,
+              "text": "Manuel Is"
+            },
+            {
+              "number": 5,
+              "text": "Manuel IIss"
+            }
+          ],
+          "correctAnswer": 2
         },
         {
-            "number": 2,
-            "text": "Ottwqqoman",
-            "options": [
-                {
-                    "number": 1,
-                    "text": "Bayasaaad I"
-                },
-                {
-                    "number": 2,
-                    "text": "Mehdsdsmed I"
-                },
-                {
-                    "number": 3,
-                    "text": "Murad II"
-                },
-                {
-                    "number": 4,
-                    "text": "Mehmed II"
-                },
-                {
-                    "number": 5,
-                    "text": "Mehmed III"
-                }
-            ],
-            "correctAnswer": 2
+          "number": 2,
+          "text": "Ottwqqoman",
+          "options": [
+            {
+              "number": 1,
+              "text": "Bayasaaad I"
+            },
+            {
+              "number": 2,
+              "text": "Mehdsdsmed I"
+            },
+            {
+              "number": 3,
+              "text": "Murad II"
+            },
+            {
+              "number": 4,
+              "text": "Mehmed II"
+            },
+            {
+              "number": 5,
+              "text": "Mehmed III"
+            }
+          ],
+          "correctAnswer": 2
         }
-    ],
-    "startDate": "2025-02-19T16:30:50.244Z",
-    "duration": 2,
-    "rootHash": "0x0",
-    "secretKey": "SIOSDajksa",
-    "questionCount": 3,
-    "isPrivate": false,
-    "isWinnerlistRequested": true,
-    "isRewarded": true,
-    "contractAddress": "0x0",
-    "rewardPerWinner": 1,
-    "passingScore": 80,
-    "deployJobId": "zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw"
-  }
-  ```
+      ],
+      "startDate": "2025-02-19T16:30:50.244Z",
+      "duration": 2,
+      "rootHash": "0x0",
+      "secretKey": "SIOSDajksa",
+      "questionCount": 3,
+      "isPrivate": false,
+      "isWinnerlistRequested": true,
+      "isRewarded": true,
+      "contractAddress": "0x0",
+      "rewardPerWinner": 1,
+      "passingScore": 80,
+      "deployJobId": "zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw"
+    }
+    ```
   - `title` (string, required): Title of the exam.
   - `description` (string, required): Description of the exam.
   - `startDate` (string, required): Starting date and time of the exam (ISO format).
@@ -366,27 +400,27 @@ TODO: validateEmail middleware will remove.
   - **201 Created**: Exam successfully created.
     ```json
     {
-      "creator":"66fa6bb1c58f93ea0cd0912c",
-    "title":"Testing Exam",
-    "description":"This is a description",
-    "startDate":"2025-01-30T10:09:43.547Z",
-    "duration":10,
-    "rootHash":"0x0",
-    "secretKey":"SIOSDajksa",
-    "questionCount":3,
-    "isRewarded":true,
-    "rewardPerWinner":1,
-    "passingScore":80,
-    "contractAddress":"0x0",
-    "deployJobId":"zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw",
-    "isCompleted":false,
-    "isDistributed":false,
-    "isPrivate":false,
-    "isWinnerlistRequested":true,
-    "_id":"679b4fe7feb5dfd7e868e5f9",
-    "createdAt":"2025-01-30T10:09:43.580Z",
-    "updatedAt":"2025-01-30T10:09:43.580Z",
-    "__v":0
+      "creator": "66fa6bb1c58f93ea0cd0912c",
+      "title": "Testing Exam",
+      "description": "This is a description",
+      "startDate": "2025-01-30T10:09:43.547Z",
+      "duration": 10,
+      "rootHash": "0x0",
+      "secretKey": "SIOSDajksa",
+      "questionCount": 3,
+      "isRewarded": true,
+      "rewardPerWinner": 1,
+      "passingScore": 80,
+      "contractAddress": "0x0",
+      "deployJobId": "zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw",
+      "isCompleted": false,
+      "isDistributed": false,
+      "isPrivate": false,
+      "isWinnerlistRequested": true,
+      "_id": "679b4fe7feb5dfd7e868e5f9",
+      "createdAt": "2025-01-30T10:09:43.580Z",
+      "updatedAt": "2025-01-30T10:09:43.580Z",
+      "__v": 0
     }
     ```
   - **400 Bad Request**: Missing or invalid data.
@@ -429,15 +463,15 @@ TODO: validateEmail middleware will remove.
 - **Headers**:
   - `Session-Token` (Bearer Token, required): User authentication token.
 - **Body**:
-  ```json
+    ```json
     {
       "examId": "679ba93a31ae46ad07b67085",
       "emailList": [
-          "abc@example.com",
-          "xvyz@example.com"
+        "abc@example.com",
+        "xvyz@example.com"
       ]
-  }
-  ```
+    }
+    ```
   - `examId` (string, required): ID of the exam.
   - `emailList` (array of strings, required): List of participant emails.
 - **Middleware**:
@@ -446,11 +480,32 @@ TODO: validateEmail middleware will remove.
 - **Response**:
   - **201 Created**: Links successfully generated and sent to participants.
     ```json
-    {"success":true,"result":[{"email":"swordlionthelionheart@gmail.com","link":"https://choz.io/app/exams/get-started/679b5278feb5dfd7e868e710/4ee0f073-31a9-42f3-9033-b146785469e0"},{"email":"ystuncerbot@gmail.com","link":"https://choz.io/app/exams/get-started/679b5278feb5dfd7e868e710/9cee46cc-435d-4b7b-adee-d54d990e88b8"}]}
+    {
+      "success": true,
+      "result": [
+        {
+          "email": "abc@example.com",
+          "link": "https://choz.io/app/exams/get-started/679b5278feb5dfd7e868e710/4ee0f073-31a9-42f3-9033-b146785469e0"
+        },
+        {
+          "email": "def@mexample.com",
+          "link": "https://choz.io/app/exams/get-started/679b5278feb5dfd7e868e710/9cee46cc-435d-4b7b-adee-d54d990e88b8"
+        }
+      ]
+    }
     ```
   - **400 Bad Request**: Invalid exam ID or email list.
     ```json
-    {"error":"ValidationException","message":"Validation failed","errors":[{"field":"examId","message":"Invalid ObjectId format"}]}
+    {
+      "error": "ValidationException",
+      "message": "Validation failed",
+      "errors": [
+        {
+          "field": "examId",
+          "message": "Invalid ObjectId format"
+        }
+      ]
+    }
     ```
   - **403 Forbidden**: User is not the creator of the exam.
     ```json
@@ -564,7 +619,46 @@ TODO: validateEmail middleware will remove.
 - **Response**:
   - **200 OK**: Returns exam details and participation information.
     ```json
-    {"exam":{"_id":"679b5278feb5dfd7e868e710","creator":"66fa6bb1c58f93ea0cd0912c","title":"Testing Exam","description":"This is a description","startDate":"2025-01-30T10:20:40.881Z","duration":10,"rootHash":"0x0","secretKey":"SIOSDajksa","questionCount":3,"isRewarded":true,"rewardPerWinner":1,"passingScore":80,"contractAddress":"0x0","deployJobId":"zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw","isCompleted":true,"isDistributed":false,"isPrivate":false,"isWinnerlistRequested":true,"createdAt":"2025-01-30T10:20:40.899Z","updatedAt":"2025-01-30T10:30:56.147Z","__v":0},"participatedUser":{"_id":"679b5385feb5dfd7e868e796","user":"66fa6bb1c58f93ea0cd0912c","exam":"679b5278feb5dfd7e868e710","nickname":"bertrand-du-guesclin","isFinished":true,"isWinner":false,"isRewardSent":false,"isMailSent":true,"jobAdded":true,"createdAt":"2025-01-30T10:25:09.870Z","updatedAt":"2025-01-30T10:31:03.482Z","__v":0,"finishTime":"2025-01-30T10:29:01.651Z"}}
+    {
+      "exam": {
+        "_id": "679b5278feb5dfd7e868e710",
+        "creator": "66fa6bb1c58f93ea0cd0912c",
+        "title": "Testing Exam",
+        "description": "This is a description",
+        "startDate": "2025-01-30T10:20:40.881Z",
+        "duration": 10,
+        "rootHash": "0x0",
+        "secretKey": "SIOSDajksa",
+        "questionCount": 3,
+        "isRewarded": true,
+        "rewardPerWinner": 1,
+        "passingScore": 80,
+        "contractAddress": "0x0",
+        "deployJobId": "zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw",
+        "isCompleted": true,
+        "isDistributed": false,
+        "isPrivate": false,
+        "isWinnerlistRequested": true,
+        "createdAt": "2025-01-30T10:20:40.899Z",
+        "updatedAt": "2025-01-30T10:30:56.147Z",
+        "__v": 0
+      },
+      "participatedUser": {
+        "_id": "679b5385feb5dfd7e868e796",
+        "user": "66fa6bb1c58f93ea0cd0912c",
+        "exam": "679b5278feb5dfd7e868e710",
+        "nickname": "bertrand-du-guesclin",
+        "isFinished": true,
+        "isWinner": false,
+        "isRewardSent": false,
+        "isMailSent": true,
+        "jobAdded": true,
+        "createdAt": "2025-01-30T10:25:09.870Z",
+        "updatedAt": "2025-01-30T10:31:03.482Z",
+        "__v": 0,
+        "finishTime": "2025-01-30T10:29:01.651Z"
+      }
+    }
     ```
   - **401 Unauthorized**: User is not authenticated.
     ```json
@@ -601,7 +695,46 @@ TODO: validateEmail middleware will remove.
 - **Response**:
   - **200 OK**: Returns detailed exam information.
     ```json
-    {"_id":"679b5278feb5dfd7e868e710","creator":"66fa6bb1c58f93ea0cd0912c","title":"Testing Exam","description":"This is a description","startDate":"2025-01-30T10:20:40.881Z","duration":10,"rootHash":"0x0","secretKey":"SIOSDajksa","questionCount":3,"isRewarded":true,"rewardPerWinner":1,"passingScore":80,"contractAddress":"0x0","deployJobId":"zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw","isCompleted":true,"isDistributed":false,"isPrivate":false,"isWinnerlistRequested":true,"createdAt":"2025-01-30T10:20:40.899Z","updatedAt":"2025-01-30T10:30:56.147Z","__v":0,"winnerlist":[],"participants":[{"finishTime":"2025-01-30T10:29:01.651Z","userId":"66fa6bb1c58f93ea0cd0912c","nickname":"Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ","walletAddress":"Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ","score":0}],"leaderboard":[{"nickname":"The Night Fury","score":0,"finishTime":"2025-01-30T10:29:01.651Z"}]}
+    {
+      "_id": "679b5278feb5dfd7e868e710",
+      "creator": "66fa6bb1c58f93ea0cd0912c",
+      "title": "Testing Exam",
+      "description": "This is a description",
+      "startDate": "2025-01-30T10:20:40.881Z",
+      "duration": 10,
+      "rootHash": "0x0",
+      "secretKey": "SIOSDajksa",
+      "questionCount": 3,
+      "isRewarded": true,
+      "rewardPerWinner": 1,
+      "passingScore": 80,
+      "contractAddress": "0x0",
+      "deployJobId": "zkCWuZbPl0YFGXdtbf3Z2jgZOyYFpnzvZHQDJjP0rQTSfVqw",
+      "isCompleted": true,
+      "isDistributed": false,
+      "isPrivate": false,
+      "isWinnerlistRequested": true,
+      "createdAt": "2025-01-30T10:20:40.899Z",
+      "updatedAt": "2025-01-30T10:30:56.147Z",
+      "__v": 0,
+      "winnerlist": [],
+      "participants": [
+        {
+          "finishTime": "2025-01-30T10:29:01.651Z",
+          "userId": "66fa6bb1c58f93ea0cd0912c",
+          "nickname": "Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
+          "walletAddress": "Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
+          "score": 0
+        }
+      ],
+      "leaderboard": [
+        {
+          "nickname": "The Night Fury",
+          "score": 0,
+          "finishTime": "2025-01-30T10:29:01.651Z"
+        }
+      ]
+    }
     ```
   - **403 Forbidden**: User is not the creator of the exam.
     ```json
@@ -634,9 +767,9 @@ TODO: validateEmail middleware will remove.
 - **Body**:
   ```json
   {
-      "examId": "679ba93a31ae46ad07b67085",
-      "passcode": "ffb3051d-dbf4-4bc7-9978-e6d353143982",
-      "nickname": "The Night Fury"
+    "examId": "679ba93a31ae46ad07b67085",
+    "passcode": "ffb3051d-dbf4-4bc7-9978-e6d353143982",
+    "nickname": "The Night Fury"
   }
   ```
   - `examId` (string, required): ID of the exam.
@@ -648,7 +781,9 @@ TODO: validateEmail middleware will remove.
 - **Response**:
   - **200 OK**: Exam started successfully.
     ```json
-    {"message":"Exam participation created successfully"}
+    {
+      "message": "Exam participation created successfully"
+    }
     ```
   - **400 Bad Request**: Invalid passcode or exam timing.
     ```json
@@ -684,7 +819,7 @@ TODO: validateEmail middleware will remove.
   - `Session-Token` (Bearer Token, required): User authentication token.
 - **Body**:
   ```json
-    {
+  {
     "examId": "679ba93a31ae46ad07b67085",
     "answers": [
       {
@@ -706,7 +841,9 @@ TODO: validateEmail middleware will remove.
 - **Response**:
   - **200 OK**: Exam finished successfully.
     ```json
-    {"message":"Exam completed successfully"}
+    {
+      "message":"Exam completed successfully"
+    }
     ```
   - **400 Bad Request**: Missing or invalid answers.
     ```json
@@ -729,13 +866,83 @@ TODO: validateEmail middleware will remove.
 
 ## Draft Endpoints `/drafts`
 
-## 1. Create Draft
+### 1. Create Draft
 **POST** `/`
 
 - **Description**: Creates a new draft for the authenticated user.
 - **Headers**:
   - `Session-Token` (Bearer Token, required): User authentication token.
 - **Body**:
+  ```json
+  {
+    "title": "Festing Exam",
+    "description": "This is a description",
+    "questions": [
+      {
+        "number": 1,
+        "text": "Bqqnt",
+        "options": [
+          {
+            "number": 1,
+            "text": "Nsaaikep"
+          },
+          {
+            "number": 2,
+            "text": "Alexiod"
+          },
+          {
+            "number": 3,
+            "text": "John IIs"
+          },
+          {
+            "number": 4,
+            "text": "Manuel Is"
+          },
+          {
+            "number": 5,
+            "text": "Manuel IIss"
+          }
+        ],
+        "correctAnswer": 2
+      },
+      {
+        "number": 2,
+        "text": "Ottwqqoman",
+        "options": [
+          {
+            "number": 1,
+            "text": "Bayasaaad I"
+          },
+          {
+            "number": 2,
+            "text": "Mehdsdsmed I"
+          },
+          {
+            "number": 3,
+            "text": "Murad II"
+          },
+          {
+            "number": 4,
+            "text": "Mehmed II"
+          },
+          {
+            "number": 5,
+            "text": "Mehmed III"
+          }
+        ],
+        "correctAnswer": 2
+      }
+    ],
+    "startDate": "2025-02-03T14:47:24.613Z",
+    "duration": 20,
+    "questionCount": 3,
+    "isPrivate": false,
+    "isWinnerlistRequested": false,
+    "isRewarded": true,
+    "rewardPerWinner": 1,
+    "passingScore": 80
+  }
+  ```
   - `title` (string, required): Title of the draft.
   - `description` (string, optional): Description of the draft.
   - `startDate` (string, optional): Starting date of the draft (ISO format).
@@ -752,19 +959,101 @@ TODO: validateEmail middleware will remove.
   - **201 Created**: Draft successfully created.
     ```json
     {
-      "id": "draftId",
-      "title": "Example Draft",
-      "creator": "userId",
+      "creator": "67a207a94fda98d75cac8513",
+      "title": "Festing Exam",
+      "description": "This is a description",
+      "startDate": "2025-02-03T14:47:24.613Z",
+      "duration": 20,
+      "questionCount": 3,
       "isRewarded": true,
-      "questionCount": 10
-      ...
+      "rewardPerWinner": 1,
+      "passingScore": 80,
+      "isPrivate": false,
+      "questions": [
+        {
+          "text": "Bqqnt",
+          "options": [
+            {
+              "number": 1,
+              "text": "Nsaaikep",
+              "_id": "67a208a94fda98d75cac859c"
+            },
+            {
+              "number": 2,
+              "text": "Alexiod",
+              "_id": "67a208a94fda98d75cac859d"
+            },
+            {
+              "number": 3,
+              "text": "John IIs",
+              "_id": "67a208a94fda98d75cac859e"
+            },
+            {
+              "number": 4,
+              "text": "Manuel Is",
+              "_id": "67a208a94fda98d75cac859f"
+            },
+            {
+              "number": 5,
+              "text": "Manuel IIss",
+              "_id": "67a208a94fda98d75cac85a0"
+            }
+          ],
+          "correctAnswer": 2,
+          "number": 1,
+          "_id": "67a208a94fda98d75cac859b"
+        },
+        {
+          "text": "Ottwqqoman",
+          "options": [
+            {
+              "number": 1,
+              "text": "Bayasaaad I",
+              "_id": "67a208a94fda98d75cac85a2"
+            },
+            {
+              "number": 2,
+              "text": "Mehdsdsmed I",
+              "_id": "67a208a94fda98d75cac85a3"
+            },
+            {
+              "number": 3,
+              "text": "Murad II",
+              "_id": "67a208a94fda98d75cac85a4"
+            },
+            {
+              "number": 4,
+              "text": "Mehmed II",
+              "_id": "67a208a94fda98d75cac85a5"
+            },
+            {
+              "number": 5,
+              "text": "Mehmed III",
+              "_id": "67a208a94fda98d75cac85a6"
+            }
+          ],
+          "correctAnswer": 2,
+          "number": 2,
+          "_id": "67a208a94fda98d75cac85a1"
+        }
+      ],
+      "_id": "67a208a94fda98d75cac859a",
+      "createdAt": "2025-02-04T12:31:37.589Z",
+      "updatedAt": "2025-02-04T12:31:37.589Z",
+      "__v": 0
     }
     ```
   - **400 Bad Request**: Missing or invalid data.
     ```json
     {
-      "message": "Validation error",
-      "errors": ["Title must be at least 3 characters"]
+      "error": "ValidationException",
+      "message": "Validation failed",
+      "errors": [
+        {
+          "field": "title",
+          "message": "Title must be at least 3 characters"
+        }
+      ]
     }
     ```
   - **401 Unauthorized**: User is not authenticated.
@@ -796,18 +1085,88 @@ TODO: validateEmail middleware will remove.
     ```json
     [
       {
-        "id": "draftId1",
-        "title": "Draft 1",
-        "creator": "userId",
-        "updatedAt": "2023-12-01T10:00:00Z"
-        ...
-      },
-      {
-        "id": "draftId2",
-        "title": "Draft 2",
-        "creator": "userId",
-        "updatedAt": "2023-12-01T12:00:00Z"
-        ...
+        "_id": "67a208a94fda98d75cac859a",
+        "creator": "67a207a94fda98d75cac8513",
+        "title": "Festing Exam",
+        "description": "This is a description",
+        "startDate": "2025-02-03T14:47:24.613Z",
+        "duration": 20,
+        "questionCount": 3,
+        "isRewarded": true,
+        "rewardPerWinner": 1,
+        "passingScore": 80,
+        "isPrivate": false,
+        "questions": [
+          {
+            "text": "Bqqnt",
+            "options": [
+              {
+                "number": 1,
+                "text": "Nsaaikep",
+                "_id": "67a208a94fda98d75cac859c"
+              },
+              {
+                "number": 2,
+                "text": "Alexiod",
+                "_id": "67a208a94fda98d75cac859d"
+              },
+              {
+                "number": 3,
+                "text": "John IIs",
+                "_id": "67a208a94fda98d75cac859e"
+              },
+              {
+                "number": 4,
+                "text": "Manuel Is",
+                "_id": "67a208a94fda98d75cac859f"
+              },
+              {
+                "number": 5,
+                "text": "Manuel IIss",
+                "_id": "67a208a94fda98d75cac85a0"
+              }
+            ],
+            "correctAnswer": 2,
+            "number": 1,
+            "_id": "67a208a94fda98d75cac859b"
+          },
+          {
+            "text": "Ottwqqoman",
+            "options": [
+              {
+                "number": 1,
+                "text": "Bayasaaad I",
+                "_id": "67a208a94fda98d75cac85a2"
+              },
+              {
+                "number": 2,
+                "text": "Mehdsdsmed I",
+                "_id": "67a208a94fda98d75cac85a3"
+              },
+              {
+                "number": 3,
+                "text": "Murad II",
+                "_id": "67a208a94fda98d75cac85a4"
+              },
+              {
+                "number": 4,
+                "text": "Mehmed II",
+                "_id": "67a208a94fda98d75cac85a5"
+              },
+              {
+                "number": 5,
+                "text": "Mehmed III",
+                "_id": "67a208a94fda98d75cac85a6"
+              }
+            ],
+            "correctAnswer": 2,
+            "number": 2,
+            "_id": "67a208a94fda98d75cac85a1"
+          }
+        ],
+        "createdAt": "2025-02-04T12:31:37.589Z",
+        "updatedAt": "2025-02-04T12:31:37.589Z",
+        "__v": 0
       }
     ]
     ```
@@ -841,11 +1200,88 @@ TODO: validateEmail middleware will remove.
   - **200 OK**: Returns the draft details.
     ```json
     {
-      "id": "draftId",
-      "title": "Example Draft",
-      "creator": "userId",
-      "isRewarded": false,
-      "questions": []
+      "_id": "67a20af24fda98d75cac86bf",
+      "creator": "67a207a94fda98d75cac8513",
+      "title": "Festing Exam",
+      "description": "This is a description",
+      "startDate": "2025-02-03T14:47:24.613Z",
+      "duration": 20,
+      "questionCount": 3,
+      "isRewarded": true,
+      "rewardPerWinner": 1,
+      "passingScore": 80,
+      "isPrivate": false,
+      "questions": [
+        {
+          "text": "Bqqnt",
+          "options": [
+            {
+              "number": 1,
+              "text": "Nsaaikep",
+              "_id": "67a20af24fda98d75cac86c1"
+            },
+            {
+              "number": 2,
+              "text": "Alexiod",
+              "_id": "67a20af24fda98d75cac86c2"
+            },
+            {
+              "number": 3,
+              "text": "John IIs",
+              "_id": "67a20af24fda98d75cac86c3"
+            },
+            {
+              "number": 4,
+              "text": "Manuel Is",
+              "_id": "67a20af24fda98d75cac86c4"
+            },
+            {
+              "number": 5,
+              "text": "Manuel IIss",
+              "_id": "67a20af24fda98d75cac86c5"
+            }
+          ],
+          "correctAnswer": 2,
+          "number": 1,
+          "_id": "67a20af24fda98d75cac86c0"
+        },
+        {
+          "text": "Ottwqqoman",
+          "options": [
+            {
+              "number": 1,
+              "text": "Bayasaaad I",
+              "_id": "67a20af24fda98d75cac86c7"
+            },
+            {
+              "number": 2,
+              "text": "Mehdsdsmed I",
+              "_id": "67a20af24fda98d75cac86c8"
+            },
+            {
+              "number": 3,
+              "text": "Murad II",
+              "_id": "67a20af24fda98d75cac86c9"
+            },
+            {
+              "number": 4,
+              "text": "Mehmed II",
+              "_id": "67a20af24fda98d75cac86ca"
+            },
+            {
+              "number": 5,
+              "text": "Mehmed III",
+              "_id": "67a20af24fda98d75cac86cb"
+            }
+          ],
+          "correctAnswer": 2,
+          "number": 2,
+          "_id": "67a20af24fda98d75cac86c6"
+        }
+      ],
+      "createdAt": "2025-02-04T12:41:22.617Z",
+      "updatedAt": "2025-02-04T12:41:22.617Z",
+      "__v": 0
     }
     ```
   - **401 Unauthorized**: User is not authenticated.
@@ -884,6 +1320,12 @@ TODO: validateEmail middleware will remove.
 - **Parameters**:
   - `id` (string, required): ID of the draft.
 - **Body**:
+  ```json
+  {
+    "title": "Vesting Exam",
+    "duration": 34
+  }
+  ```
   - Partial update of draft fields (e.g., `title`, `description`, `questions`).
 - **Middleware**:
   - `ensureAuthenticated`: Ensures the user is logged in.
@@ -892,17 +1334,105 @@ TODO: validateEmail middleware will remove.
   - **200 OK**: Draft updated successfully.
     ```json
     {
-      "id": "draftId",
-      "title": "Updated Draft",
-      "creator": "userId"
-      ...
+      "_id": "67a20af24fda98d75cac86bf",
+      "creator": "67a207a94fda98d75cac8513",
+      "title": "Vesting Exam",
+      "description": "This is a description",
+      "startDate": "2025-02-03T14:47:24.613Z",
+      "duration": 34,
+      "questionCount": 3,
+      "isRewarded": true,
+      "rewardPerWinner": 1,
+      "passingScore": 80,
+      "isPrivate": false,
+      "questions": [
+        {
+          "text": "Bqqnt",
+          "options": [
+            {
+              "number": 1,
+              "text": "Nsaaikep",
+              "_id": "67a20af24fda98d75cac86c1"
+            },
+            {
+              "number": 2,
+              "text": "Alexiod",
+              "_id": "67a20af24fda98d75cac86c2"
+            },
+            {
+              "number": 3,
+              "text": "John IIs",
+              "_id": "67a20af24fda98d75cac86c3"
+            },
+            {
+              "number": 4,
+              "text": "Manuel Is",
+              "_id": "67a20af24fda98d75cac86c4"
+            },
+            {
+              "number": 5,
+              "text": "Manuel IIss",
+              "_id": "67a20af24fda98d75cac86c5"
+            }
+          ],
+          "correctAnswer": 2,
+          "number": 1,
+          "_id": "67a20af24fda98d75cac86c0"
+        },
+        {
+          "text": "Ottwqqoman",
+          "options": [
+            {
+              "number": 1,
+              "text": "Bayasaaad I",
+              "_id": "67a20af24fda98d75cac86c7"
+            },
+            {
+              "number": 2,
+              "text": "Mehdsdsmed I",
+              "_id": "67a20af24fda98d75cac86c8"
+            },
+            {
+              "number": 3,
+              "text": "Murad II",
+              "_id": "67a20af24fda98d75cac86c9"
+            },
+            {
+              "number": 4,
+              "text": "Mehmed II",
+              "_id": "67a20af24fda98d75cac86ca"
+            },
+            {
+              "number": 5,
+              "text": "Mehmed III",
+              "_id": "67a20af24fda98d75cac86cb"
+            }
+          ],
+          "correctAnswer": 2,
+          "number": 2,
+          "_id": "67a20af24fda98d75cac86c6"
+        }
+      ],
+      "createdAt": "2025-02-04T12:41:22.617Z",
+      "updatedAt": "2025-02-04T12:44:05.596Z",
+      "__v": 0
     }
     ```
   - **400 Bad Request**: Invalid update data.
     ```json
     {
-      "message": "Validation error",
-      "errors": ["Title must be at least 3 characters"]
+      "error": "ValidationException",
+      "message": "Validation failed",
+      "errors": [
+        {
+          "field": "title",
+          "message": "Title must be at least 3 characters"
+        },
+        {
+          "field": "duration",
+          "message": "Expected number, received string"
+        }
+      ]
     }
     ```
   - **401 Unauthorized**: User is not authenticated.
@@ -993,14 +1523,41 @@ TODO: validateEmail middleware will remove.
   - **200 OK**: Question successfully retrieved.
     ```json
     {
-      "id": "questionId",
-      "text": "What is the capital of France?",
+      "_id": "67a0c73bf658ea9eb6dc8e16",
+      "exam": "67a0c73bf658ea9eb6dc8e14",
+      "text": "Bqqntiwe",
       "options": [
-        { "number": 1, "text": "Paris" },
-        { "number": 2, "text": "Berlin" },
-        { "number": 3, "text": "Madrid" }
+        {
+          "number": 1,
+          "text": "Nsaaikephoros sII",
+          "_id": "67a0c73bf658ea9eb6dc8e17"
+        },
+        {
+          "number": 2,
+          "text": "Alexiodsaas Is",
+          "_id": "67a0c73bf658ea9eb6dc8e18"
+        },
+        {
+          "number": 3,
+          "text": "John IIs",
+          "_id": "67a0c73bf658ea9eb6dc8e19"
+        },
+        {
+          "number": 4,
+          "text": "Manuel Is",
+          "_id": "67a0c73bf658ea9eb6dc8e1a"
+        },
+        {
+          "number": 5,
+          "text": "Manuel IIss",
+          "_id": "67a0c73bf658ea9eb6dc8e1b"
+        }
       ],
-      "exam": "examId"
+      "correctAnswer": 2,
+      "number": 1,
+      "createdAt": "2025-02-03T13:40:11.032Z",
+      "updatedAt": "2025-02-03T13:40:11.032Z",
+      "__v": 0
     }
     ```
   - **401 Unauthorized**: User is not authenticated.
@@ -1044,7 +1601,116 @@ TODO: validateEmail middleware will remove.
 - **Response**:
   - **200 OK**: Questions successfully retrieved.
     ```json
-    [{"_id":"679b5278feb5dfd7e868e718","exam":"679b5278feb5dfd7e868e710","text":"Ottwqqoman","options":[{"number":1,"text":"Bayasaaad I","_id":"679b5278feb5dfd7e868e719"},{"number":2,"text":"Mehdsdsmed I","_id":"679b5278feb5dfd7e868e71a"},{"number":3,"text":"Murad II","_id":"679b5278feb5dfd7e868e71b"},{"number":4,"text":"Mehmed II","_id":"679b5278feb5dfd7e868e71c"},{"number":5,"text":"Mehmed III","_id":"679b5278feb5dfd7e868e71d"}],"createdAt":"2025-01-30T10:20:40.909Z","updatedAt":"2025-01-30T10:20:40.909Z","__v":0,"number":1},{"_id":"679b5278feb5dfd7e868e71e","exam":"679b5278feb5dfd7e868e710","text":"Bqqnt![image (4).png](https://coral-dead-toad-141.mypinata.cloud/ipfs/QmPzRYRU5vTPdAqF9NpvNd9RjEs2Bzgqa7Y6mMSKfDkLzq)iwe","options":[{"number":1,"text":"Nsaaikep![image (5).png](https://coral-dead-toad-141.mypinata.cloud/ipfs/QmZpjyb3AWVHDqPoRFG6rG2eGtHyCrFzTjwpTxTHpZojKP)horos sII","_id":"679b5278feb5dfd7e868e71f"},{"number":2,"text":"Alexiod![image (6).png](https://coral-dead-toad-141.mypinata.cloud/ipfs/QmXTnxapRXY2W23y9Qy7mhAwFuN1zrSvEZTbtDZT9y3vby)saas Is","_id":"679b5278feb5dfd7e868e720"},{"number":3,"text":"John IIs","_id":"679b5278feb5dfd7e868e721"},{"number":4,"text":"Manuel Is","_id":"679b5278feb5dfd7e868e722"},{"number":5,"text":"Manuel IIss","_id":"679b5278feb5dfd7e868e723"}],"createdAt":"2025-01-30T10:20:40.909Z","updatedAt":"2025-01-30T10:20:40.909Z","__v":0,"number":2},{"_id":"679b5278feb5dfd7e868e712","exam":"679b5278feb5dfd7e868e710","text":"Bqqnt![image (1).png](https://coral-dead-toad-141.mypinata.cloud/ipfs/QmW1EmgxzNe9PcsAZcqYUKaXdpMuosApNY1rYgiMWahWb4)iwe","options":[{"number":1,"text":"Nsaaikep![image (2).png](https://coral-dead-toad-141.mypinata.cloud/ipfs/QmXjY5A8m6gQ1NvFYR7y2HLdxYcpqABKfkhcPz45QrXyNp)horos sII","_id":"679b5278feb5dfd7e868e713"},{"number":2,"text":"Alexiod![image (3).png](https://coral-dead-toad-141.mypinata.cloud/ipfs/QmZT7xbLM8nF5sFnR5HfT1PTLJULrVUVzgQ9skxJKMkRbs)saas Is","_id":"679b5278feb5dfd7e868e714"},{"number":3,"text":"John IIs","_id":"679b5278feb5dfd7e868e715"},{"number":4,"text":"Manuel Is","_id":"679b5278feb5dfd7e868e716"},{"number":5,"text":"Manuel IIss","_id":"679b5278feb5dfd7e868e717"}],"createdAt":"2025-01-30T10:20:40.908Z","updatedAt":"2025-01-30T10:20:40.908Z","__v":0,"number":3}]
+    [
+      {
+        "_id": "679b5278feb5dfd7e868e718",
+        "exam": "679b5278feb5dfd7e868e710",
+        "text": "Ottwqqoman",
+        "options": [
+          {
+            "number": 1,
+            "text": "Bayasaaad I",
+            "_id": "679b5278feb5dfd7e868e719"
+          },
+          {
+            "number": 2,
+            "text": "Mehdsdsmed I",
+            "_id": "679b5278feb5dfd7e868e71a"
+          },
+          {
+            "number": 3,
+            "text": "Murad II",
+            "_id": "679b5278feb5dfd7e868e71b"
+          },
+          {
+            "number": 4,
+            "text": "Mehmed II",
+            "_id": "679b5278feb5dfd7e868e71c"
+          },
+          {
+            "number": 5,
+            "text": "Mehmed III",
+            "_id": "679b5278feb5dfd7e868e71d"
+          }
+        ],
+        "createdAt": "2025-01-30T10:20:40.909Z",
+        "updatedAt": "2025-01-30T10:20:40.909Z",
+        "__v": 0,
+        "number": 1
+      },
+      {
+        "_id": "679b5278feb5dfd7e868e71e",
+        "exam": "679b5278feb5dfd7e868e710",
+        "text": "Bqqntiwe",
+        "options": [
+          {
+            "number": 1,
+            "text": "Nsaaikhoros sII",
+            "_id": "679b5278feb5dfd7e868e71f"
+          },
+          {
+            "number": 2,
+            "text": "Alexiodsaas Is",
+            "_id": "679b5278feb5dfd7e868e720"
+          },
+          {
+            "number": 3,
+            "text": "John IIs",
+            "_id": "679b5278feb5dfd7e868e721"
+          },
+          {
+            "number": 4,
+            "text": "Manuel Is",
+            "_id": "679b5278feb5dfd7e868e722"
+          },
+          {
+            "number": 5,
+            "text": "Manuel IIss",
+            "_id": "679b5278feb5dfd7e868e723"
+          }
+        ],
+        "createdAt": "2025-01-30T10:20:40.909Z",
+        "updatedAt": "2025-01-30T10:20:40.909Z",
+        "__v": 0,
+        "number": 2
+      },
+      {
+        "_id": "679b5278feb5dfd7e868e712",
+        "exam": "679b5278feb5dfd7e868e710",
+        "text": "Bqqniwe",
+        "options": [
+          {
+            "number": 1,
+            "text": "Nsaaikephoros sII",
+            "_id": "679b5278feb5dfd7e868e713"
+          },
+          {
+            "number": 2,
+            "text": "Alexiodsaas Is",
+            "_id": "679b5278feb5dfd7e868e714"
+          },
+          {
+            "number": 3,
+            "text": "John IIs",
+            "_id": "679b5278feb5dfd7e868e715"
+          },
+          {
+            "number": 4,
+            "text": "Manuel Is",
+            "_id": "679b5278feb5dfd7e868e716"
+          },
+          {
+            "number": 5,
+            "text": "Manuel IIss",
+            "_id": "679b5278feb5dfd7e868e717"
+          }
+        ],
+        "createdAt": "2025-01-30T10:20:40.908Z",
+        "updatedAt": "2025-01-30T10:20:40.908Z",
+        "__v": 0,
+        "number": 3
+      }
+    ]
     ```
   - **400 Bad Request**: Exam is not active or timing is invalid.
     ```json
@@ -1090,19 +1756,32 @@ TODO: validateEmail middleware will remove.
   - **200 OK**: Answers successfully retrieved.
     ```json
     {
-      "id": "answerId",
-      "user": "userId",
-      "exam": "examId",
+      "_id": "67a0d89006bc9d15832828e8",
+      "user": "6724c914bd890efb03a9166f",
+      "exam": "67a0d6fc06bc9d15832825b9",
       "answers": [
         {
-          "questionId": "questionId1",
-          "answer": 1
+          "question": "67a0c73bf658ea9eb6dc8e16",
+          "selectedOption": "2",
+          "answerHash": "293d5daffb609c9f2c7eb4cb17405dfc7f7f2e8886f37a74134333ac5972ea32",
+          "_id": "67a0d89006bc9d15832828e9"
         },
         {
-          "questionId": "questionId2",
-          "answer": 2
+          "question": "67a0c73bf658ea9eb6dc8e1c",
+          "selectedOption": "2",
+          "answerHash": "293d5daffb609c9f2c7eb4cb17405dfc7f7f2e8886f37a74134333ac5972ea32",
+          "_id": "67a0d89006bc9d15832828ea"
+        },
+        {
+          "question": "67a0c73bf658ea9eb6dc8e22",
+          "selectedOption": "2",
+          "answerHash": "293d5daffb609c9f2c7eb4cb17405dfc7f7f2e8886f37a74134333ac5972ea32",
+          "_id": "67a0d89006bc9d15832828eb"
         }
-      ]
+      ],
+      "createdAt": "2025-02-03T14:54:08.233Z",
+      "updatedAt": "2025-02-03T14:54:08.233Z",
+      "__v": 0
     }
     ```
   - **401 Unauthorized**: User is not authenticated.
@@ -1142,26 +1821,39 @@ TODO: validateEmail middleware will remove.
   - **200 OK**: Answer successfully retrieved.
     ```json
     {
-      "id": "answerId",
+      "_id": "67a0d89006bc9d15832828e8",
       "user": {
-        "id": "userId",
-        "username": "exampleUser",
-        "walletAddress": "0x..."
+        "_id": "6724c914bd890efb03a9166f",
+        "username": "B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz",
+        "walletAddress": "B62qqVs4eJbEFKLHLt4VeneazmpBajJkHyC9nFTvj9PDnZkeePJpcVz"
       },
       "exam": {
-        "id": "examId",
-        "title": "Example Exam"
+        "_id": "67a0d6fc06bc9d15832825b9",
+        "title": "Festing Exam"
       },
       "answers": [
         {
-          "questionId": "questionId1",
-          "answer": 1
+          "question": "67a0c73bf658ea9eb6dc8e16",
+          "selectedOption": "2",
+          "answerHash": "293d5daffb609c9f2c7eb4cb17405dfc7f7f2e8886f37a74134333ac5972ea32",
+          "_id": "67a0d89006bc9d15832828e9"
         },
         {
-          "questionId": "questionId2",
-          "answer": 3
+          "question": "67a0c73bf658ea9eb6dc8e1c",
+          "selectedOption": "2",
+          "answerHash": "293d5daffb609c9f2c7eb4cb17405dfc7f7f2e8886f37a74134333ac5972ea32",
+          "_id": "67a0d89006bc9d15832828ea"
+        },
+        {
+          "question": "67a0c73bf658ea9eb6dc8e22",
+          "selectedOption": "2",
+          "answerHash": "293d5daffb609c9f2c7eb4cb17405dfc7f7f2e8886f37a74134333ac5972ea32",
+          "_id": "67a0d89006bc9d15832828eb"
         }
-      ]
+      ],
+      "createdAt": "2025-02-03T14:54:08.233Z",
+      "updatedAt": "2025-02-03T14:54:08.233Z",
+      "__v": 0
     }
     ```
   - **401 Unauthorized**: User is not authenticated.
@@ -1206,34 +1898,49 @@ TODO: validateEmail middleware will remove.
     ```json
     [
       {
-        "id": "scoreId",
+        "isWinner": false,
+        "_id": "66eddff52bdff433272e4e65",
         "user": {
-          "id": "userId",
-          "username": "exampleUser",
-          "walletAddress": "0x..."
+          "_id": "66cf70cb320d7d2190ce0d68",
+          "username": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
+          "walletAddress": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ"
         },
         "exam": {
-          "id": "examId",
-          "title": "Example Exam"
+          "_id": "66eddfc52bdff433272e4e09",
+          "title": "Production Exam"
         },
-        "score": 85,
-        "totalQuestions": 10,
-        "correctAnswers": 8
+        "score": 99,
+        "__v": 0
       },
       {
-        "id": "scoreId2",
+        "isWinner": false,
+        "_id": "66ede3f450b0a54bd6961a18",
         "user": {
-          "id": "userId2",
-          "username": "userTwo",
-          "walletAddress": "0x..."
+          "_id": "66cf70cb320d7d2190ce0d68",
+          "username": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
+          "walletAddress": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ"
         },
         "exam": {
-          "id": "examId2",
-          "title": "Another Exam"
+          "_id": "66ede3ce50b0a54bd69619ee",
+          "title": "Production Exam"
         },
-        "score": 90,
-        "totalQuestions": 10,
-        "correctAnswers": 9
+        "score": 99,
+        "__v": 0
+      },
+      {
+        "isWinner": false,
+        "_id": "66ede6d9ea7f0df297718776",
+        "user": {
+          "_id": "66cf70cb320d7d2190ce0d68",
+          "username": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
+          "walletAddress": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ"
+        },
+        "exam": {
+          "_id": "66ede686ea7f0df297718746",
+          "title": "Production Exam"
+        },
+        "score": 99,
+        "__v": 0
       }
     ]
     ```
@@ -1278,7 +1985,27 @@ TODO: validateEmail middleware will remove.
 - **Response**:
   - **200 OK**: Scores successfully retrieved for the exam.
     ```json
-    [{"_id":"679b546dfeb5dfd7e868e7fa","user":{"_id":"66fa6bb1c58f93ea0cd0912c","username":"Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ","walletAddress":"Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ"},"exam":{"_id":"679b5278feb5dfd7e868e710","title":"Testing Exam"},"score":0,"totalQuestions":3,"correctAnswers":0,"isWinner":false,"createdAt":"2025-01-30T10:29:01.640Z","updatedAt":"2025-01-30T10:29:01.640Z","__v":0}]
+    [
+      {
+        "_id": "679b546dfeb5dfd7e868e7fa",
+        "user": {
+          "_id": "66fa6bb1c58f93ea0cd0912c",
+          "username": "Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
+          "walletAddress": "Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ"
+        },
+        "exam": {
+          "_id": "679b5278feb5dfd7e868e710",
+          "title": "Testing Exam"
+        },
+        "score": 0,
+        "totalQuestions": 3,
+        "correctAnswers": 0,
+        "isWinner": false,
+        "createdAt": "2025-01-30T10:29:01.640Z",
+        "updatedAt": "2025-01-30T10:29:01.640Z",
+        "__v": 0
+      }
+    ]
     ```
   - **401 Unauthorized**: User is not authenticated.
     ```json

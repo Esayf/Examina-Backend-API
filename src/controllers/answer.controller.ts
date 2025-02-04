@@ -4,7 +4,7 @@ import answerService from "../services/answer.service";
 
 async function getAnswers(req: CustomRequest, res: Response) {
 	try {
-		const { examId } = req.body as { examId: string };
+		const { examId } = req.params;
 		const userId = req.session.user?.userId;
 
 		if (!userId) {

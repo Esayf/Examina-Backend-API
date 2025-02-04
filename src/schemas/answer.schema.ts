@@ -5,9 +5,9 @@ import { Types } from "mongoose";
 const objectIdSchema = z.string().refine((val) => Types.ObjectId.isValid(val), { message: "Invalid ObjectId format" });
 
 export const answerSchemas = {
-	getAnswers: z.object({ examId: objectIdSchema }),
+	getAnswersParams: z.object({ examId: objectIdSchema }),
 
-	params: z.object({
+	answerParams: z.object({
 		answerId: objectIdSchema,
 	}),
 };

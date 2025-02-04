@@ -86,6 +86,6 @@ export const draftSchemas = {
 } as const;
 
 // Type exports for use in services and controllers
-export type CreateDraftInput = z.infer<typeof draftSchemas.createDraft>;
-export type UpdateDraftInput = z.infer<typeof draftSchemas.updateDraft>;
-export type DraftQueryParams = z.infer<typeof draftSchemas.query>;
+// export type CreateDraftInput = z.infer<typeof draftSchemas.createDraft>;
+// export type UpdateDraftInput = z.infer<typeof draftSchemas.updateDraft>;
+// export type DraftQueryParams = z.infer<typeof draftSchemas.query>;
