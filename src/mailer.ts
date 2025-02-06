@@ -9,7 +9,7 @@ const regularHtmlContent = fs.readFileSync(regularResultsHtmlPath, "utf-8");
 const winnerHtmlContent = fs.readFileSync(winnerResultsHtmlPath, "utf-8");
 
 import SMTPTransport from "nodemailer/lib/smtp-transport"; // SMTP transport tipini içe aktar
-import { Winnerlist } from "./cron/sendWinnerlistToCreator";
+import { WinnerlistMailData } from "./cron/sendWinnerlistToCreator";
 import { formatMina } from "./helpers/helperFunctions";
 
 const transporter: Transporter<SMTPTransport.Options> = nodemailer.createTransport({
@@ -91,7 +91,7 @@ async function sendGeneratedExamLink(examLink: string, participantEmail: string)
 	console.log("Message sent: %s", info.messageId);
 }
 
-async function sendWinnerlist(winnerlist: Winnerlist): Promise<void> {
+async function sendWinnerlist(winnerlist: WinnerlistMailData): Promise<void> {
 	const subject = `Winnerlist of the exam ${winnerlist.examId}`;
 	const htmlBody = `
 <!DOCTYPE html>
