@@ -15,6 +15,7 @@ const questionSchema = z
 		options: z.array(optionSchema).min(2, "At least 2 options are required").max(6, "Maximum 6 options allowed"),
 		correctAnswer: z.number().int().min(1),
 		number: z.number().int().min(1),
+		difficulty: z.number().int().min(1).max(5).optional(),
 	})
 	.refine((data) => data.correctAnswer <= data.options.length, {
 		message: "Correct answer must be within the range of available options",

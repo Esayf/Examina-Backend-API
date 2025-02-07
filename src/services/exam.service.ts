@@ -29,54 +29,6 @@ interface ExamResult {
 
 async function create(examData: Partial<ExamDocument>, questions: Array<QuestionInput>): Promise<ExamDocument> {
 	try {
-		const schema = Joi.object({
-			title: Joi.string().required(),
-			creator: Joi.string().required(),
-			description: Joi.string().required(),
-			startDate: Joi.date().required(),
-			duration: Joi.number().positive().required(),
-			rootHash: Joi.string().required(),
-			secretKey: Joi.string().required(),
-			questions: Joi.array().required(),
-			questionCount: Joi.number().positive().required(),
-			isRewarded: Joi.boolean(),
-			rewardPerWinner: Joi.when("isRewarded", {
-				is: true,
-				then: Joi.number().positive().required(),
-				otherwise: Joi.optional(),
-			}),
-			passingScore: Joi.when("isRewarded", {
-				is: true,
-				then: Joi.number().min(0).max(100).required(),
-				otherwise: Joi.optional(),
-			}),
-			deployJobId: Joi.when("isRewarded", {
-				is: true,
-				then: Joi.string().required(),
-				otherwise: Joi.optional(),
-			}),
-			contractAddress: Joi.string().optional(),
-		});
-		const { error } = schema.validate({
-			title: examData.title,
-			creator: examData.creator,
-			description: examData.description,
-			startDate: examData.startDate,
-			questions: questions,
-			duration: examData.duration,
-			rootHash: examData.rootHash,
-			secretKey: examData.secretKey,
-			questionCount: examData.questionCount,
-			isRewarded: examData.isRewarded,
-			rewardPerWinner: examData.rewardPerWinner,
-			passingScore: examData.passingScore,
-			deployJobId: examData.deployJobId,
-			contractAddress: examData.contractAddress,
-		});
-		if (error) {
-			throw new Error(error.details[0].message);
-		}
-
 		examData.isDistributed = false;
 		const exam = new Exam(examData);
 		const savedExam = await exam.save();
@@ -344,7 +296,7 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 
 		await answerService.create(userId, examId, answers, walletAddress);
 
-		const answerKey = await getAnswerKey(examId);
+		const answerKey: AnswerKey[] = await getAnswerKey(examId);
 
 		const { score, correctAnswers } = await scoreService.calculateScore(answers, answerKey);
 
@@ -399,11 +351,14 @@ async function getAnswerKey(examId: string): Promise<AnswerKey[]> {
 		throw new Error("Exam not found");
 	}
 
-	const questions = await Question.find({ exam: examId }).select("number correctAnswer").sort({ number: 1 });
+	const questions = await Question.find({ exam: examId })
+		.select("number correctAnswer difficulty")
+		.sort({ number: 1 });
 
 	const answerKey: AnswerKey[] = questions.map((question) => ({
 		questionId: question.id,
 		correctAnswer: question.correctAnswer,
+		difficulty: question.difficulty,
 	}));
 
 	return answerKey;
