@@ -161,6 +161,7 @@ interface DraftDocument extends Document {
 	secretKey?: string;
 	questionCount?: number;
 	isRewarded?: boolean;
+	totalRewardPoolAmount?: number;
 	rewardPerWinner?: number;
 	passingScore?: number;
 	questions?: Array<{

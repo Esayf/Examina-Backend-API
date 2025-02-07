@@ -3,8 +3,6 @@ import { DraftDocument } from "@/typings";
 
 async function create(draftData: Partial<DraftDocument>): Promise<DraftDocument> {
 	try {
-		console.log("Creating draft: ", draftData);
-		console.log("Draft data question type", draftData?.questions?.[0]?.questionType);
 		const draft = new Draft(draftData);
 		return await draft.save();
 	} catch (err) {
