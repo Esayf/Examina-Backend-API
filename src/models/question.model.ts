@@ -32,6 +32,10 @@ const QuestionSchema = new Schema(
 			type: Number,
 			required: true,
 		},
+		difficulty: {
+			type: Number,
+			default: 1,
+		},
 	},
 	{
 		timestamps: true,

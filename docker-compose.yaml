@@ -5,17 +5,16 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "4000:3000"
     environment:
       - NODE_ENV=production
       - MONGO_URI=mongodb://db:27017
-      - PORT=8000
+      - PORT=3000
       - PINATA_API_KEY=${PINATA_API_KEY}
       - PINATA_SECRET_KEY=${PINATA_SECRET_KEY}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - ADMIN_PRIVATE_KEY=${ADMIN_PRIVATE_KEY}
+      - REDIS_PORT=6380
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
@@ -24,19 +23,23 @@ services:
       - redis
     networks:
       - examina_network
-    command: ["bun", "start"]
+    command: ["bun", "dev"]
 
   db:
-    container_name: choz-mongodb
+    container_name: mongodb
     image: mongo:latest
+    ports:
+      - "27017:27017"
     volumes:
       - mongodb_data:/data/db
     networks:
       - examina_network
 
   redis:
-    container_name: choz-redis
+    container_name: redis
     image: redis:latest
+    ports:
+      - "6380:6379"
     volumes:
       - redis_data:/data
     networks:

@@ -40,11 +40,37 @@ async function createScore(scoreData: ScoreData): Promise<ScoreDocument> {
 
 async function calculateScore(userAnswers: Answer[], answerKey: AnswerKey[]) {
 	let correctAnswers = 0;
+	let weightedScore = 0;
+	let totalPossibleWeightedScore = 0;
+
+	const getDifficultyMultiplier = (difficulty: number): number => {
+		switch (difficulty) {
+			case 1:
+				return 1; // Very Easy (Default): 1x weight
+			case 2:
+				return 1.5; // Easy: 1.5x weight
+			case 3:
+				return 2; // Moderate: 2x weight
+			case 4:
+				return 2.5; // Hard: 2.5x weight
+			case 5:
+				return 3; // Very Hard: 3x weight
+			default:
+				return 1; // Default: 1x
+		}
+	};
 
 	userAnswers.forEach((userAnswer) => {
 		const question = answerKey.find((key) => key.questionId.toString() === userAnswer.questionId.toString());
-		if (question && question.correctAnswer.toString() === userAnswer.answer.toString()) {
-			correctAnswers++;
+		if (question && question.difficulty) {
+			const multiplier = getDifficultyMultiplier(question.difficulty);
+
+			if (question.correctAnswer.toString() === userAnswer.answer.toString()) {
+				correctAnswers++;
+				weightedScore += 10 * multiplier;
+			}
+
+			totalPossibleWeightedScore += 10 * multiplier;
 		}
 	});
 	// Make sure that userAnswers.questionId order in the array is the same as answerKey.questionId order in the array
@@ -62,9 +88,12 @@ async function calculateScore(userAnswers: Answer[], answerKey: AnswerKey[]) {
 	//console.log("ZK Program Score Calculation score: ", zkProgramScoreCalculationProof.score);
 
 	// TODO: Changing Score Calculation System
-	const score = ((correctAnswers / answerKey.length) * 100).toFixed(2).toString();
+	const normalizedWeightedScore = ((weightedScore / totalPossibleWeightedScore) * 100).toFixed(2);
 
-	return { score, correctAnswers };
+	return {
+		score: normalizedWeightedScore,
+		correctAnswers,
+	};
 }
 
 export default {

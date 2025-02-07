@@ -1,8 +1,12 @@
 import express from "express";
 import examController from "../controllers/exam.controller";
-import { ensureAuthenticated, validateFinishExamBody } from "../middleware/middleware";
+import { ensureAuthenticated } from "../middleware/middleware";
+import { validateRequest } from "../middleware/validators";
+import { examSchemas } from "../schemas/exam.schema";
 
 const router = express.Router();
+
+router.use(ensureAuthenticated);
 
 /**
  * @typedef {object} ExamInput
@@ -25,9 +29,9 @@ const router = express.Router();
  * @return {object} 401 - Unauthorized
  * @return {object} 500 - Server error
  */
-router.post("/create", ensureAuthenticated, examController.createExam);
+router.post("/create", validateRequest({ body: examSchemas.createExam }), examController.createExam);
 
-router.post("/generateExamLinks", ensureAuthenticated, examController.generateLinks);
+router.post("/generateExamLinks", validateRequest({ body: examSchemas.generateLinks }), examController.generateLinks);
 
 /**
  * GET /exams/myExams
@@ -38,11 +42,11 @@ router.post("/generateExamLinks", ensureAuthenticated, examController.generateLi
  * @return {object} 401 - Unauthorized
  * @return {object} 500 - Server error
  */
-router.get("/myExams", ensureAuthenticated, examController.getAllExamsByUser);
+router.get("/myExams", validateRequest({ query: examSchemas.myExamsQueryParams }), examController.getAllExamsByUser);
 
-router.get("/:id", ensureAuthenticated, examController.getExamById);
-router.get("/:id/details", ensureAuthenticated, examController.getExamDetails);
-router.post("/startExam", ensureAuthenticated, examController.startExam);
-router.post("/finishExam", ensureAuthenticated, validateFinishExamBody, examController.finishExam);
+router.get("/:id", validateRequest({ params: examSchemas.params }), examController.getExamById);
+router.get("/:id/details", validateRequest({ params: examSchemas.params }), examController.getExamDetails);
+router.post("/startExam", validateRequest({ body: examSchemas.startExam }), examController.startExam);
+router.post("/finishExam", validateRequest({ body: examSchemas.finishExam }), examController.finishExam);
 
 export default router;

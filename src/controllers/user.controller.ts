@@ -24,11 +24,6 @@ async function registerUser(req: CustomRequest, res: Response) {
 			return res.status(400).json({ message: "Wallet address is required" });
 		}
 		const user = await userService.registerOrLogin(req, walletAddress);
-		// console.log("The return value of registerOrLogin: ", {
-		// 	success: true,
-		// 	session: req.session.user,
-		// 	user,
-		// });
 		return res.json({
 			success: true,
 			session: req.session.user,
