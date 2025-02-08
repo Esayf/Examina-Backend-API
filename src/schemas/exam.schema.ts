@@ -97,8 +97,8 @@ export const examSchemas = {
 
 	startExam: z.object({
 		examId: objectIdSchema,
-		passcode: z.string().min(1, "Passcode is required"),
-		nickname: z.string().nullable(),
+		passcode: z.string().min(1, "Passcode is required").optional(),
+		nickname: z.string().optional(),
 	}),
 	finishExam: z.object({
 		examId: objectIdSchema,

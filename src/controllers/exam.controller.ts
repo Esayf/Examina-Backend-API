@@ -132,10 +132,14 @@ async function getExamDetails(req: CustomRequest, res: Response) {
 
 async function startExam(req: CustomRequest, res: Response) {
 	try {
-		const { examId, passcode, nickname } = req.body as {
+		const {
+			examId,
+			passcode = "",
+			nickname = null,
+		} = req.body as {
 			examId: string;
-			passcode: string;
-			nickname: string | null;
+			passcode?: string;
+			nickname?: string;
 		};
 		const userId = req.session.user?.userId;
 
