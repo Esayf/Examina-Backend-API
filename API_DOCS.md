@@ -304,6 +304,7 @@ TODO: session message/token validation info will be fixed.
         {
           "number": 1,
           "text": "Bqqnt",
+          "difficulty": 1,
           "options": [
             {
               "number": 1,
@@ -331,6 +332,7 @@ TODO: session message/token validation info will be fixed.
         {
           "number": 2,
           "text": "Ottwqqoman",
+          "difficulty": 5,
           "options": [
             {
               "number": 1,
@@ -380,6 +382,7 @@ TODO: session message/token validation info will be fixed.
   - `questions` (array of objects, required): List of questions in the exam.
     - `number` (number, required): The question number.
     - `text` (string, required): The question text.
+    - `difficulty` (number, optional): The question difficulty (between 1-5).
     - `options` (array of objects, required): List of answer options.
       - `number` (number, required): The option number.
       - `text` (string, required): The option text.
@@ -903,6 +906,7 @@ TODO: session message/token validation info will be fixed.
             "text": "Manuel IIss"
           }
         ],
+        "difficulty": 2,
         "correctAnswer": 2
       },
       {
@@ -930,6 +934,7 @@ TODO: session message/token validation info will be fixed.
             "text": "Mehmed III"
           }
         ],
+        "difficulty": 3,
         "correctAnswer": 2
       }
     ],
@@ -952,6 +957,13 @@ TODO: session message/token validation info will be fixed.
   - `rewardPerWinner` (number, optional): Reward amount per winner (required if `isRewarded` is true).
   - `passingScore` (number, optional): Minimum score required to win (required if `isRewarded` is true).
   - `questions` (array, optional): List of questions with options and correct answers.
+    - `number` (number, required): The question number.
+    - `text` (string, required): The question text.
+    - `difficulty` (number, optional): The question difficulty (between 1-5).
+    - `options` (array of objects, required): List of answer options.
+      - `number` (number, required): The option number.
+      - `text` (string, required): The option text.
+    - `correctAnswer` (number, required): The correct option number.
 - **Middleware**:
   - `ensureAuthenticated`: Ensures the user is logged in.
   - `validateRequest`: Validates the request body.
@@ -972,6 +984,7 @@ TODO: session message/token validation info will be fixed.
       "questions": [
         {
           "text": "Bqqnt",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1005,6 +1018,7 @@ TODO: session message/token validation info will be fixed.
         },
         {
           "text": "Ottwqqoman",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1099,6 +1113,7 @@ TODO: session message/token validation info will be fixed.
         "questions": [
           {
             "text": "Bqqnt",
+            "difficulty": 2,
             "options": [
               {
                 "number": 1,
@@ -1132,6 +1147,7 @@ TODO: session message/token validation info will be fixed.
           },
           {
             "text": "Ottwqqoman",
+            "difficulty": 3,
             "options": [
               {
                 "number": 1,
@@ -1214,6 +1230,7 @@ TODO: session message/token validation info will be fixed.
       "questions": [
         {
           "text": "Bqqnt",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1247,6 +1264,7 @@ TODO: session message/token validation info will be fixed.
         },
         {
           "text": "Ottwqqoman",
+          "difficulty": 3,
           "options": [
             {
               "number": 1,
@@ -1348,6 +1366,7 @@ TODO: session message/token validation info will be fixed.
       "questions": [
         {
           "text": "Bqqnt",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1381,6 +1400,7 @@ TODO: session message/token validation info will be fixed.
         },
         {
           "text": "Ottwqqoman",
+          "difficulty": 3,
           "options": [
             {
               "number": 1,
@@ -1526,6 +1546,7 @@ TODO: session message/token validation info will be fixed.
       "_id": "67a0c73bf658ea9eb6dc8e16",
       "exam": "67a0c73bf658ea9eb6dc8e14",
       "text": "Bqqntiwe",
+      "difficulty": 2,
       "options": [
         {
           "number": 1,
@@ -1606,6 +1627,7 @@ TODO: session message/token validation info will be fixed.
         "_id": "679b5278feb5dfd7e868e718",
         "exam": "679b5278feb5dfd7e868e710",
         "text": "Ottwqqoman",
+        "difficulty": 2,
         "options": [
           {
             "number": 1,
@@ -1642,6 +1664,7 @@ TODO: session message/token validation info will be fixed.
         "_id": "679b5278feb5dfd7e868e71e",
         "exam": "679b5278feb5dfd7e868e710",
         "text": "Bqqntiwe",
+        "difficulty": 3,
         "options": [
           {
             "number": 1,
@@ -1678,6 +1701,7 @@ TODO: session message/token validation info will be fixed.
         "_id": "679b5278feb5dfd7e868e712",
         "exam": "679b5278feb5dfd7e868e710",
         "text": "Bqqniwe",
+        "difficulty": 2,
         "options": [
           {
             "number": 1,
