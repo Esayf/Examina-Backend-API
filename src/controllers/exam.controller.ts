@@ -84,6 +84,34 @@ async function getAllExamsByUser(req: CustomRequest, res: Response) {
 	}
 }
 
+async function getAllCreatedExams(req: CustomRequest, res: Response) {
+	try {
+		const userId = req.session.user?.userId;
+		if (!userId) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+		const exams = await examService.getAllCreatedExams(userId);
+		return res.status(200).json(exams);
+	} catch (err) {
+		console.error("Error fetching created exams: ", err);
+		return res.status(500).json({ message: "Internal server error" });
+	}
+}
+
+async function getAllJoinedExams(req: CustomRequest, res: Response) {
+	try {
+		const userId = req.session.user?.userId;
+		if (!userId) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+		const exams = await examService.getAllJoinedExams(userId);
+		return res.status(200).json(exams);
+	} catch (err) {
+		console.error("Error fetching joined exams: ", err);
+		return res.status(500).json({ message: "Internal server error" });
+	}
+}
+
 async function getExamById(req: CustomRequest, res: Response) {
 	try {
 		const { id } = req.params;
@@ -185,6 +213,8 @@ export default {
 	createExam,
 	generateLinks,
 	getAllExamsByUser,
+	getAllCreatedExams,
+	getAllJoinedExams,
 	getExamById,
 	getExamDetails,
 	startExam,

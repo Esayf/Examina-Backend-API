@@ -2026,4 +2026,93 @@ TODO: session message/token validation info will be fixed.
     }
     ```
 
+---
+
+### 3. Get Created Exams
+**GET** `/myExams/created`
+
+- **Description**: Retrieves all exams created by the authenticated user.
+- **Headers**:
+  - `Session-Token` (Bearer Token, required): User authentication token.
+- **Query Parameters**:
+  - `filter` (string, optional): `all`, `upcoming`, `active`, or `ended` (default: `all`).
+  - `sortBy` (string, optional): Field to sort by (e.g., `startDate`, `duration`, `title`, default: `createdAt`).
+  - `sortOrder` (string, optional): `asc` or `desc` (default: `desc`).
+- **Middleware**:
+  - `ensureAuthenticated`: Ensures the user is logged in.
+- **Response**:
+  - **200 OK**: Returns the list of created exams.
+    ```json
+    [
+      {
+        "_id": "673f369944e8c1ef46638105",
+        "title": "Testing Exam",
+        "description": "This is a description",
+        "startDate": "2024-11-21T13:32:57.000Z",
+        "duration": 2,
+        "endDate": "2024-11-21T13:34:57.000Z",
+        "totalParticipants": 25,
+        "status": "ended"
+      }
+    ]
+    ```
+  - **401 Unauthorized**: User is not authenticated.
+    ```json
+    {
+      "message": "Unauthorized"
+    }
+    ```
+  - **500 Internal Server Error**: Server encountered an unexpected error.
+    ```json
+    {
+      "message": "Internal server error"
+    }
+    ```
+
+### 4. Get Joined Exams
+**GET** `/myExams/joined`
+
+- **Description**: Retrieves all exams that the authenticated user has participated in.
+- **Headers**:
+  - `Session-Token` (Bearer Token, required): User authentication token.
+- **Query Parameters**:
+  - `filter` (string, optional): `all`, `active`, or `ended` (default: `all`).
+  - `sortBy` (string, optional): Field to sort by (e.g., `startDate`, `duration`, `title`, default: `createdAt`).
+  - `sortOrder` (string, optional): `asc` or `desc` (default: `desc`).
+- **Middleware**:
+  - `ensureAuthenticated`: Ensures the user is logged in.
+- **Response**:
+  - **200 OK**: Returns the list of joined exams.
+    ```json
+    [
+      {
+        "_id": "673f369944e8c1ef46638105",
+        "title": "Testing Exam",
+        "description": "This is a description",
+        "examStartDate": "2024-11-21T13:32:57.000Z",
+        "examEndDate": "2024-11-21T13:34:57.000Z",
+        "examDuration": 2,
+        "examFinishedAt": "2024-11-21T13:34:57.000Z",
+        "status": "ended",
+        "userStartedAt": "2024-11-21T13:33:00.000Z",
+        "userFinishedAt": "2024-11-21T13:34:30.000Z",
+        "userDurationAsSeconds": 90,
+        "userScore": 85,
+        "userNickName": "User123"
+      }
+    ]
+    ```
+  - **401 Unauthorized**: User is not authenticated.
+    ```json
+    {
+      "message": "Unauthorized"
+    }
+    ```
+  - **500 Internal Server Error**: Server encountered an unexpected error.
+    ```json
+    {
+      "message": "Internal server error"
+    }
+    ```
+
 
