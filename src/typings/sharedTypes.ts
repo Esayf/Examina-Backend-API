@@ -30,6 +30,7 @@ interface CustomRequest extends Request<ParamsDictionary, any, any, any> {
 }
 
 interface ExamDocument extends Document {
+	_id: string;
 	creator: string;
 	title: string;
 	description: string;
@@ -73,7 +74,6 @@ type Leaderboard = Array<
 >;
 
 interface ExtendedExamDocument extends ExamDocument {
-	_id: string;
 	winnerlist?: Winner[];
 	participants?: Participant[];
 	leaderboard?: Leaderboard;

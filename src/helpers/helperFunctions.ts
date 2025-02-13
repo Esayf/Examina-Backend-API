@@ -179,3 +179,12 @@ export function generatePasscodes(count: number): string[] {
 
 	return passcodes;
 }
+
+export function generatePinCode(): string {
+	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	let pincode = "";
+	for (let i = 0; i < 6; i++) {
+		pincode += chars.charAt(Math.floor(Math.random() * chars.length));
+	}
+	return pincode;
+}

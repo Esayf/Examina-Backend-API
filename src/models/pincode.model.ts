@@ -1,14 +1,15 @@
 import mongoose, { Schema } from "mongoose";
-import { JoinCode } from "@/typings";
+import { PincodeDocument } from "@/typings";
 
-const JoinCodeSchema = new Schema(
+const PincodeSchema = new Schema(
 	{
 		exam: {
 			type: Schema.Types.ObjectId,
 			ref: "Exam",
 			required: true,
+			unique: true,
 		},
-		joinCode: {
+		pincode: {
 			type: String,
 			required: true,
 			unique: true,
@@ -19,4 +20,4 @@ const JoinCodeSchema = new Schema(
 	}
 );
 
-export default mongoose.model<JoinCode>("JoinCode", JoinCodeSchema);
+export default mongoose.model<PincodeDocument>("Pincode", PincodeSchema);

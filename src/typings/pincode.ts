@@ -1,7 +1,7 @@
 import { Document } from "mongoose";
 import { ExamDocument } from "./sharedTypes";
 
-export interface JoinCode extends Document {
+export interface PincodeDocument extends Document {
 	exam: ExamDocument;
-	joinCode: string;
+	pincode: string;
 }
