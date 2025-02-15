@@ -94,6 +94,7 @@ interface QuestionDocument extends Document {
 	}>;
 	correctAnswer: number;
 	number: number;
+	difficulty?: number;
 }
 
 interface QuestionResponseDocument extends Omit<QuestionDocument, "correctAnswer"> {}
@@ -103,6 +104,7 @@ interface QuestionInput {
 	text: string;
 	options: Array<{ number: number; text: string }>;
 	correctAnswer: number;
+	difficulty: number;
 }
 
 interface ParticipatedUserDocument extends Document {
@@ -149,6 +151,7 @@ interface ProcessedAnswer {
 interface AnswerKey {
 	questionId: string;
 	correctAnswer: number;
+	difficulty?: number;
 }
 
 interface DraftDocument extends Document {
@@ -161,11 +164,13 @@ interface DraftDocument extends Document {
 	secretKey?: string;
 	questionCount?: number;
 	isRewarded?: boolean;
+	totalRewardPoolAmount?: number;
 	rewardPerWinner?: number;
 	passingScore?: number;
 	questions?: Array<{
 		questionType?: string;
 		text?: string;
+		difficulty?: number;
 		options?: Array<{
 			number: number;
 			text?: string;

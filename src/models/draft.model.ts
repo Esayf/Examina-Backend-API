@@ -30,6 +30,9 @@ const DraftSchema = new Schema(
 		rewardPerWinner: {
 			type: Number,
 		},
+		totalRewardPoolAmount: {
+			type: Number,
+		},
 		passingScore: {
 			type: Number,
 		},
@@ -49,6 +52,7 @@ const DraftSchema = new Schema(
 				correctAnswer: Number,
 				number: Number,
 				questionType: String,
+				difficulty: Number,
 			},
 		],
 	},

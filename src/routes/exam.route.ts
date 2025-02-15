@@ -42,8 +42,16 @@ router.post("/generateExamLinks", validateRequest({ body: examSchemas.generateLi
  * @return {object} 401 - Unauthorized
  * @return {object} 500 - Server error
  */
-router.get("/myExams", validateRequest({ query: examSchemas.myExamsQueryParams }), examController.getAllExamsByUser);
-
+router.get(
+	"/myExams/created",
+	validateRequest({ query: examSchemas.createdExamsQueryParams }),
+	examController.getAllCreatedExams
+);
+router.get(
+	"/myExams/joined",
+	validateRequest({ query: examSchemas.joinedExamsQueryParams }),
+	examController.getAllJoinedExams
+);
 router.get("/:id", validateRequest({ params: examSchemas.params }), examController.getExamById);
 router.get("/:id/details", validateRequest({ params: examSchemas.params }), examController.getExamDetails);
 router.post("/startExam", validateRequest({ body: examSchemas.startExam }), examController.startExam);
