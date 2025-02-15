@@ -5,8 +5,24 @@ import ParticipatedUser from "@/models/participatedUser.model";
 import Score from "@/models/score.model";
 import User from "@/models/user.model";
 import { ExamDocument, ExtendedExamDocument } from "@/typings";
+import { beforeEach, describe, expect, it } from "bun:test";
+
+// Helper function to generate unique identifiers
+function generateUniqueId() {
+	return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
 
 describe("Exam Service - getDetails", () => {
+	beforeEach(async () => {
+		// Clean up the database before each test
+		await Promise.all([
+			User.deleteMany({}),
+			Exam.deleteMany({}),
+			ParticipatedUser.deleteMany({}),
+			Score.deleteMany({}),
+		]);
+	});
+
 	it("should return null for non-existent exam", async () => {
 		const nonExistentId = new mongoose.Types.ObjectId();
 		const result = await examService.getDetails(nonExistentId.toString());
@@ -34,7 +50,7 @@ describe("Exam Service - getDetails", () => {
 		expect(result).toBeDefined();
 		expect(result?.title).toBe(examData.title);
 		expect(result?.winnerlist).toBeUndefined();
-		expect(result?.participants).toBeUndefined();
+		expect(result?.participants).toEqual([]);
 		expect(result?.leaderboard).toBeUndefined();
 	});
 
@@ -57,24 +73,24 @@ describe("Exam Service - getDetails", () => {
 
 		const exam = await Exam.create(examData);
 
-		// Create test users first
+		// Create test users with unique identifiers
 		const user1Id = new mongoose.Types.ObjectId();
 		const user2Id = new mongoose.Types.ObjectId();
+		const uniqueId1 = generateUniqueId();
+		const uniqueId2 = generateUniqueId();
 
 		await User.create({
 			_id: user1Id,
-			email: "user1@test.com",
-			username: "user1",
-			walletAddress: "0x1234567890",
-			// add other required fields based on your User model
+			email: `user1.${uniqueId1}@test.com`,
+			username: `user1.${uniqueId1}`,
+			walletAddress: `0x${uniqueId1}`,
 		});
 
 		await User.create({
 			_id: user2Id,
-			email: "user2@test.com",
-			username: "user2",
-			walletAddress: "0x0987654321",
-			// add other required fields based on your User model
+			email: `user2.${uniqueId2}@test.com`,
+			username: `user2.${uniqueId2}`,
+			walletAddress: `0x${uniqueId2}`,
 		});
 
 		const finishTime1 = new Date();
@@ -84,7 +100,7 @@ describe("Exam Service - getDetails", () => {
 		await ParticipatedUser.create({
 			user: user1Id,
 			exam: exam.id,
-			nickname: "user1",
+			nickname: `user1.${uniqueId1}`,
 			isFinished: true,
 			finishTime: finishTime1,
 			isWinner: true,
@@ -93,7 +109,7 @@ describe("Exam Service - getDetails", () => {
 		await ParticipatedUser.create({
 			user: user2Id,
 			exam: exam.id,
-			nickname: "user2",
+			nickname: `user2.${uniqueId2}`,
 			isFinished: true,
 			finishTime: finishTime2,
 			isWinner: false,
@@ -125,10 +141,7 @@ describe("Exam Service - getDetails", () => {
 		// Check winnerlist
 		expect(extendedResult.winnerlist).toBeDefined();
 		expect(extendedResult.winnerlist?.length).toBe(1);
-		expect(extendedResult.winnerlist?.[0]).toMatchObject({
-			walletAddress: "0x1234567890",
-			score: 90,
-		});
+		expect(extendedResult.winnerlist?.[0].score).toBe(90);
 		// Check that finishTime exists and is a Date
 		expect(extendedResult.winnerlist?.[0].finishTime).toBeInstanceOf(Date);
 

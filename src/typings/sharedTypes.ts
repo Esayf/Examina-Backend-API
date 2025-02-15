@@ -48,6 +48,10 @@ interface ExamDocument extends Document {
 	isPrivate?: boolean;
 	isWinnerlistRequested?: boolean;
 	backgroundImage?: string;
+	// New fields for passive-active quiz functionality
+	isFlexible?: boolean;
+	status?: "active" | "passive" | "completed";
+	participantTimeLimit?: number;
 }
 
 type Winner = {
@@ -82,8 +86,12 @@ interface ExtendedExamDocument extends ExamDocument {
 interface CreateExamDto
 	extends Omit<
 		ExamDocument,
-		"contractAddress" | "deployJobId" | "secretKey" | "isDistributed" | "isFinished" | "isCompleted"
-	> {}
+		"contractAddress" | "deployJobId" | "secretKey" | "isDistributed" | "isFinished" | "isCompleted" | "status"
+	> {
+	// Override required fields from ExamDocument to be optional for creation
+	isFlexible?: boolean;
+	participantTimeLimit?: number;
+}
 
 interface QuestionDocument extends Document {
 	exam: string;

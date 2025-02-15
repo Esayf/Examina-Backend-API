@@ -13,6 +13,9 @@ import { ExamDocument } from "@/typings";
  * @property {number} questionCount.required - Number of questions
  * @property {boolean} isCompleted - Completion status
  * @property {string} backgroundImage - Background image
+ * @property {boolean} isFlexible - Whether the exam is passive-active type
+ * @property {string} status - Exam status (active/passive/completed)
+ * @property {number} participantTimeLimit - Time limit per participant in minutes
  */
 const ExamSchema = new Schema(
 	{
@@ -88,6 +91,38 @@ const ExamSchema = new Schema(
 		backgroundImage: {
 			type: String,
 			required: false,
+		},
+		isFlexible: {
+			type: Boolean,
+			default: false,
+		},
+		status: {
+			type: String,
+			enum: ["active", "passive", "completed"],
+			required: function (this: ExamDocument) {
+				return this.isFlexible === true;
+			},
+			validate: {
+				validator: function (this: ExamDocument, v: string | undefined) {
+					if (this.isFlexible === true && !v) {
+						return false;
+					}
+					return true;
+				},
+				message: "Status is required for flexible exams",
+			},
+		},
+		participantTimeLimit: {
+			type: Number,
+			required: function (this: ExamDocument) {
+				return this.isFlexible === true;
+			},
+			validate: {
+				validator: function (this: ExamDocument, v: number) {
+					return !this.isFlexible || (v > 0 && v <= 180); // Max 3 hours
+				},
+				message: "Participant time limit must be between 1 and 180 minutes for flexible exams",
+			},
 		},
 	},
 	{

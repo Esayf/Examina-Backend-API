@@ -49,4 +49,49 @@ router.get("/:id/details", validateRequest({ params: examSchemas.params }), exam
 router.post("/startExam", validateRequest({ body: examSchemas.startExam }), examController.startExam);
 router.post("/finishExam", validateRequest({ body: examSchemas.finishExam }), examController.finishExam);
 
+/**
+ * @swagger
+ * /exams/{id}/status:
+ *   patch:
+ *     summary: Update exam status (for flexible exams)
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [active, passive]
+ *     responses:
+ *       200:
+ *         description: Exam status updated successfully
+ *       400:
+ *         description: Invalid request or exam is not flexible
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - only creator can change status
+ *       404:
+ *         description: Exam not found
+ */
+router.patch(
+	"/:id/status",
+	ensureAuthenticated,
+	validateRequest(examSchemas.updateStatus),
+	examController.updateStatus
+);
+
 export default router;

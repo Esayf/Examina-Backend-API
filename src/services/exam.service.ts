@@ -9,6 +9,7 @@ import {
 	Participant,
 	Leaderboard,
 } from "@/typings";
+import { ExamSessionDocument } from "@/models/examSession.model";
 import Exam from "../models/exam.model";
 import Question from "../models/question.model";
 import ParticipatedUser from "@/models/participatedUser.model";
@@ -21,6 +22,10 @@ import Joi from "joi";
 import { sendGeneratedExamLink } from "@/mailer";
 import passcodeService from "./passcode.service";
 import mongoose from "mongoose";
+import { BadRequestError, NotFoundError, ForbiddenError } from "@/utils/errors";
+import { ExamSessionService } from "./examSession.service";
+
+const examSessionService = new ExamSessionService();
 
 interface ExamResult {
 	status: number;
@@ -30,6 +35,15 @@ interface ExamResult {
 async function create(examData: Partial<ExamDocument>, questions: Array<QuestionInput>): Promise<ExamDocument> {
 	try {
 		examData.isDistributed = false;
+
+		// Set default values for flexible exam
+		if (examData.isFlexible) {
+			examData.status = "passive";
+			if (!examData.participantTimeLimit) {
+				throw new BadRequestError("Participant time limit is required for flexible exams");
+			}
+		}
+
 		const exam = new Exam(examData);
 		const savedExam = await exam.save();
 
@@ -38,7 +52,7 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 		return savedExam;
 	} catch (error) {
 		console.error("Error creating exam: ", error);
-		throw new Error("Error creating exam");
+		throw error;
 	}
 }
 
@@ -71,10 +85,10 @@ async function generateAndSendLinks(examId: string, emailList: string[]): Promis
 
 export type SortFields = "title" | "startDate" | "duration" | "createdAt" | "score" | "endDate" | "status";
 
-interface ExamWithScore extends ExamDocument {
+interface ExamWithScore extends Omit<ExamDocument, "status"> {
 	score?: number;
-	endDate: Date; // Dinamik olarak hesaplanacak endDate
-	status?: string; // Dinamik olarak hesaplanacak durum bilgisi
+	endDate: Date;
+	status?: "upcoming" | "active" | "ended" | "passive" | "completed"; // Combined status types
 }
 
 export async function getAllByUser(
@@ -239,6 +253,35 @@ async function getDetails(examId: string): Promise<ExtendedExamDocument | null> 
 	}
 }
 
+async function updateExamStatus(
+	examId: string,
+	userId: string,
+	newStatus: "active" | "passive"
+): Promise<ExamDocument> {
+	const exam = await Exam.findById(examId);
+	if (!exam) {
+		throw new NotFoundError("Exam not found");
+	}
+
+	// Only creator can change status
+	if (exam.creator.toString() !== userId) {
+		throw new ForbiddenError("Only exam creator can change exam status");
+	}
+
+	// Only flexible exams can have their status changed
+	if (!exam.isFlexible) {
+		throw new BadRequestError("Only flexible exams can have their status changed");
+	}
+
+	// Cannot reactivate completed exam
+	if (exam.status === "completed") {
+		throw new BadRequestError("Cannot change status of completed exam");
+	}
+
+	exam.status = newStatus;
+	return await exam.save();
+}
+
 async function start(examId: string, userId: string, passcode: string, nickname: string | null): Promise<ExamResult> {
 	try {
 		let randomNickname = nickname || (await participatedUserService.generateRandomNickname(examId));
@@ -246,7 +289,7 @@ async function start(examId: string, userId: string, passcode: string, nickname:
 		if (!exam) {
 			return { status: 404, message: "Exam not found" };
 		}
-		console.log("Exam: ", exam);
+
 		if (exam.isPrivate) {
 			const isPasscodeValid = await passcodeService.validate(passcode);
 			if (!isPasscodeValid) {
@@ -254,17 +297,30 @@ async function start(examId: string, userId: string, passcode: string, nickname:
 			}
 		}
 
-		const isExamActive = checkExamTimes(exam);
-		if (!isExamActive.valid) {
-			return {
-				status: 400,
-				message: isExamActive.message || "Invalid exam time",
-			};
+		// Handle flexible exam validation
+		if (exam.isFlexible) {
+			if (exam.status !== "active") {
+				return { status: 400, message: "This exam is not currently active" };
+			}
+		} else {
+			// For non-flexible exams, check the usual time constraints
+			const isExamActive = checkExamTimes(exam);
+			if (!isExamActive.valid) {
+				return {
+					status: 400,
+					message: isExamActive.message || "Invalid exam time",
+				};
+			}
 		}
 
 		const participationResult = await participatedUserService.checkParticipation(userId, examId, randomNickname, {
 			createIfNotExist: true,
 		});
+
+		// If participation is successful and exam is flexible, create a session
+		if (participationResult.status === 200 && exam.isFlexible) {
+			await examSessionService.startSession(examId, userId);
+		}
 
 		return {
 			status: participationResult.status,
@@ -272,7 +328,7 @@ async function start(examId: string, userId: string, passcode: string, nickname:
 		};
 	} catch (error) {
 		console.error("Error starting exam: ", error);
-		throw new Error("Error starting exam");
+		throw error;
 	}
 }
 
@@ -281,6 +337,18 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 		const exam = await getById(examId);
 		if (!exam) {
 			return { status: 404, message: "Exam not found" };
+		}
+
+		// For flexible exams, check and complete the session
+		if (exam.isFlexible) {
+			const session = (await examSessionService.getActiveSession(examId, userId)) as ExamSessionDocument;
+			if (!session) {
+				return { status: 400, message: "No active session found for this exam" };
+			}
+			if (session.remainingTime <= 0) {
+				return { status: 400, message: "Exam session has expired" };
+			}
+			await examSessionService.completeSession((session._id as mongoose.Types.ObjectId).toString());
 		}
 
 		const participationResult = await participatedUserService.checkParticipation(userId, examId, "", {
@@ -297,11 +365,7 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 		await answerService.create(userId, examId, answers, walletAddress);
 
 		const answerKey: AnswerKey[] = await getAnswerKey(examId);
-
 		const { score, correctAnswers } = await scoreService.calculateScore(answers, answerKey);
-
-		console.log("Score: ", score);
-		console.log("Correct Answers: ", correctAnswers);
 
 		await scoreService.createScore({
 			user: userId,
@@ -313,13 +377,12 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 
 		// WINNER DETERMINATION
 		const isWinner = exam.isRewarded ? parseInt(score) > (exam.passingScore || 0) : false;
-
 		await participatedUserService.updateParticipationStatus(userId, examId, isWinner);
 
 		return { status: 200, message: "Exam completed successfully" };
 	} catch (error) {
 		console.error("Error finishing exam: ", error);
-		throw new Error("Error finishing exam");
+		throw error;
 	}
 }
 
@@ -542,4 +605,5 @@ export default {
 	start,
 	finish,
 	getWinnerlist,
+	updateExamStatus,
 };

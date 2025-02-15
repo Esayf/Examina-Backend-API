@@ -43,6 +43,8 @@ export const examSchemas = {
 			deployJobId: z.string().optional(),
 			contractAddress: z.string().optional(),
 			rewardPerWinner: z.number().positive("Reward per winner must be positive").optional(),
+			isFlexible: z.boolean().optional().default(false),
+			participantTimeLimit: z.number().positive("Participant time limit must be positive").optional(),
 		})
 		.refine(
 			(data) => {
@@ -54,12 +56,28 @@ export const examSchemas = {
 						data.contractAddress !== undefined
 					);
 				}
-				return true; // Eğer isRewarded false ise kontrol gerekmez
+				return true;
 			},
 			{
 				message:
 					"Rewarded exams must include reward per winner, passing score, deployedJobId and contractAddress fields",
-				path: ["isRewarded"], // Hatanın nerede oluştuğunu belirtir
+				path: ["isRewarded"],
+			}
+		)
+		.refine(
+			(data) => {
+				if (data.isFlexible) {
+					return (
+						data.participantTimeLimit !== undefined &&
+						data.participantTimeLimit > 0 &&
+						data.participantTimeLimit <= 180
+					);
+				}
+				return true;
+			},
+			{
+				message: "Flexible exams must include a participant time limit between 1 and 180 minutes",
+				path: ["participantTimeLimit"],
 			}
 		),
 	generateLinks: z.object({
@@ -112,4 +130,17 @@ export const examSchemas = {
 	params: z.object({
 		id: objectIdSchema,
 	}),
+
+	// New schema for updating exam status
+	updateStatus: {
+		params: z.object({
+			id: objectIdSchema,
+		}),
+		body: z.object({
+			status: z.enum(["active", "passive"], {
+				required_error: "Status is required",
+				invalid_type_error: "Status must be either 'active' or 'passive'",
+			}),
+		}),
+	},
 };

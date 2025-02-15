@@ -3,6 +3,7 @@ import { CustomRequest, QuestionInput } from "@/typings";
 import examService, { SortFields } from "../services/exam.service";
 import participatedUserService from "@/services/participatedUser.service";
 import User from "@/models/user.model";
+import { BadRequestError, NotFoundError, ForbiddenError } from "@/utils/errors";
 
 interface ExamInput {
 	title: string;
@@ -177,6 +178,46 @@ async function finishExam(req: CustomRequest, res: Response) {
 	}
 }
 
+/**
+ * Update exam status
+ * @route PATCH /exams/:id/status
+ */
+async function updateStatus(req: CustomRequest, res: Response) {
+	try {
+		const { id } = req.params;
+		const { status } = req.body;
+		const userId = req.session.user?.userId;
+
+		if (!userId) {
+			throw new BadRequestError("User ID not found in session");
+		}
+
+		const updatedExam = await examService.updateExamStatus(id, userId, status);
+
+		return res.json({
+			success: true,
+			message: "Exam status updated successfully",
+			data: {
+				examId: updatedExam._id,
+				status: updatedExam.status,
+			},
+		});
+	} catch (error) {
+		if (error instanceof BadRequestError || error instanceof NotFoundError || error instanceof ForbiddenError) {
+			return res.status(error.statusCode).json({
+				success: false,
+				message: error.message,
+			});
+		}
+
+		console.error("Error updating exam status:", error);
+		return res.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+	}
+}
+
 export default {
 	createExam,
 	generateLinks,
@@ -185,4 +226,5 @@ export default {
 	getExamDetails,
 	startExam,
 	finishExam,
+	updateStatus,
 };

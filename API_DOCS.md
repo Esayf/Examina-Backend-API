@@ -864,6 +864,69 @@ TODO: session message/token validation info will be fixed.
     }
     ```
 
+---
+
+### 7. Update Exam Status
+**PATCH** `/exams/:id/status`
+
+- **Description**: Updates the status of a flexible exam. Only the exam creator can change the status between active and passive.
+- **Authentication**: Required
+- **Parameters**:
+  - `id` (string, required): The ID of the exam to update
+- **Request Body**:
+  ```json
+  {
+    "status": "active" | "passive"
+  }
+  ```
+- **Response**:
+  - **200 OK**: Status updated successfully
+    ```json
+    {
+      "success": true,
+      "message": "Exam status updated successfully",
+      "data": {
+        "examId": "string",
+        "status": "active" | "passive"
+      }
+    }
+    ```
+  - **400 Bad Request**: Invalid request or exam is not flexible
+    ```json
+    {
+      "success": false,
+      "message": "Only flexible exams can have their status changed"
+    }
+    ```
+  - **401 Unauthorized**: User not authenticated
+    ```json
+    {
+      "success": false,
+      "message": "Unauthorized"
+    }
+    ```
+  - **403 Forbidden**: User is not the exam creator
+    ```json
+    {
+      "success": false,
+      "message": "Only exam creator can change exam status"
+    }
+    ```
+  - **404 Not Found**: Exam not found
+    ```json
+    {
+      "success": false,
+      "message": "Exam not found"
+    }
+    ```
+  - **500 Internal Server Error**: Server error
+    ```json
+    {
+      "success": false,
+      "message": "Internal server error"
+    }
+    ```
+
 ## Draft Endpoints `/drafts`
 
 ### 1. Create Draft
@@ -2025,5 +2088,136 @@ TODO: session message/token validation info will be fixed.
       "message": "Internal server error"
     }
     ```
+
+
+
+## Worker Endpoints `/worker`
+
+### 1. Initialize Winner Map
+**POST** `/worker/initWinnerMap`
+
+- **Description**: Initializes the winner map for an exam's reward distribution.
+- **Authentication**: Required (Admin)
+- **Request Body**:
+  ```json
+  {
+    "examId": "string",
+    "contractAddress": "string"
+  }
+  ```
+- **Response**:
+  - **200 OK**: Winner map initialized successfully
+  - **401 Unauthorized**: User not authenticated
+  - **403 Forbidden**: User is not an admin
+  - **500 Internal Server Error**: Server error
+
+### 2. Add Winner
+**POST** `/worker/addWinner`
+
+- **Description**: Adds a winner to the exam's winner map.
+- **Authentication**: Required (Admin)
+- **Request Body**:
+  ```json
+  {
+    "examId": "string",
+    "walletAddress": "string",
+    "score": "number"
+  }
+  ```
+- **Response**:
+  - **200 OK**: Winner added successfully
+  - **401 Unauthorized**: User not authenticated
+  - **403 Forbidden**: User is not an admin
+  - **500 Internal Server Error**: Server error
+
+### 3. Payout Winners
+**POST** `/worker/payoutWinners`
+
+- **Description**: Initiates the payout process for exam winners.
+- **Authentication**: Required (Admin)
+- **Request Body**:
+  ```json
+  {
+    "examId": "string",
+    "contractAddress": "string"
+  }
+  ```
+- **Response**:
+  - **200 OK**: Payout process initiated successfully
+  - **401 Unauthorized**: User not authenticated
+  - **403 Forbidden**: User is not an admin
+  - **500 Internal Server Error**: Server error
+
+### 4. Calculate Score
+**POST** `/worker/calculateScore`
+
+- **Description**: Calculates the final score for a participant.
+- **Authentication**: Required (Admin)
+- **Request Body**:
+  ```json
+  {
+    "examId": "string",
+    "userId": "string"
+  }
+  ```
+- **Response**:
+  - **200 OK**: Score calculated successfully
+  - **401 Unauthorized**: User not authenticated
+  - **403 Forbidden**: User is not an admin
+  - **500 Internal Server Error**: Server error
+
+### 5. Initialize Map, Add Winners and Payout
+**POST** `/worker/initWinnerMapAddTwoWinnersAndPayout`
+
+- **Description**: Combined operation to initialize winner map, add winners, and process payouts.
+- **Authentication**: Required (Admin)
+- **Request Body**:
+  ```json
+  {
+    "examId": "string",
+    "contractAddress": "string",
+    "winners": [
+      {
+        "walletAddress": "string",
+        "score": "number"
+      }
+    ]
+  }
+  ```
+- **Response**:
+  - **200 OK**: Operation completed successfully
+  - **401 Unauthorized**: User not authenticated
+  - **403 Forbidden**: User is not an admin
+  - **500 Internal Server Error**: Server error
+
+### 7. Generate Exam Links
+**POST** `/exams/generateExamLinks`
+
+- **Description**: Generates unique participation links for private exams and sends them to participants via email.
+- **Authentication**: Required
+- **Request Body**:
+  ```json
+  {
+    "examId": "string",
+    "emailList": ["string"]
+  }
+  ```
+- **Response**:
+  - **201 Created**: Links generated and sent successfully
+    ```json
+    {
+      "success": true,
+      "result": [
+        {
+          "email": "string",
+          "link": "string"
+        }
+      ]
+    }
+    ```
+  - **400 Bad Request**: Invalid input data
+  - **401 Unauthorized**: User not authenticated
+  - **403 Forbidden**: User is not the exam creator
+  - **500 Internal Server Error**: Server error
 
 

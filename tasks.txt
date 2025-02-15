@@ -1,0 +1,100 @@
+# Passive-Active Quiz Implementation Tasks
+
+## 1. Database Schema Updates
+- Add new fields to Exam model:
+  - isFlexible (boolean) - indicates if exam is passive-active type
+  - status (enum) - ['active', 'passive', 'completed']
+  - participantTimeLimit (number) - duration in minutes for each participant
+
+## 2. Type Definition Updates
+- Update ExamDocument interface with new fields
+- Update CreateExamDto interface
+- Add new validation schemas for status changes
+
+## 3. API Endpoint Implementation
+- Create new endpoint: PATCH /exams/:id/status
+  - Update exam status (active/passive)
+  - Validate creator permissions
+  - Handle ongoing participant sessions
+- Update existing endpoints:
+  - POST /exams/create - Add flexible exam creation
+  - GET /exams/:id - Include flexible status info
+  - GET /exams - Add flexible status filters
+
+## 4. Service Layer Updates
+### Exam Service
+- Add methods:
+  - updateExamStatus(examId, status)
+  - validateStatusChange(exam)
+  - getActiveParticipants(examId)
+
+### Participated User Service
+- Add methods:
+  - trackParticipantStartTime(userId, examId)
+  - checkParticipantTimeLimit(userId, examId)
+
+## 5. API Documentation Updates
+### New Endpoints
+- Add PATCH /exams/:id/status documentation:
+  ```json
+  {
+    "status": "active" | "passive"
+  }
+  ```
+  - Response codes: 200, 400, 401, 403
+
+### Update Existing Endpoints
+- POST /exams/create:
+  - Add new fields:
+    ```json
+    {
+      "isFlexible": true,
+      "participantTimeLimit": 60,
+      "status": "passive"
+    }
+    ```
+- GET /exams/:id:
+  - Add new response fields:
+    ```json
+    {
+      "isFlexible": true,
+      "status": "active",
+      "participantTimeLimit": 60
+    }
+    ```
+
+## 6. Validation Updates
+- Add new validation rules:
+  - Flexible exam creation validation
+  - Status change validation
+  - Participant time limit validation
+- Update existing validation schemas:
+  - createExam schema
+  - updateExam schema
+
+## 7. Cron Job Updates
+- Modify checkCompletedExams:
+  - Handle flexible exam completion logic
+  - Track individual participant time limits
+- Add new job for cleaning up expired flexible sessions
+
+## 8. Testing
+- Unit tests for new service methods
+- Integration tests for status changes
+- E2E tests for flexible exam flow
+- API endpoint tests:
+  - Status change endpoint
+  - Modified create endpoint
+  - Modified get endpoints
+
+## 9. Frontend Integration (if needed)
+- Add UI elements for flexible exam creation
+- Implement status toggle controls
+- Display flexible exam status indicators
+- Add participant time tracking display
+
+## 10. Security & Validation
+- Ensure only creators can change exam status
+- Validate status transitions
+- Protect ongoing participant sessions
+- Add rate limiting for status changes 
