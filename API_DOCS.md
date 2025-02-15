@@ -304,6 +304,7 @@ TODO: session message/token validation info will be fixed.
         {
           "number": 1,
           "text": "Bqqnt",
+          "difficulty": 1,
           "options": [
             {
               "number": 1,
@@ -331,6 +332,7 @@ TODO: session message/token validation info will be fixed.
         {
           "number": 2,
           "text": "Ottwqqoman",
+          "difficulty": 5,
           "options": [
             {
               "number": 1,
@@ -380,6 +382,7 @@ TODO: session message/token validation info will be fixed.
   - `questions` (array of objects, required): List of questions in the exam.
     - `number` (number, required): The question number.
     - `text` (string, required): The question text.
+    - `difficulty` (number, optional): The question difficulty (between 1-5).
     - `options` (array of objects, required): List of answer options.
       - `number` (number, required): The option number.
       - `text` (string, required): The option text.
@@ -966,6 +969,7 @@ TODO: session message/token validation info will be fixed.
             "text": "Manuel IIss"
           }
         ],
+        "difficulty": 2,
         "correctAnswer": 2
       },
       {
@@ -993,6 +997,7 @@ TODO: session message/token validation info will be fixed.
             "text": "Mehmed III"
           }
         ],
+        "difficulty": 3,
         "correctAnswer": 2
       }
     ],
@@ -1015,6 +1020,13 @@ TODO: session message/token validation info will be fixed.
   - `rewardPerWinner` (number, optional): Reward amount per winner (required if `isRewarded` is true).
   - `passingScore` (number, optional): Minimum score required to win (required if `isRewarded` is true).
   - `questions` (array, optional): List of questions with options and correct answers.
+    - `number` (number, required): The question number.
+    - `text` (string, required): The question text.
+    - `difficulty` (number, optional): The question difficulty (between 1-5).
+    - `options` (array of objects, required): List of answer options.
+      - `number` (number, required): The option number.
+      - `text` (string, required): The option text.
+    - `correctAnswer` (number, required): The correct option number.
 - **Middleware**:
   - `ensureAuthenticated`: Ensures the user is logged in.
   - `validateRequest`: Validates the request body.
@@ -1035,6 +1047,7 @@ TODO: session message/token validation info will be fixed.
       "questions": [
         {
           "text": "Bqqnt",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1068,6 +1081,7 @@ TODO: session message/token validation info will be fixed.
         },
         {
           "text": "Ottwqqoman",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1162,6 +1176,7 @@ TODO: session message/token validation info will be fixed.
         "questions": [
           {
             "text": "Bqqnt",
+            "difficulty": 2,
             "options": [
               {
                 "number": 1,
@@ -1195,6 +1210,7 @@ TODO: session message/token validation info will be fixed.
           },
           {
             "text": "Ottwqqoman",
+            "difficulty": 3,
             "options": [
               {
                 "number": 1,
@@ -1277,6 +1293,7 @@ TODO: session message/token validation info will be fixed.
       "questions": [
         {
           "text": "Bqqnt",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1310,6 +1327,7 @@ TODO: session message/token validation info will be fixed.
         },
         {
           "text": "Ottwqqoman",
+          "difficulty": 3,
           "options": [
             {
               "number": 1,
@@ -1411,6 +1429,7 @@ TODO: session message/token validation info will be fixed.
       "questions": [
         {
           "text": "Bqqnt",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1444,6 +1463,7 @@ TODO: session message/token validation info will be fixed.
         },
         {
           "text": "Ottwqqoman",
+          "difficulty": 3,
           "options": [
             {
               "number": 1,
@@ -1589,6 +1609,7 @@ TODO: session message/token validation info will be fixed.
       "_id": "67a0c73bf658ea9eb6dc8e16",
       "exam": "67a0c73bf658ea9eb6dc8e14",
       "text": "Bqqntiwe",
+      "difficulty": 2,
       "options": [
         {
           "number": 1,
@@ -1669,6 +1690,7 @@ TODO: session message/token validation info will be fixed.
         "_id": "679b5278feb5dfd7e868e718",
         "exam": "679b5278feb5dfd7e868e710",
         "text": "Ottwqqoman",
+        "difficulty": 2,
         "options": [
           {
             "number": 1,
@@ -1705,6 +1727,7 @@ TODO: session message/token validation info will be fixed.
         "_id": "679b5278feb5dfd7e868e71e",
         "exam": "679b5278feb5dfd7e868e710",
         "text": "Bqqntiwe",
+        "difficulty": 3,
         "options": [
           {
             "number": 1,
@@ -1741,6 +1764,7 @@ TODO: session message/token validation info will be fixed.
         "_id": "679b5278feb5dfd7e868e712",
         "exam": "679b5278feb5dfd7e868e710",
         "text": "Bqqniwe",
+        "difficulty": 2,
         "options": [
           {
             "number": 1,
@@ -2080,6 +2104,95 @@ TODO: session message/token validation info will be fixed.
     ```json
     {
       "message": "Scores not found"
+    }
+    ```
+  - **500 Internal Server Error**: Server encountered an unexpected error.
+    ```json
+    {
+      "message": "Internal server error"
+    }
+    ```
+
+---
+
+### 3. Get Created Exams
+**GET** `/myExams/created`
+
+- **Description**: Retrieves all exams created by the authenticated user.
+- **Headers**:
+  - `Session-Token` (Bearer Token, required): User authentication token.
+- **Query Parameters**:
+  - `filter` (string, optional): `all`, `upcoming`, `active`, or `ended` (default: `all`).
+  - `sortBy` (string, optional): Field to sort by (e.g., `startDate`, `duration`, `title`, default: `createdAt`).
+  - `sortOrder` (string, optional): `asc` or `desc` (default: `desc`).
+- **Middleware**:
+  - `ensureAuthenticated`: Ensures the user is logged in.
+- **Response**:
+  - **200 OK**: Returns the list of created exams.
+    ```json
+    [
+      {
+        "_id": "673f369944e8c1ef46638105",
+        "title": "Testing Exam",
+        "description": "This is a description",
+        "startDate": "2024-11-21T13:32:57.000Z",
+        "duration": 2,
+        "endDate": "2024-11-21T13:34:57.000Z",
+        "totalParticipants": 25,
+        "status": "ended"
+      }
+    ]
+    ```
+  - **401 Unauthorized**: User is not authenticated.
+    ```json
+    {
+      "message": "Unauthorized"
+    }
+    ```
+  - **500 Internal Server Error**: Server encountered an unexpected error.
+    ```json
+    {
+      "message": "Internal server error"
+    }
+    ```
+
+### 4. Get Joined Exams
+**GET** `/myExams/joined`
+
+- **Description**: Retrieves all exams that the authenticated user has participated in.
+- **Headers**:
+  - `Session-Token` (Bearer Token, required): User authentication token.
+- **Query Parameters**:
+  - `filter` (string, optional): `all`, `active`, or `ended` (default: `all`).
+  - `sortBy` (string, optional): Field to sort by (e.g., `startDate`, `duration`, `title`, default: `createdAt`).
+  - `sortOrder` (string, optional): `asc` or `desc` (default: `desc`).
+- **Middleware**:
+  - `ensureAuthenticated`: Ensures the user is logged in.
+- **Response**:
+  - **200 OK**: Returns the list of joined exams.
+    ```json
+    [
+      {
+        "_id": "673f369944e8c1ef46638105",
+        "title": "Testing Exam",
+        "description": "This is a description",
+        "examStartDate": "2024-11-21T13:32:57.000Z",
+        "examEndDate": "2024-11-21T13:34:57.000Z",
+        "examDuration": 2,
+        "examFinishedAt": "2024-11-21T13:34:57.000Z",
+        "status": "ended",
+        "userStartedAt": "2024-11-21T13:33:00.000Z",
+        "userFinishedAt": "2024-11-21T13:34:30.000Z",
+        "userDurationAsSeconds": 90,
+        "userScore": 85,
+        "userNickName": "User123"
+      }
+    ]
+    ```
+  - **401 Unauthorized**: User is not authenticated.
+    ```json
+    {
+      "message": "Unauthorized"
     }
     ```
   - **500 Internal Server Error**: Server encountered an unexpected error.

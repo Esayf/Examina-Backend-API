@@ -178,6 +178,7 @@ interface DraftDocument extends Document {
 	questions?: Array<{
 		questionType?: string;
 		text?: string;
+		difficulty?: number;
 		options?: Array<{
 			number: number;
 			text?: string;

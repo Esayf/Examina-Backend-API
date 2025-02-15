@@ -87,36 +87,44 @@ export const examSchemas = {
 			.min(1, { message: "Email list must contain at least one email" }),
 	}),
 
-	myExamsQueryParams: z.object({
-		// role: "created" veya "joined" olmalı
-		role: z.preprocess(
-			(val) => (typeof val === "string" ? val.trim() : val),
-			z.enum(["created", "joined"], { message: "Role must be 'created' or 'joined'" })
-		),
-
-		// filter: "all", "upcoming", "active" veya "ended" olabilir
+	createdExamsQueryParams: z.object({
 		filter: z.preprocess(
-			(val) => (typeof val === "string" ? val.trim() : "all"),
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "all"),
 			z.enum(["all", "upcoming", "active", "ended"], { message: "Invalid filter option" })
 		),
-
-		// sortBy: Sıralama yapılabilecek alanlardan biri olmalı
 		sortBy: z.preprocess(
-			(val) => (typeof val === "string" ? val.trim() : undefined),
-			z.enum(["title", "startDate", "duration", "createdAt", "score", "endDate", "status"]).optional()
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "createdAt"),
+			z.enum(["title", "startDate", "duration", "createdAt", "score", "endDate", "status"], {
+				message: "Invalid sort by option",
+			})
 		),
-
-		// sortOrder: "asc" veya "desc" olmalı
 		sortOrder: z.preprocess(
-			(val) => (typeof val === "string" ? val.trim() : "desc"),
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "asc"),
+			z.enum(["asc", "desc"], { message: "Sort order must be 'asc' or 'desc'" })
+		),
+	}),
+
+	joinedExamsQueryParams: z.object({
+		filter: z.preprocess(
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "all"),
+			z.enum(["all", "active", "ended"], { message: "Invalid filter option" })
+		),
+		sortBy: z.preprocess(
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "createdAt"),
+			z.enum(["title", "startDate", "duration", "createdAt", "score", "endDate", "status"], {
+				message: "Invalid sort by option",
+			})
+		),
+		sortOrder: z.preprocess(
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "asc"),
 			z.enum(["asc", "desc"], { message: "Sort order must be 'asc' or 'desc'" })
 		),
 	}),
 
 	startExam: z.object({
 		examId: objectIdSchema,
-		passcode: z.string().min(1, "Passcode is required"),
-		nickname: z.string().nullable(),
+		passcode: z.string().min(1, "Passcode is required").optional(),
+		nickname: z.string().optional(),
 	}),
 	finishExam: z.object({
 		examId: objectIdSchema,
