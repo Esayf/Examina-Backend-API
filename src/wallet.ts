@@ -55,11 +55,7 @@ const checkTransactionStatus = async (transactionId: string) => {
 			query,
 			variables: { hash: transactionId },
 		});
-
 		const data = response.data;
-
-		console.log("Burası da neresi: ", response);
-
 		if (data && data.status === "applied") {
 			return true;
 		}

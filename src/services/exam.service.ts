@@ -29,54 +29,6 @@ interface ExamResult {
 
 async function create(examData: Partial<ExamDocument>, questions: Array<QuestionInput>): Promise<ExamDocument> {
 	try {
-		const schema = Joi.object({
-			title: Joi.string().required(),
-			creator: Joi.string().required(),
-			description: Joi.string().required(),
-			startDate: Joi.date().required(),
-			duration: Joi.number().positive().required(),
-			rootHash: Joi.string().required(),
-			secretKey: Joi.string().required(),
-			questions: Joi.array().required(),
-			questionCount: Joi.number().positive().required(),
-			isRewarded: Joi.boolean(),
-			rewardPerWinner: Joi.when("isRewarded", {
-				is: true,
-				then: Joi.number().positive().required(),
-				otherwise: Joi.optional(),
-			}),
-			passingScore: Joi.when("isRewarded", {
-				is: true,
-				then: Joi.number().min(0).max(100).required(),
-				otherwise: Joi.optional(),
-			}),
-			deployJobId: Joi.when("isRewarded", {
-				is: true,
-				then: Joi.string().required(),
-				otherwise: Joi.optional(),
-			}),
-			contractAddress: Joi.string().optional(),
-		});
-		const { error } = schema.validate({
-			title: examData.title,
-			creator: examData.creator,
-			description: examData.description,
-			startDate: examData.startDate,
-			questions: questions,
-			duration: examData.duration,
-			rootHash: examData.rootHash,
-			secretKey: examData.secretKey,
-			questionCount: examData.questionCount,
-			isRewarded: examData.isRewarded,
-			rewardPerWinner: examData.rewardPerWinner,
-			passingScore: examData.passingScore,
-			deployJobId: examData.deployJobId,
-			contractAddress: examData.contractAddress,
-		});
-		if (error) {
-			throw new Error(error.details[0].message);
-		}
-
 		examData.isDistributed = false;
 		const exam = new Exam(examData);
 		const savedExam = await exam.save();
@@ -120,9 +72,9 @@ async function generateAndSendLinks(examId: string, emailList: string[]): Promis
 export type SortFields = "title" | "startDate" | "duration" | "createdAt" | "score" | "endDate" | "status";
 
 interface ExamWithScore extends ExamDocument {
-	score?: number;
+	score?: number | null;
 	endDate: Date; // Dinamik olarak hesaplanacak endDate
-	status?: string; // Dinamik olarak hesaplanacak durum bilgisi
+	status: string; // Dinamik olarak hesaplanacak durum bilgisi
 }
 
 export async function getAllByUser(
@@ -134,6 +86,7 @@ export async function getAllByUser(
 ): Promise<ExamWithScore[]> {
 	try {
 		let exams: ExamWithScore[];
+		const scoreMap = new Map<string, number>();
 
 		// role filtering
 		if (role === "created") {
@@ -143,23 +96,14 @@ export async function getAllByUser(
 			const examIds = participated.map((p) => new mongoose.Types.ObjectId(p.exam.toString()));
 			exams = await Exam.find({ _id: { $in: examIds } });
 
-			// score sorting
-			if (sortBy === "score") {
-				const scores = await Score.find({
-					user: new mongoose.Types.ObjectId(userId),
-					exam: { $in: examIds },
-				}).select("exam score");
-				const scoreMap = new Map<string, number>();
+			const scores = await Score.find({
+				user: new mongoose.Types.ObjectId(userId),
+				exam: { $in: examIds },
+			}).select("exam score");
 
-				scores.forEach((score) => {
-					scoreMap.set(score.exam.toString(), score.score);
-				});
-
-				exams = exams.map((exam) => ({
-					...exam.toObject(),
-					score: scoreMap.get((exam._id as mongoose.Types.ObjectId).toString()) || null,
-				})) as ExamWithScore[];
-			}
+			scores.forEach((score) => {
+				scoreMap.set(score.exam.toString(), score.score);
+			});
 		} else {
 			throw new Error("Invalid role: Role must be 'created' or 'joined'.");
 		}
@@ -184,20 +128,16 @@ export async function getAllByUser(
 				...exam.toObject(),
 				endDate,
 				status,
+				...(role === "joined" && {
+					score: scoreMap.get((exam._id as mongoose.Types.ObjectId).toString()) || null,
+				}),
 			} as ExamWithScore;
 		});
 
 		// Filtreleme işlemi
-		if (filter !== "all") {
+		if (filter !== "all" && filter in ["upcoming", "active", "ended"]) {
 			exams = exams.filter((exam) => {
-				if (filter === "upcoming") {
-					return exam.status === "upcoming";
-				} else if (filter === "active") {
-					return exam.status === "active";
-				} else if (filter === "ended") {
-					return exam.status === "ended";
-				}
-				return true;
+				return exam.status === filter;
 			});
 		}
 
@@ -242,6 +182,218 @@ export async function getAllByUser(
 	} catch (error) {
 		console.error("Error fetching exams by user: ", error);
 		throw new Error("Error fetching exams by user");
+	}
+}
+
+interface CreatedExamResponse {
+	_id: string;
+	title: string;
+	description: string;
+	startDate: Date;
+	duration: number;
+	endDate: Date;
+	totalParticipants: number;
+	status: "upcoming" | "active" | "ended";
+}
+export async function getAllCreatedExams(
+	userId: string,
+	sortBy: SortFields = "createdAt",
+	filter: "all" | "upcoming" | "active" | "ended" = "all",
+	sortOrder: "asc" | "desc" = "desc"
+): Promise<CreatedExamResponse[]> {
+	try {
+		const now = new Date();
+		const exams = (await Exam.aggregate([
+			{
+				$match: { creator: new mongoose.Types.ObjectId(userId) },
+			},
+			{
+				$lookup: {
+					from: "participatedusers",
+					localField: "_id",
+					foreignField: "exam",
+					as: "participantCount",
+				},
+			},
+			{
+				$addFields: {
+					endDate: { $add: ["$startDate", { $multiply: ["$duration", 60000] }] },
+					totalParticipants: { $size: "$participantCount" },
+					status: {
+						$cond: [
+							{ $gt: [now, "$endDate"] },
+							"ended",
+							{
+								$cond: [{ $gt: [now, "$startDate"] }, "active", "upcoming"],
+							},
+						],
+					},
+				},
+			},
+			{
+				$match: {
+					status: { $in: filter === "all" ? ["upcoming", "active", "ended"] : [filter] },
+				},
+			},
+			{
+				$project: {
+					_id: 1,
+					title: 1,
+					description: 1,
+					startDate: 1,
+					duration: 1,
+					endDate: 1,
+					createDate: 1,
+					status: 1,
+					totalParticipants: 1,
+				},
+			},
+			{
+				$sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 },
+			},
+		])) as CreatedExamResponse[];
+
+		return exams;
+	} catch (error) {
+		console.error("Error fetching created exams: ", error);
+		throw new Error("Error fetching created exams");
+	}
+}
+
+interface JoinedExamResponse {
+	_id: string;
+	title: string;
+	description: string;
+	examStartDate: Date;
+	examEndDate: Date;
+	examDuration: number;
+	examFinishedAt: Date;
+	status: "active" | "ended";
+	userStartedAt: Date;
+	userFinishedAt: Date | null;
+	userDurationAsSeconds: number | null;
+	userScore: number | null;
+	userNickName: string;
+}
+
+export async function getAllJoinedExams(
+	userId: string,
+	sortBy: SortFields = "createdAt",
+	filter: "all" | "active" | "ended" = "all",
+	sortOrder: "asc" | "desc" = "desc"
+): Promise<JoinedExamResponse[]> {
+	try {
+		const now = new Date();
+		const exams = (await ParticipatedUser.aggregate([
+			{
+				$match: { user: new mongoose.Types.ObjectId(userId) }, // Kullanıcıya göre filtrele
+			},
+			{
+				$lookup: {
+					from: "exams", // Exam koleksiyonu
+					localField: "exam", // ParticipatedUser'daki exam alanı
+					foreignField: "_id", // Exam tablosundaki _id alanı
+					as: "examDetails", // Bağlanan exam bilgileri
+				},
+			},
+			{
+				$unwind: {
+					path: "$examDetails", // Exam bilgilerini düzleştir
+					preserveNullAndEmptyArrays: false, // Eğer exam eşleşmesi yoksa belgeyi kaldır
+				},
+			},
+			{
+				$lookup: {
+					from: "scores", // Scores koleksiyonu
+					let: { examId: "$exam", userId: "$user" }, // Kullanıcı ve sınav ID'sini tanımla
+					pipeline: [
+						{
+							$match: {
+								$expr: {
+									$and: [{ $eq: ["$exam", "$$examId"] }, { $eq: ["$user", "$$userId"] }],
+								},
+							},
+						},
+					],
+					as: "scoreDetails", // Bağlanan score bilgileri
+				},
+			},
+			{
+				$unwind: {
+					path: "$scoreDetails", // Score bilgilerini düzleştir
+					preserveNullAndEmptyArrays: true, // Eğer score eşleşmesi yoksa null olarak bırak
+				},
+			},
+			{
+				$addFields: {
+					examId: "$examDetails._id", // Exam ID
+					title: "$examDetails.title", // Exam title
+					description: "$examDetails.description", // Exam description
+					examStartDate: "$examDetails.startDate", // Exam startDate
+					examDuration: "$examDetails.duration", // Exam duration
+					examEndDate: {
+						$add: ["$examDetails.startDate", { $multiply: ["$examDetails.duration", 60000] }],
+					},
+					examCreatedAt: "$examDetails.createdAt", // Exam createdAt
+					isCompleted: "$examDetails.isCompleted", // Exam completion durumu
+					userStartedAt: "$createdAt", // Kullanıcının sınava giriş tarihi
+					userFinishedAt: "$finishTime", // Kullanıcının sınavı bitirme tarihi
+					userNickName: "$nickname", // Kullanıcının takma adı
+					userScore: "$scoreDetails.score", // Kullanıcının sınav sonucu
+					userDurationAsSeconds: {
+						$cond: {
+							if: "$isFinished", // Kullanıcı sınavı tamamladıysa
+							then: { $divide: [{ $subtract: ["$finishTime", "$createdAt"] }, 1000] }, // Harcanan süre
+							else: null, // Eğer sınav tamamlanmadıysa null
+						},
+					},
+					status: {
+						$cond: [
+							{ $eq: ["$examDetails.isCompleted", true] }, // Eğer sınav tamamlandıysa
+							"ended",
+							{
+								$cond: [
+									{ $gte: [now, "$examDetails.startDate"] }, // Başlama zamanı geçmiş mi?
+									"active",
+									"upcoming",
+								],
+							},
+						],
+					},
+				},
+			},
+			{
+				$project: {
+					_id: "$examId",
+					title: 1,
+					description: 1,
+					examStartDate: 1,
+					examDuration: 1,
+					examEndDate: 1,
+					examCreatedAt: 1,
+					isCompleted: 1,
+					userStartedAt: 1,
+					userFinishedAt: 1,
+					userNickName: 1,
+					userDurationAsSeconds: 1,
+					userScore: 1,
+					status: 1,
+				},
+			},
+			{
+				$match: {
+					status: { $in: filter === "all" ? ["active", "ended"] : [filter] },
+				},
+			},
+			{
+				$sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 },
+			},
+		])) as JoinedExamResponse[];
+
+		return exams;
+	} catch (error) {
+		console.error("Error fetching joined exams: ", error);
+		throw new Error("Error fetching joined exams");
 	}
 }
 
@@ -344,7 +496,7 @@ async function finish(userId: string, examId: string, answers: Answer[], walletA
 
 		await answerService.create(userId, examId, answers, walletAddress);
 
-		const answerKey = await getAnswerKey(examId);
+		const answerKey: AnswerKey[] = await getAnswerKey(examId);
 
 		const { score, correctAnswers } = await scoreService.calculateScore(answers, answerKey);
 
@@ -399,11 +551,14 @@ async function getAnswerKey(examId: string): Promise<AnswerKey[]> {
 		throw new Error("Exam not found");
 	}
 
-	const questions = await Question.find({ exam: examId }).select("number correctAnswer").sort({ number: 1 });
+	const questions = await Question.find({ exam: examId })
+		.select("number correctAnswer difficulty")
+		.sort({ number: 1 });
 
 	const answerKey: AnswerKey[] = questions.map((question) => ({
 		questionId: question.id,
 		correctAnswer: question.correctAnswer,
+		difficulty: question.difficulty,
 	}));
 
 	return answerKey;
@@ -582,6 +737,8 @@ export default {
 	create,
 	generateAndSendLinks,
 	getAllByUser,
+	getAllCreatedExams,
+	getAllJoinedExams,
 	getById,
 	getDetails,
 	start,

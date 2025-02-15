@@ -15,10 +15,8 @@ import examRoutes from "./routes/exam.route";
 import userRoutes from "./routes/user.route";
 import answerRoutes from "./routes/answer.route";
 import questionRoutes from "./routes/question.route";
-import scoreRoutes from "./routes/score.route";
 import workerRoutes from "./routes/worker.route";
 import draftRoutes from "./routes/draft.route";
-
 // Import cron jobs
 import checkCompletedExams from "./cron/checkCompletedExams";
 import checkParticipantScoreAndMail from "./cron/checkParticipantScoreAndMail";
@@ -154,15 +152,9 @@ app.use(session(sessionConfig));
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
 	const oldEnd = res.end;
 	res.end = function (...args: any[]) {
-		console.log("Response Headers:", res.getHeaders());
 		// @ts-ignore
 		return oldEnd.apply(this, args);
 	};
-
-	console.log("Request Cookies:", req.headers.cookie);
-	console.log("Session ID:", req.sessionID);
-	console.log("Session Message:", req.session.message);
-	console.log("Session User:", req.session.user);
 	next();
 });
 
@@ -202,7 +194,6 @@ const initializeApp = async () => {
 		app.use("/users", userRoutes);
 		app.use("/answers", answerRoutes);
 		app.use("/questions", questionRoutes);
-		app.use("/scores", scoreRoutes);
 		app.use("/worker", workerRoutes);
 		app.use("/drafts", draftRoutes);
 

@@ -16,6 +16,7 @@ const questionSchema = z.object({
 	correctAnswer: z.number().int().optional(),
 	number: z.number().int().min(1),
 	questionType: z.enum(["mc", "tf"]).optional(),
+	difficulty: z.number().int().min(1).max(5).optional(),
 });
 
 // Common fields that appear in multiple schemas
@@ -26,50 +27,22 @@ const commonDraftFields = {
 	duration: z.number().int().positive("Duration must be positive").optional(),
 	questionCount: z.number().int().positive().optional(),
 	isRewarded: z.boolean().optional(),
-	isPrivate: z.boolean().optional(),
-	questions: z.array(questionSchema).optional(),
+	totalRewardPoolAmount: z.number().positive().optional(),
 	rewardPerWinner: z.number().positive().optional(),
 	passingScore: z.number().min(0).max(100).optional(),
+	isPrivate: z.boolean().optional(),
+	questions: z.array(questionSchema).optional(),
 };
 
 export const draftSchemas = {
 	// Schema for creating a new draft
-	createDraft: z
-		.object({
-			...commonDraftFields,
-		})
-		.refine(
-			(data) => {
-				if (data.isRewarded) {
-					return data.rewardPerWinner !== undefined && data.passingScore !== undefined;
-				}
-				return true;
-			},
-			{
-				message: "Rewarded exams must include reward per winner and passing score",
-				path: ["isRewarded"],
-			}
-		),
-
+	createDraft: z.object({
+		...commonDraftFields,
+	}),
 	// Schema for updating an existing draft
-	updateDraft: z
-		.object({
-			...commonDraftFields,
-		})
-		.partial()
-		.refine(
-			(data) => {
-				if (data.isRewarded) {
-					return data.rewardPerWinner !== undefined && data.passingScore !== undefined;
-				}
-				return true;
-			},
-			{
-				message: "Rewarded exams must include reward per winner and passing score",
-				path: ["isRewarded"],
-			}
-		),
-
+	updateDraft: z.object({
+		...commonDraftFields,
+	}),
 	// Schema for route parameters
 	params: z.object({
 		id: objectIdSchema,

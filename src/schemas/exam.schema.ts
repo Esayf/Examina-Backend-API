@@ -15,6 +15,7 @@ const questionSchema = z
 		options: z.array(optionSchema).min(2, "At least 2 options are required").max(6, "Maximum 6 options allowed"),
 		correctAnswer: z.number().int().min(1),
 		number: z.number().int().min(1),
+		difficulty: z.number().int().min(1).max(5).optional(),
 	})
 	.refine((data) => data.correctAnswer <= data.options.length, {
 		message: "Correct answer must be within the range of available options",
@@ -68,28 +69,36 @@ export const examSchemas = {
 			.min(1, { message: "Email list must contain at least one email" }),
 	}),
 
-	myExamsQueryParams: z.object({
-		// role: "created" veya "joined" olmalı
-		role: z.preprocess(
-			(val) => (typeof val === "string" ? val.trim() : val),
-			z.enum(["created", "joined"], { message: "Role must be 'created' or 'joined'" })
-		),
-
-		// filter: "all", "upcoming", "active" veya "ended" olabilir
+	createdExamsQueryParams: z.object({
 		filter: z.preprocess(
-			(val) => (typeof val === "string" ? val.trim() : "all"),
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "all"),
 			z.enum(["all", "upcoming", "active", "ended"], { message: "Invalid filter option" })
 		),
-
-		// sortBy: Sıralama yapılabilecek alanlardan biri olmalı
 		sortBy: z.preprocess(
-			(val) => (typeof val === "string" ? val.trim() : undefined),
-			z.enum(["title", "startDate", "duration", "createdAt", "score", "endDate", "status"]).optional()
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "createdAt"),
+			z.enum(["title", "startDate", "duration", "createdAt", "score", "endDate", "status"], {
+				message: "Invalid sort by option",
+			})
 		),
-
-		// sortOrder: "asc" veya "desc" olmalı
 		sortOrder: z.preprocess(
-			(val) => (typeof val === "string" ? val.trim() : "desc"),
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "asc"),
+			z.enum(["asc", "desc"], { message: "Sort order must be 'asc' or 'desc'" })
+		),
+	}),
+
+	joinedExamsQueryParams: z.object({
+		filter: z.preprocess(
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "all"),
+			z.enum(["all", "active", "ended"], { message: "Invalid filter option" })
+		),
+		sortBy: z.preprocess(
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "createdAt"),
+			z.enum(["title", "startDate", "duration", "createdAt", "score", "endDate", "status"], {
+				message: "Invalid sort by option",
+			})
+		),
+		sortOrder: z.preprocess(
+			(val) => (typeof val === "string" ? val.trim().toLowerCase() : "asc"),
 			z.enum(["asc", "desc"], { message: "Sort order must be 'asc' or 'desc'" })
 		),
 	}),
