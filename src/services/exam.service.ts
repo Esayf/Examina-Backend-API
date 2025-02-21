@@ -21,6 +21,7 @@ import Joi from "joi";
 import { sendGeneratedExamLink } from "@/mailer";
 import passcodeService from "./passcode.service";
 import mongoose from "mongoose";
+import pincodeService from "./pincode.service";
 
 interface ExamResult {
 	status: number;
@@ -34,6 +35,7 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 		const savedExam = await exam.save();
 
 		await saveQuestions(questions, savedExam.id);
+		await pincodeService.createPincodeForExam(savedExam._id);
 
 		return savedExam;
 	} catch (error) {
@@ -72,9 +74,9 @@ async function generateAndSendLinks(examId: string, emailList: string[]): Promis
 export type SortFields = "title" | "startDate" | "duration" | "createdAt" | "score" | "endDate" | "status";
 
 interface ExamWithScore extends ExamDocument {
-	score?: number;
+	score?: number | null;
 	endDate: Date; // Dinamik olarak hesaplanacak endDate
-	status?: string; // Dinamik olarak hesaplanacak durum bilgisi
+	status: string; // Dinamik olarak hesaplanacak durum bilgisi
 }
 
 export async function getAllByUser(
@@ -86,6 +88,7 @@ export async function getAllByUser(
 ): Promise<ExamWithScore[]> {
 	try {
 		let exams: ExamWithScore[];
+		const scoreMap = new Map<string, number>();
 
 		// role filtering
 		if (role === "created") {
@@ -95,23 +98,14 @@ export async function getAllByUser(
 			const examIds = participated.map((p) => new mongoose.Types.ObjectId(p.exam.toString()));
 			exams = await Exam.find({ _id: { $in: examIds } });
 
-			// score sorting
-			if (sortBy === "score") {
-				const scores = await Score.find({
-					user: new mongoose.Types.ObjectId(userId),
-					exam: { $in: examIds },
-				}).select("exam score");
-				const scoreMap = new Map<string, number>();
+			const scores = await Score.find({
+				user: new mongoose.Types.ObjectId(userId),
+				exam: { $in: examIds },
+			}).select("exam score");
 
-				scores.forEach((score) => {
-					scoreMap.set(score.exam.toString(), score.score);
-				});
-
-				exams = exams.map((exam) => ({
-					...exam.toObject(),
-					score: scoreMap.get((exam._id as mongoose.Types.ObjectId).toString()) || null,
-				})) as ExamWithScore[];
-			}
+			scores.forEach((score) => {
+				scoreMap.set(score.exam.toString(), score.score);
+			});
 		} else {
 			throw new Error("Invalid role: Role must be 'created' or 'joined'.");
 		}
@@ -136,20 +130,16 @@ export async function getAllByUser(
 				...exam.toObject(),
 				endDate,
 				status,
+				...(role === "joined" && {
+					score: scoreMap.get(exam._id) || null,
+				}),
 			} as ExamWithScore;
 		});
 
 		// Filtreleme işlemi
-		if (filter !== "all") {
+		if (filter !== "all" && filter in ["upcoming", "active", "ended"]) {
 			exams = exams.filter((exam) => {
-				if (filter === "upcoming") {
-					return exam.status === "upcoming";
-				} else if (filter === "active") {
-					return exam.status === "active";
-				} else if (filter === "ended") {
-					return exam.status === "ended";
-				}
-				return true;
+				return exam.status === filter;
 			});
 		}
 
@@ -197,6 +187,246 @@ export async function getAllByUser(
 	}
 }
 
+interface CreatedExamResponse {
+	_id: string;
+	title: string;
+	description: string;
+	startDate: Date;
+	duration: number;
+	endDate: Date;
+	totalParticipants: number;
+	status: "upcoming" | "active" | "ended";
+	pincode?: string;
+}
+export async function getAllCreatedExams(
+	userId: string,
+	sortBy: SortFields = "createdAt",
+	filter: "all" | "upcoming" | "active" | "ended" = "all",
+	sortOrder: "asc" | "desc" = "desc"
+): Promise<CreatedExamResponse[]> {
+	try {
+		const now = new Date();
+		const exams = (await Exam.aggregate([
+			{
+				$match: { creator: new mongoose.Types.ObjectId(userId) },
+			},
+			{
+				$lookup: {
+					from: "participatedusers",
+					localField: "_id",
+					foreignField: "exam",
+					as: "participantCount",
+				},
+			},
+			{
+				$lookup: {
+					from: "pincodes",
+					localField: "_id",
+					foreignField: "exam",
+					as: "pincodeDetails",
+				},
+			},
+			{
+				$unwind: {
+					path: "$pincodeDetails",
+					preserveNullAndEmptyArrays: true,
+				},
+			},
+			{
+				$addFields: {
+					endDate: { $add: ["$startDate", { $multiply: ["$duration", 60000] }] },
+					totalParticipants: { $size: "$participantCount" },
+					pincode: "$pincodeDetails.pincode",
+					status: {
+						$cond: [
+							{ $eq: ["$isCompleted", true] }, // Eğer sınav tamamlandıysa
+							"ended",
+							{
+								$cond: [{ $gt: [now, "$startDate"] }, "active", "upcoming"],
+							},
+						],
+					},
+				},
+			},
+			{
+				$match: {
+					status: { $in: filter === "all" ? ["upcoming", "active", "ended"] : [filter] },
+				},
+			},
+			{
+				$project: {
+					_id: 1,
+					title: 1,
+					description: 1,
+					startDate: 1,
+					duration: 1,
+					endDate: 1,
+					createDate: 1,
+					status: 1,
+					totalParticipants: 1,
+					pincode: 1,
+				},
+			},
+			{
+				$sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 },
+			},
+		])) as CreatedExamResponse[];
+
+		return exams;
+	} catch (error) {
+		console.error("Error fetching created exams: ", error);
+		throw new Error("Error fetching created exams");
+	}
+}
+
+interface JoinedExamResponse {
+	_id: string;
+	title: string;
+	description: string;
+	examStartDate: Date;
+	examEndDate: Date;
+	examDuration: number;
+	examFinishedAt: Date;
+	status: "active" | "ended";
+	userStartedAt: Date;
+	userFinishedAt: Date | null;
+	userDurationAsSeconds: number | null;
+	userScore: number | null;
+	userNickName: string;
+	pincode?: string;
+}
+
+export async function getAllJoinedExams(
+	userId: string,
+	sortBy: SortFields = "createdAt",
+	filter: "all" | "active" | "ended" = "all",
+	sortOrder: "asc" | "desc" = "desc"
+): Promise<JoinedExamResponse[]> {
+	try {
+		const now = new Date();
+		const exams = (await ParticipatedUser.aggregate([
+			{
+				$match: { user: new mongoose.Types.ObjectId(userId) }, // Kullanıcıya göre filtrele
+			},
+			{
+				$lookup: {
+					from: "exams", // Exam koleksiyonu
+					localField: "exam", // ParticipatedUser'daki exam alanı
+					foreignField: "_id", // Exam tablosundaki _id alanı
+					as: "examDetails", // Bağlanan exam bilgileri
+				},
+			},
+			{
+				$unwind: {
+					path: "$examDetails", // Exam bilgilerini düzleştir
+					preserveNullAndEmptyArrays: false, // Eğer exam eşleşmesi yoksa belgeyi kaldır
+				},
+			},
+			{
+				$lookup: {
+					from: "scores", // Scores koleksiyonu
+					let: { examId: "$exam", userId: "$user" }, // Kullanıcı ve sınav ID'sini tanımla
+					pipeline: [
+						{
+							$match: {
+								$expr: {
+									$and: [{ $eq: ["$exam", "$$examId"] }, { $eq: ["$user", "$$userId"] }],
+								},
+							},
+						},
+					],
+					as: "scoreDetails", // Bağlanan score bilgileri
+				},
+			},
+			{
+				$unwind: {
+					path: "$scoreDetails", // Score bilgilerini düzleştir
+					preserveNullAndEmptyArrays: true, // Eğer score eşleşmesi yoksa null olarak bırak
+				},
+			},
+			{
+				$lookup: {
+					from: "pincodes", // Pincode koleksiyonu
+					localField: "examDetails._id", // Exam ID ile eşleştir
+					foreignField: "exam", // Pincode tablosundaki exam alanı
+					as: "pincodeDetails", // Bağlanan pincode bilgileri
+				},
+			},
+			{
+				$unwind: {
+					path: "$pincodeDetails", // Pincode bilgilerini düzleştir
+					preserveNullAndEmptyArrays: true, // Eğer pincode eşleşmesi yoksa null olarak bırak
+				},
+			},
+			{
+				$addFields: {
+					examId: "$examDetails._id", // Exam ID
+					title: "$examDetails.title", // Exam title
+					description: "$examDetails.description", // Exam description
+					examStartDate: "$examDetails.startDate", // Exam startDate
+					examDuration: "$examDetails.duration", // Exam duration
+					examEndDate: {
+						$add: ["$examDetails.startDate", { $multiply: ["$examDetails.duration", 60000] }],
+					},
+					examCreatedAt: "$examDetails.createdAt", // Exam createdAt
+					isCompleted: "$examDetails.isCompleted", // Exam completion durumu
+					userStartedAt: "$createdAt", // Kullanıcının sınava giriş tarihi
+					userFinishedAt: "$finishTime", // Kullanıcının sınavı bitirme tarihi
+					userNickName: "$nickname", // Kullanıcının takma adı
+					userScore: "$scoreDetails.score", // Kullanıcının sınav sonucu
+					userDurationAsSeconds: {
+						$cond: {
+							if: "$isFinished", // Kullanıcı sınavı tamamladıysa
+							then: { $divide: [{ $subtract: ["$finishTime", "$createdAt"] }, 1000] }, // Harcanan süre
+							else: null, // Eğer sınav tamamlanmadıysa null
+						},
+					},
+					pincode: "$pincodeDetails.pincode", // Pincode bilgisi eklendi
+					status: {
+						$cond: [
+							{ $eq: ["$examDetails.isCompleted", true] }, // Eğer sınav tamamlandıysa
+							"ended",
+							"active",
+						],
+					},
+				},
+			},
+			{
+				$project: {
+					_id: "$examId",
+					title: 1,
+					description: 1,
+					examStartDate: 1,
+					examDuration: 1,
+					examEndDate: 1,
+					examCreatedAt: 1,
+					isCompleted: 1,
+					userStartedAt: 1,
+					userFinishedAt: 1,
+					userNickName: 1,
+					userDurationAsSeconds: 1,
+					userScore: 1,
+					status: 1,
+					pincode: 1,
+				},
+			},
+			{
+				$match: {
+					status: { $in: filter === "all" ? ["active", "ended"] : [filter] },
+				},
+			},
+			{
+				$sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 },
+			},
+		])) as JoinedExamResponse[];
+		console.log("EXAMS with pincode: ", exams);
+		return exams;
+	} catch (error) {
+		console.error("Error fetching joined exams: ", error);
+		throw new Error("Error fetching joined exams");
+	}
+}
+
 async function getById(examId: string): Promise<ExamDocument | null> {
 	try {
 		const exam = await Exam.findById(examId);
@@ -225,7 +455,7 @@ async function getDetails(examId: string): Promise<ExtendedExamDocument | null> 
 			examObject.leaderboard = leaderboard;
 
 			if (exam.isRewarded) {
-				const winnerlist: Winner[] = await getWinnerlist(exam.id);
+				const winnerlist: Winner[] = await getWinnerlist(exam._id);
 				console.log("WINNERLIST: ", winnerlist);
 				examObject.winnerlist = winnerlist;
 			}
@@ -537,6 +767,8 @@ export default {
 	create,
 	generateAndSendLinks,
 	getAllByUser,
+	getAllCreatedExams,
+	getAllJoinedExams,
 	getById,
 	getDetails,
 	start,

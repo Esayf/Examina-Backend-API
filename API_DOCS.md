@@ -304,6 +304,7 @@ TODO: session message/token validation info will be fixed.
         {
           "number": 1,
           "text": "Bqqnt",
+          "difficulty": 1,
           "options": [
             {
               "number": 1,
@@ -331,6 +332,7 @@ TODO: session message/token validation info will be fixed.
         {
           "number": 2,
           "text": "Ottwqqoman",
+          "difficulty": 5,
           "options": [
             {
               "number": 1,
@@ -380,6 +382,7 @@ TODO: session message/token validation info will be fixed.
   - `questions` (array of objects, required): List of questions in the exam.
     - `number` (number, required): The question number.
     - `text` (string, required): The question text.
+    - `difficulty` (number, optional): The question difficulty (between 1-5).
     - `options` (array of objects, required): List of answer options.
       - `number` (number, required): The option number.
       - `text` (string, required): The option text.
@@ -522,72 +525,81 @@ TODO: session message/token validation info will be fixed.
 
 ---
 
-### 3. Get My Exams
-**GET** `/myExams`
+### 3. Get Created Exams
+**GET** `/myExams/created`
 
-- **Description**: Retrieves all exams created or joined by the authenticated user, optionally filtered by role or status.
+- **Description**: Retrieves all exams created by the authenticated user.
 - **Headers**:
   - `Session-Token` (Bearer Token, required): User authentication token.
 - **Query Parameters**:
-  - `role` (string, optional): `creator` or `joined` (default: `creator`).
   - `filter` (string, optional): `all`, `upcoming`, `active`, or `ended` (default: `all`).
   - `sortBy` (string, optional): Field to sort by (e.g., `startDate`, `duration`, `title`, default: `createdAt`).
-  - `sortOrder` (string, optional): `asc` or `desc` (default: `desc`).
+  - `sortOrder` (string, optional): `asc` or `desc` (default: `asc`).
 - **Middleware**:
   - `ensureAuthenticated`: Ensures the user is logged in.
 - **Response**:
-  - **200 OK**: Returns the list of exams.
+  - **200 OK**: Returns the list of created exams.
     ```json
     [
       {
-        "passingScore": 0,
-        "contractAddress": "0x0",
-        "deployJobId": "",
-        "isPrivate": false,
-        "isWinnerlistRequested": false,
         "_id": "673f369944e8c1ef46638105",
-        "creator": "6724c914bd890efb03a9166f",
         "title": "Testing Exam",
         "description": "This is a description",
         "startDate": "2024-11-21T13:32:57.000Z",
         "duration": 2,
-        "rootHash": "0x0",
-        "secretKey": "SIOSDajksa",
-        "questionCount": 3,
-        "isRewarded": true,
-        "rewardPerWinner": 1,
-        "isCompleted": true,
-        "isDistributed": true,
-        "createdAt": "2024-11-21T13:33:13.262Z",
-        "updatedAt": "2024-11-21T13:36:01.398Z",
-        "__v": 0,
         "endDate": "2024-11-21T13:34:57.000Z",
-        "status": "ended"
-    },
+        "totalParticipants": 25,
+        "status": "ended",
+        "pincode": "U2XT0H"
+      }
+    ]
+    ```
+  - **401 Unauthorized**: User is not authenticated.
+    ```json
     {
-        "passingScore": 0,
-        "contractAddress": "0x0",
-        "deployJobId": "",
-        "isPrivate": false,
-        "isWinnerlistRequested": false,
-        "_id": "673f3f0403586189e987cfd5",
-        "creator": "6724c914bd890efb03a9166f",
+      "message": "Unauthorized"
+    }
+    ```
+  - **500 Internal Server Error**: Server encountered an unexpected error.
+    ```json
+    {
+      "message": "Internal server error"
+    }
+    ```
+    
+---
+
+### 4. Get Joined Exams
+**GET** `/myExams/joined`
+
+- **Description**: Retrieves all exams that the authenticated user has participated in.
+- **Headers**:
+  - `Session-Token` (Bearer Token, required): User authentication token.
+- **Query Parameters**:
+  - `filter` (string, optional): `all`, `active`, or `ended` (default: `all`).
+  - `sortBy` (string, optional): Field to sort by (e.g., `startDate`, `duration`, `title`, default: `createdAt`).
+  - `sortOrder` (string, optional): `asc` or `desc` (default: `asc`).
+- **Middleware**:
+  - `ensureAuthenticated`: Ensures the user is logged in.
+- **Response**:
+  - **200 OK**: Returns the list of joined exams.
+    ```json
+    [
+      {
+        "_id": "673f369944e8c1ef46638105",
         "title": "Testing Exam",
         "description": "This is a description",
-        "startDate": "2024-11-21T14:08:54.000Z",
-        "duration": 2,
-        "rootHash": "0x0",
-        "secretKey": "SIOSDajksa",
-        "questionCount": 3,
-        "isRewarded": true,
-        "rewardPerWinner": 1,
-        "isCompleted": true,
-        "isDistributed": true,
-        "createdAt": "2024-11-21T14:09:08.108Z",
-        "updatedAt": "2024-11-21T14:12:01.877Z",
-        "__v": 0,
-        "endDate": "2024-11-21T14:10:54.000Z",
-        "status": "ended"
+        "examStartDate": "2024-11-21T13:32:57.000Z",
+        "examEndDate": "2024-11-21T13:34:57.000Z",
+        "examDuration": 2,
+        "examFinishedAt": "2024-11-21T13:34:57.000Z",
+        "status": "ended",
+        "userStartedAt": "2024-11-21T13:33:00.000Z",
+        "userFinishedAt": "2024-11-21T13:34:30.000Z",
+        "userDurationAsSeconds": 90,
+        "userScore": 85,
+        "userNickName": "User123",
+        "pincode": "U2XT0H"
       }
     ]
     ```
@@ -605,7 +617,7 @@ TODO: session message/token validation info will be fixed.
     ```
 
 ---
-### 4. Get Exam by ID
+### 5. Get Exam by ID
 **GET** `/:id`
 
 - **Description**: Retrieves details of a specific exam by its ID, including participation information for the authenticated user.
@@ -681,7 +693,7 @@ TODO: session message/token validation info will be fixed.
 
 ---
 
-### 5. Get Exam Details
+### 6. Get Exam Details
 **GET** `/:id/details`
 
 - **Description**: Retrieves detailed information about a specific exam. Includes metadata, participants, winner list, and leaderboard if applicable.
@@ -758,7 +770,7 @@ TODO: session message/token validation info will be fixed.
 ---
 
 
-### 6. Start Exam
+### 7. Start Exam
 **POST** `/startExam`
 
 - **Description**: Starts an exam for the authenticated user. Private exams require a valid passcode for participation.
@@ -811,7 +823,7 @@ TODO: session message/token validation info will be fixed.
 
 ---
 
-### 7. Finish Exam
+### 8. Finish Exam
 **POST** `/finishExam`
 
 - **Description**: Submits the user's answers and marks the exam as completed. Calculates the user's score and updates their participation status.
@@ -863,7 +875,7 @@ TODO: session message/token validation info will be fixed.
       "message": "Error finishing exam and submitting answers"
     }
     ```
-
+    
 ## Draft Endpoints `/drafts`
 
 ### 1. Create Draft
@@ -903,6 +915,7 @@ TODO: session message/token validation info will be fixed.
             "text": "Manuel IIss"
           }
         ],
+        "difficulty": 2,
         "correctAnswer": 2
       },
       {
@@ -930,6 +943,7 @@ TODO: session message/token validation info will be fixed.
             "text": "Mehmed III"
           }
         ],
+        "difficulty": 3,
         "correctAnswer": 2
       }
     ],
@@ -952,6 +966,13 @@ TODO: session message/token validation info will be fixed.
   - `rewardPerWinner` (number, optional): Reward amount per winner (required if `isRewarded` is true).
   - `passingScore` (number, optional): Minimum score required to win (required if `isRewarded` is true).
   - `questions` (array, optional): List of questions with options and correct answers.
+    - `number` (number, required): The question number.
+    - `text` (string, required): The question text.
+    - `difficulty` (number, optional): The question difficulty (between 1-5).
+    - `options` (array of objects, required): List of answer options.
+      - `number` (number, required): The option number.
+      - `text` (string, required): The option text.
+    - `correctAnswer` (number, required): The correct option number.
 - **Middleware**:
   - `ensureAuthenticated`: Ensures the user is logged in.
   - `validateRequest`: Validates the request body.
@@ -972,6 +993,7 @@ TODO: session message/token validation info will be fixed.
       "questions": [
         {
           "text": "Bqqnt",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1005,6 +1027,7 @@ TODO: session message/token validation info will be fixed.
         },
         {
           "text": "Ottwqqoman",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1099,6 +1122,7 @@ TODO: session message/token validation info will be fixed.
         "questions": [
           {
             "text": "Bqqnt",
+            "difficulty": 2,
             "options": [
               {
                 "number": 1,
@@ -1132,6 +1156,7 @@ TODO: session message/token validation info will be fixed.
           },
           {
             "text": "Ottwqqoman",
+            "difficulty": 3,
             "options": [
               {
                 "number": 1,
@@ -1214,6 +1239,7 @@ TODO: session message/token validation info will be fixed.
       "questions": [
         {
           "text": "Bqqnt",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1247,6 +1273,7 @@ TODO: session message/token validation info will be fixed.
         },
         {
           "text": "Ottwqqoman",
+          "difficulty": 3,
           "options": [
             {
               "number": 1,
@@ -1348,6 +1375,7 @@ TODO: session message/token validation info will be fixed.
       "questions": [
         {
           "text": "Bqqnt",
+          "difficulty": 2,
           "options": [
             {
               "number": 1,
@@ -1381,6 +1409,7 @@ TODO: session message/token validation info will be fixed.
         },
         {
           "text": "Ottwqqoman",
+          "difficulty": 3,
           "options": [
             {
               "number": 1,
@@ -1526,6 +1555,7 @@ TODO: session message/token validation info will be fixed.
       "_id": "67a0c73bf658ea9eb6dc8e16",
       "exam": "67a0c73bf658ea9eb6dc8e14",
       "text": "Bqqntiwe",
+      "difficulty": 2,
       "options": [
         {
           "number": 1,
@@ -1606,6 +1636,7 @@ TODO: session message/token validation info will be fixed.
         "_id": "679b5278feb5dfd7e868e718",
         "exam": "679b5278feb5dfd7e868e710",
         "text": "Ottwqqoman",
+        "difficulty": 2,
         "options": [
           {
             "number": 1,
@@ -1642,6 +1673,7 @@ TODO: session message/token validation info will be fixed.
         "_id": "679b5278feb5dfd7e868e71e",
         "exam": "679b5278feb5dfd7e868e710",
         "text": "Bqqntiwe",
+        "difficulty": 3,
         "options": [
           {
             "number": 1,
@@ -1678,6 +1710,7 @@ TODO: session message/token validation info will be fixed.
         "_id": "679b5278feb5dfd7e868e712",
         "exam": "679b5278feb5dfd7e868e710",
         "text": "Bqqniwe",
+        "difficulty": 2,
         "options": [
           {
             "number": 1,
@@ -1882,141 +1915,44 @@ TODO: session message/token validation info will be fixed.
     ```
 
 
-## Score Endpoints `/scores`
+## Pincode Endpoints `/pincode`
 
-### 1. Get All Scores
-**GET** `/allScores`
+### 1. Get Exam ID by Pincode
+**GET** `/:pincode`
 
-- **Description**: Retrieves a list of all scores across all exams. This endpoint is restricted to admin users.
-- **Headers**:
-  - `Session-Token` (Bearer Token, required): Admin authentication token.
-- **Middleware**:
-  - `ensureAuthenticated`: Ensures the user is logged in.
-  - `ensureAdmin`: Ensures the user has admin privileges.
-- **Response**:
-  - **200 OK**: Scores successfully retrieved.
-    ```json
-    [
-      {
-        "isWinner": false,
-        "_id": "66eddff52bdff433272e4e65",
-        "user": {
-          "_id": "66cf70cb320d7d2190ce0d68",
-          "username": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
-          "walletAddress": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ"
-        },
-        "exam": {
-          "_id": "66eddfc52bdff433272e4e09",
-          "title": "Production Exam"
-        },
-        "score": 99,
-        "__v": 0
-      },
-      {
-        "isWinner": false,
-        "_id": "66ede3f450b0a54bd6961a18",
-        "user": {
-          "_id": "66cf70cb320d7d2190ce0d68",
-          "username": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
-          "walletAddress": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ"
-        },
-        "exam": {
-          "_id": "66ede3ce50b0a54bd69619ee",
-          "title": "Production Exam"
-        },
-        "score": 99,
-        "__v": 0
-      },
-      {
-        "isWinner": false,
-        "_id": "66ede6d9ea7f0df297718776",
-        "user": {
-          "_id": "66cf70cb320d7d2190ce0d68",
-          "username": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
-          "walletAddress": "B62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ"
-        },
-        "exam": {
-          "_id": "66ede686ea7f0df297718746",
-          "title": "Production Exam"
-        },
-        "score": 99,
-        "__v": 0
-      }
-    ]
-    ```
-  - **401 Unauthorized**: User is not authenticated.
-    ```json
-    {
-      "message": "Unauthorized"
-    }
-    ```
-  - **403 Forbidden**: User does not have admin privileges.
-    ```json
-    {
-      "message": "Admin access required"
-    }
-    ```
-  - **404 Not Found**: No scores found.
-    ```json
-    {
-      "message": "Scores not found"
-    }
-    ```
-  - **500 Internal Server Error**: Server encountered an unexpected error.
-    ```json
-    {
-      "message": "Internal server error"
-    }
-    ```
-
----
-
-### 2. Get Scores by Exam ID
-**GET** `/:examId`
-
-- **Description**: Retrieves scores for a specific exam based on the exam ID.
-- **Headers**:
-  - `Session-Token` (Bearer Token, required): User authentication token.
+- **Description**: Retrieves the exam ID associated with a given pincode. The pincode must be 6 characters long and will be automatically converted to uppercase.
 - **Parameters**:
-  - `examId` (string, required): The ID of the exam.
+  - `pincode` (string, required): A 6-character alphanumeric pincode.
 - **Middleware**:
-  - `ensureAuthenticated`: Ensures the user is logged in.
-  - `validateRequest`: Validates the `examId` parameter.
+  - `validateRequest`: Validates the pincode parameter format.
 - **Response**:
-  - **200 OK**: Scores successfully retrieved for the exam.
-    ```json
-    [
-      {
-        "_id": "679b546dfeb5dfd7e868e7fa",
-        "user": {
-          "_id": "66fa6bb1c58f93ea0cd0912c",
-          "username": "Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ",
-          "walletAddress": "Z62aa9ssZH8zQaasVr53ApUBrtwt8odZ7hXVXguhq6udpUYQVbRnpVJ"
-        },
-        "exam": {
-          "_id": "679b5278feb5dfd7e868e710",
-          "title": "Testing Exam"
-        },
-        "score": 0,
-        "totalQuestions": 3,
-        "correctAnswers": 0,
-        "isWinner": false,
-        "createdAt": "2025-01-30T10:29:01.640Z",
-        "updatedAt": "2025-01-30T10:29:01.640Z",
-        "__v": 0
-      }
-    ]
-    ```
-  - **401 Unauthorized**: User is not authenticated.
+  - **200 OK**: Returns the exam ID associated with the pincode.
     ```json
     {
-      "message": "Unauthorized"
+      "examId": "679b4fe7feb5dfd7e868e5f9"
     }
     ```
-  - **404 Not Found**: No scores found for the specified exam.
+  - **400 Bad Request**: Invalid pincode format.
     ```json
     {
-      "message": "Scores not found"
+      "error": "ValidationException",
+      "message": "Validation failed",
+      "errors": [
+        {
+          "field": "pincode",
+          "message": "Pincode must be 6 characters long"
+        }
+      ]
+      }
+      }
+    ]
+    }
+    ]
+    ```
+  - **404 Not Found**: Pincode not found.
+    ```json
+    {
+      "message": "Pincode not found"
     }
     ```
   - **500 Internal Server Error**: Server encountered an unexpected error.
@@ -2025,5 +1961,3 @@ TODO: session message/token validation info will be fixed.
       "message": "Internal server error"
     }
     ```
-
-

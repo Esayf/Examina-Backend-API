@@ -16,6 +16,7 @@ const questionSchema = z.object({
 	correctAnswer: z.number().int().optional(),
 	number: z.number().int().min(1),
 	questionType: z.enum(["mc", "tf"]).optional(),
+	difficulty: z.number().int().min(1).max(5).optional(),
 });
 
 // Common fields that appear in multiple schemas
