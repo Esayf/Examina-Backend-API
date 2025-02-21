@@ -21,6 +21,7 @@ import Joi from "joi";
 import { sendGeneratedExamLink } from "@/mailer";
 import passcodeService from "./passcode.service";
 import mongoose from "mongoose";
+import pincodeService from "./pincode.service";
 
 interface ExamResult {
 	status: number;
@@ -34,6 +35,7 @@ async function create(examData: Partial<ExamDocument>, questions: Array<Question
 		const savedExam = await exam.save();
 
 		await saveQuestions(questions, savedExam.id);
+		await pincodeService.createPincodeForExam(savedExam._id);
 
 		return savedExam;
 	} catch (error) {
@@ -129,7 +131,7 @@ export async function getAllByUser(
 				endDate,
 				status,
 				...(role === "joined" && {
-					score: scoreMap.get((exam._id as mongoose.Types.ObjectId).toString()) || null,
+					score: scoreMap.get(exam._id) || null,
 				}),
 			} as ExamWithScore;
 		});
@@ -194,6 +196,7 @@ interface CreatedExamResponse {
 	endDate: Date;
 	totalParticipants: number;
 	status: "upcoming" | "active" | "ended";
+	pincode?: string;
 }
 export async function getAllCreatedExams(
 	userId: string,
@@ -216,12 +219,27 @@ export async function getAllCreatedExams(
 				},
 			},
 			{
+				$lookup: {
+					from: "pincodes",
+					localField: "_id",
+					foreignField: "exam",
+					as: "pincodeDetails",
+				},
+			},
+			{
+				$unwind: {
+					path: "$pincodeDetails",
+					preserveNullAndEmptyArrays: true,
+				},
+			},
+			{
 				$addFields: {
 					endDate: { $add: ["$startDate", { $multiply: ["$duration", 60000] }] },
 					totalParticipants: { $size: "$participantCount" },
+					pincode: "$pincodeDetails.pincode",
 					status: {
 						$cond: [
-							{ $gt: [now, "$endDate"] },
+							{ $eq: ["$isCompleted", true] }, // Eğer sınav tamamlandıysa
 							"ended",
 							{
 								$cond: [{ $gt: [now, "$startDate"] }, "active", "upcoming"],
@@ -246,6 +264,7 @@ export async function getAllCreatedExams(
 					createDate: 1,
 					status: 1,
 					totalParticipants: 1,
+					pincode: 1,
 				},
 			},
 			{
@@ -274,6 +293,7 @@ interface JoinedExamResponse {
 	userDurationAsSeconds: number | null;
 	userScore: number | null;
 	userNickName: string;
+	pincode?: string;
 }
 
 export async function getAllJoinedExams(
@@ -325,6 +345,20 @@ export async function getAllJoinedExams(
 				},
 			},
 			{
+				$lookup: {
+					from: "pincodes", // Pincode koleksiyonu
+					localField: "examDetails._id", // Exam ID ile eşleştir
+					foreignField: "exam", // Pincode tablosundaki exam alanı
+					as: "pincodeDetails", // Bağlanan pincode bilgileri
+				},
+			},
+			{
+				$unwind: {
+					path: "$pincodeDetails", // Pincode bilgilerini düzleştir
+					preserveNullAndEmptyArrays: true, // Eğer pincode eşleşmesi yoksa null olarak bırak
+				},
+			},
+			{
 				$addFields: {
 					examId: "$examDetails._id", // Exam ID
 					title: "$examDetails.title", // Exam title
@@ -347,17 +381,12 @@ export async function getAllJoinedExams(
 							else: null, // Eğer sınav tamamlanmadıysa null
 						},
 					},
+					pincode: "$pincodeDetails.pincode", // Pincode bilgisi eklendi
 					status: {
 						$cond: [
 							{ $eq: ["$examDetails.isCompleted", true] }, // Eğer sınav tamamlandıysa
 							"ended",
-							{
-								$cond: [
-									{ $gte: [now, "$examDetails.startDate"] }, // Başlama zamanı geçmiş mi?
-									"active",
-									"upcoming",
-								],
-							},
+							"active",
 						],
 					},
 				},
@@ -378,6 +407,7 @@ export async function getAllJoinedExams(
 					userDurationAsSeconds: 1,
 					userScore: 1,
 					status: 1,
+					pincode: 1,
 				},
 			},
 			{
@@ -389,7 +419,7 @@ export async function getAllJoinedExams(
 				$sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 },
 			},
 		])) as JoinedExamResponse[];
-
+		console.log("EXAMS with pincode: ", exams);
 		return exams;
 	} catch (error) {
 		console.error("Error fetching joined exams: ", error);
@@ -425,7 +455,7 @@ async function getDetails(examId: string): Promise<ExtendedExamDocument | null> 
 			examObject.leaderboard = leaderboard;
 
 			if (exam.isRewarded) {
-				const winnerlist: Winner[] = await getWinnerlist(exam.id);
+				const winnerlist: Winner[] = await getWinnerlist(exam._id);
 				console.log("WINNERLIST: ", winnerlist);
 				examObject.winnerlist = winnerlist;
 			}
