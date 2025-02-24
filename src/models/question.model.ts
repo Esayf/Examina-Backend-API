@@ -28,6 +28,11 @@ const QuestionSchema = new Schema(
 			type: Number,
 			required: true,
 		},
+		questionType: {
+			type: String,
+			enum: ["mc", "tf"],
+			required: true,
+		},
 		number: {
 			type: Number,
 			required: true,

@@ -359,6 +359,30 @@ export async function getAllJoinedExams(
 				},
 			},
 			{
+				$lookup: {
+					from: "questions",
+					localField: "examDetails._id",
+					foreignField: "exam",
+					as: "questions",
+				},
+			},
+			{
+				$lookup: {
+					from: "answers",
+					let: { examId: "$examDetails._id", userId: "$user" },
+					pipeline: [
+						{
+							$match: {
+								$expr: {
+									$and: [{ $eq: ["$exam", "$$examId"] }, { $eq: ["$user", "$$userId"] }],
+								},
+							},
+						},
+					],
+					as: "userAnswers",
+				},
+			},
+			{
 				$addFields: {
 					examId: "$examDetails._id", // Exam ID
 					title: "$examDetails.title", // Exam title
@@ -374,6 +398,38 @@ export async function getAllJoinedExams(
 					userFinishedAt: "$finishTime", // Kullanıcının sınavı bitirme tarihi
 					userNickName: "$nickname", // Kullanıcının takma adı
 					userScore: "$scoreDetails.score", // Kullanıcının sınav sonucu
+					questions: {
+						$map: {
+							input: "$questions",
+							as: "question",
+							in: {
+								text: "$$question.text",
+								options: "$$question.options",
+								correctAnswer: "$$question.correctAnswer",
+								number: "$$question.number",
+								questionType: "$$question.questionType",
+								userAnswer: {
+									$let: {
+										vars: {
+											userAnswer: {
+												$arrayElemAt: [
+													{
+														$filter: {
+															input: { $arrayElemAt: ["$userAnswers.answers", 0] },
+															as: "answer",
+															cond: { $eq: ["$$answer.question", "$$question._id"] },
+														},
+													},
+													0,
+												],
+											},
+										},
+										in: { $ifNull: ["$$userAnswer.selectedOption", null] },
+									},
+								},
+							},
+						},
+					},
 					userDurationAsSeconds: {
 						$cond: {
 							if: "$isFinished", // Kullanıcı sınavı tamamladıysa
@@ -408,6 +464,9 @@ export async function getAllJoinedExams(
 					userScore: 1,
 					status: 1,
 					pincode: 1,
+					questions: {
+						$cond: [{ $eq: ["$status", "ended"] }, "$questions", "$$REMOVE"],
+					},
 				},
 			},
 			{
