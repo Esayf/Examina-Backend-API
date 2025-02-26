@@ -104,6 +104,7 @@ interface QuestionInput {
 	text: string;
 	options: Array<{ number: number; text: string }>;
 	correctAnswer: number;
+	questionType: "mc" | "tf";
 	difficulty: number;
 }
 

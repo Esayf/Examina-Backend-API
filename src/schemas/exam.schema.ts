@@ -16,6 +16,7 @@ const questionSchema = z
 		correctAnswer: z.number().int().min(1),
 		number: z.number().int().min(1),
 		difficulty: z.number().int().min(1).max(5).optional(),
+		questionType: z.enum(["mc", "tf"]).optional(),
 	})
 	.refine((data) => data.correctAnswer <= data.options.length, {
 		message: "Correct answer must be within the range of available options",
