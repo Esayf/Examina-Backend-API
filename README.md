@@ -16,15 +16,15 @@ Next, run Docker Compose to set up the application containers. Depending on your
 
 **For Linux:**
 
-`sudo docker compose up -d`
+`sudo docker compose -f docker-compose.dev.yml up -d`
 
 **For Mac:**
 
-`docker compose up -d`
+`docker compose -f docker-compose.dev.yml up -d`
 
 **For Windows:**
 
-`docker-compose up -d`
+`docker-compose -f docker-compose.dev.yml up -d`
 
 ## Access the Application
 
