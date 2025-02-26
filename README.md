@@ -31,7 +31,7 @@ Next, run Docker Compose to set up the application containers. Depending on your
 Once the setup is complete, the API will be running and accessible at:
 
 
-`http://localhost:3005`
+`http://localhost:8000`
 
 
 
